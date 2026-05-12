@@ -128,13 +128,13 @@ function calcSessionMetrics(sessionRows: SessionRow[]): {
   const bouncedSessions = Object.values(sessionMap).filter((c) => c.length === 1).length;
   const bounceRate = sessions > 0 ? (bouncedSessions / sessions) * 100 : 0;
 
-  const durations = Object.values(sessionMap)
-    .map((clicks) => {
-      if (clicks.length < 2) return 0;
-      const sorted = clicks.sort((a, b) => a.getTime() - b.getTime());
-      return (sorted[sorted.length - 1].getTime() - sorted[0].getTime()) / 1000;
-    })
-    .filter((d) => d > 0);
+  const durations = Object.values(sessionMap).reduce((acc, clicks) => {
+    if (clicks.length < 2) return acc;
+    const sorted = clicks.sort((a, b) => a.getTime() - b.getTime());
+    const duration = (sorted[sorted.length - 1].getTime() - sorted[0].getTime()) / 1000;
+    if (duration > 0) acc.push(duration);
+    return acc;
+  }, [] as number[]);
 
   const avgSessionDuration = durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0;
 

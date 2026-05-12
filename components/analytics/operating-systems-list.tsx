@@ -39,7 +39,7 @@ export function OperatingSystemsList({ data }: OperatingSystemsListProps) {
                 className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50"
               >
                 <div className="flex items-center gap-2">
-                  <OSIcon className="h-4 w-4" />
+                  <OSIcon className="size-4" />
                   <span className="text-sm font-medium">{item.name}</span>
                 </div>
                 <div className="flex items-center gap-4">

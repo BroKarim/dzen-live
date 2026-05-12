@@ -62,7 +62,7 @@ export function DeviceBrowserCharts({ deviceData = EMPTY_ARRAY, browserData = EM
                 return (
                   <div key={item.name} className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
-                      <DeviceIcon className="h-4 w-4" />
+                      <DeviceIcon className="size-4" />
                       <span>{item.name}</span>
                     </div>
                     <span className="font-medium">{item.value}</span>

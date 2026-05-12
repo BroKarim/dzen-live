@@ -10,7 +10,7 @@ import Image from "next/image";
 export function Hero() {
   const [username, setUsername] = useState("");
   const { data: session } = useSession();
-  const router = useRouter();
+  const { push } = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -19,9 +19,9 @@ export function Hero() {
     if (!username) return;
 
     if (!session) {
-      router.push(`/login?username=${username}`);
+      push(`/login?username=${username}`);
     } else {
-      router.push("/editor");
+      push("/editor");
     }
   };
 
@@ -32,6 +32,7 @@ export function Hero() {
           src="https://res.cloudinary.com/dctl5pihh/image/upload/f_auto,q_auto,w_1920/background_valoru.jpg"
           alt="Hero background"
           fill
+          sizes="100vw"
           priority
           quality={90}
           className={`object-cover transition-[transform,opacity] duration-700 ${isHovered ? "scale-105" : "scale-100"} ${imageLoaded ? "opacity-100" : "opacity-90 scale-110"}`}

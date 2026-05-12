@@ -55,6 +55,7 @@ export function CardTextureSelector({ profile, onUpdate }: CardTextureSelectorPr
                     src={t.preview}
                     alt={t.label}
                     fill
+                    sizes="(max-width: 768px) 50vw, 33vw"
                     className={`object-cover transition-all duration-500 ${isActive ? "opacity-100 scale-110" : "opacity-60 grayscale-[0.5] group-hover:scale-110 group-hover:grayscale-0 group-hover:opacity-40"}`}
                   />
 
@@ -67,8 +68,8 @@ export function CardTextureSelector({ profile, onUpdate }: CardTextureSelectorPr
                   <div className={`absolute inset-0 transition-opacity duration-300 ${isActive ? "bg-primary/10" : "bg-transparent"}`} />
 
                   {isActive && (
-                    <m.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg z-10">
-                      <Check className="h-3 w-3 stroke-[3]" />
+                    <m.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg z-10">
+                      <Check className="size-3 stroke-[3]" />
                     </m.div>
                   )}
                 </div>

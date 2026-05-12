@@ -56,7 +56,7 @@ export function TrafficTrendsChart({ data, isLoading = false, showMultipleLines 
     <Card className="rounded-xl border-white/5 bg-white/5 shadow-none overflow-hidden">
       <CardHeader className="p-4 pb-2">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-blue-500" />
+          <TrendingUp className="size-4 text-blue-500" />
           Traffic Trends
         </CardTitle>
       </CardHeader>

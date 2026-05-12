@@ -96,7 +96,7 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
 
       if (!res.ok) throw new Error("Failed to upload icon to S3");
 
-      setNewLink({ ...newLink, icon: publicUrl! });
+      setNewLink(prev => ({ ...prev, icon: publicUrl! }));
       setUiState((prev) => ({ ...prev, logoPreview: publicUrl! }));
     } catch (error: any) {
       console.error(error);
@@ -151,11 +151,11 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
 
       if (!res.ok) throw new Error("Failed to upload media to S3");
 
-      setNewLink({
-        ...newLink,
+      setNewLink(prev => ({
+        ...prev,
         mediaUrl: mediaPublicUrl!,
         mediaType: "image",
-      });
+      }));
       setUiState((prev) => ({ ...prev, mediaPreview: mediaPublicUrl! }));
     } catch (error: any) {
       console.error(error);
@@ -165,11 +165,11 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
   };
 
   const handlePaymentSelect = (provider: "stripe" | "lemonsqueezy") => {
-    setNewLink({
-      ...newLink,
+    setNewLink(prev => ({
+      ...prev,
       paymentProvider: provider,
       paymentAccountId: "dummy-account-id",
-    });
+    }));
   };
 
   const handleAdd = async () => {
@@ -271,7 +271,7 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
       {!uiState.isAdding && (
         <div className="flex justify-end">
           <Button2 onClick={() => setUiState((prev) => ({ ...prev, isAdding: true }))} variant="blue" className="w-1/3 rounded-md">
-            <Plus className="h-3.5 w-3.5 group-hover:scale-110 transition-transform" />
+            <Plus className="size-3.5 group-hover:scale-110 transition-transform" />
             <span>Add link</span>
           </Button2>
         </div>
@@ -282,26 +282,26 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
           <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-muted/30">
             <span className="text-xs font-medium text-foreground">New Link</span>
             <button onClick={resetForm} className="p-1 rounded-md hover:bg-muted transition-colors">
-              <X className="h-3.5 w-3.5 text-muted-foreground" />
+              <X className="size-3.5 text-muted-foreground" />
             </button>
           </div>
 
           <div className="p-3 space-y-3">
             <div className="flex gap-2">
               <div className="relative shrink-0">
-                <input id="add-icon-upload" type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
+                <input id="add-icon-upload" type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 size-full opacity-0 cursor-pointer z-20" />
                 <label
                   htmlFor="add-icon-upload"
-                  className="h-10 w-10 rounded-lg border border-dashed border-border bg-muted/50 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden relative"
+                  className="size-10 rounded-lg border border-dashed border-border bg-muted/50 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden relative"
                 >
-                  {uiState.logoPreview ? <Image src={uiState.logoPreview} alt="Icon" fill className="object-cover" unoptimized /> : <Plus className="h-4 w-4 text-muted-foreground" />}
+                  {uiState.logoPreview ? <Image src={uiState.logoPreview} alt="Icon" fill sizes="40px" className="object-cover" unoptimized /> : <Plus className="size-4 text-muted-foreground" />}
                 </label>
               </div>
 
-              <Input value={newLink.title} onChange={(e) => setNewLink({ ...newLink, title: e.target.value })} placeholder="Link title" className="h-10 flex-1 text-sm" />
+              <Input value={newLink.title} onChange={(e) => setNewLink(prev => ({ ...prev, title: e.target.value }))} placeholder="Link title" className="h-10 flex-1 text-sm" />
             </div>
 
-            <Input value={newLink.description} onChange={(e) => setNewLink({ ...newLink, description: e.target.value })} placeholder="Description (optional)" className="h-10 text-sm" />
+            <Input value={newLink.description} onChange={(e) => setNewLink(prev => ({ ...prev, description: e.target.value }))} placeholder="Description (optional)" className="h-10 text-sm" />
             <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
               {typeOptions.map((type) => {
                 const Icon = type.icon;
@@ -316,27 +316,27 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
                       ${isActive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}
                     `}
                   >
-                    <Icon className="h-3.5 w-3.5" />
+                    <Icon className="size-3.5" />
                     <span className="hidden sm:inline">{type.label}</span>
                   </button>
                 );
               })}
             </div>
             {/* Dynamic Content Based on Type */}
-            {uiState.selectedType === "url" && <Input value={newLink.url} onChange={(e) => setNewLink({ ...newLink, url: e.target.value })} placeholder="https://example.com" className="h-10 text-sm" />}
+            {uiState.selectedType === "url" && <Input value={newLink.url} onChange={(e) => setNewLink(prev => ({ ...prev, url: e.target.value }))} placeholder="https://example.com" className="h-10 text-sm" />}
 
             {uiState.selectedType === "media" && (
               <div className="relative">
-                <input id="media-upload" type="file" accept="image/*" onChange={handleMediaUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" style={{ pointerEvents: "auto" }} />
+                <input id="media-upload" type="file" accept="image/*" onChange={handleMediaUpload} className="absolute inset-0 size-full opacity-0 cursor-pointer z-20" style={{ pointerEvents: "auto" }} />
                 <label
                   htmlFor="media-upload"
                   className="h-20 rounded-lg border border-dashed border-border bg-muted/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden relative"
                 >
                   {uiState.mediaPreview ? (
-                    <Image src={uiState.mediaPreview} alt="Media" fill className="object-cover" unoptimized />
+                    <Image src={uiState.mediaPreview} alt="Media" fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover" unoptimized />
                   ) : (
                     <>
-                      <ImageIcon className="h-5 w-5 text-muted-foreground mb-1" />
+                      <ImageIcon className="size-5 text-muted-foreground mb-1" />
                       <span className="text-[10px] text-muted-foreground">Click to upload</span>
                     </>
                   )}
@@ -347,7 +347,7 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
             {/* Action Buttons */}
             <div className="flex gap-2 pt-1">
               <Button onClick={handleAdd} disabled={uiState.isSaving || !newLink.title} size="sm" className="flex-1 h-9 text-sm">
-                {uiState.isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+                {uiState.isSaving && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
                 Add Link
               </Button>
               <Button onClick={resetForm} variant="ghost" size="sm" className="h-9 text-sm" disabled={uiState.isSaving}>
@@ -372,8 +372,8 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
 
         {(!profile.links || profile.links.length === 0) && !uiState.isAdding && (
           <div className="text-center py-6">
-            <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-muted mb-2">
-              <Link2Icon className="h-5 w-5 text-muted-foreground" />
+            <div className="inline-flex items-center justify-center size-10 rounded-full bg-muted mb-2">
+              <Link2Icon className="size-5 text-muted-foreground" />
             </div>
             <p className="text-sm text-muted-foreground">No links yet</p>
             <p className="text-xs text-muted-foreground/70">Add your first link above</p>
@@ -425,16 +425,16 @@ function SortableLinkItem({ link, onEdit, onDelete, deletingId }: SortableLinkIt
   return (
     <div ref={setNodeRef} style={style} className="group flex items-center rounded-xl gap-2 py-3 shadow-dzenn border-none bg-card hover:border-primary/30 transition-all">
       <div {...attributes} {...listeners} className="p-1 cursor-grab opacity-0 group-hover:opacity-100 transition-opacity touch-none">
-        <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+        <GripVertical className="size-3.5 text-muted-foreground" />
       </div>
 
       {link.icon ? (
-        <div className="h-10 w-10 rounded-md overflow-hidden shrink-0 relative">
-          <Image src={link.icon} alt={link.title} fill className="object-cover" unoptimized />
+        <div className="size-10 rounded-md overflow-hidden shrink-0 relative">
+          <Image src={link.icon} alt={link.title} fill sizes="40px" className="object-cover" unoptimized />
         </div>
       ) : (
-        <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-          <LinkIcon className="h-4 w-4 text-muted-foreground" />
+        <div className="size-10 rounded-md bg-muted flex items-center justify-center shrink-0">
+          <LinkIcon className="size-4 text-muted-foreground" />
         </div>
       )}
 
@@ -450,7 +450,7 @@ function SortableLinkItem({ link, onEdit, onDelete, deletingId }: SortableLinkIt
           <Tooltip>
             <TooltipTrigger asChild>
               <a href={link.url} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-md hover:bg-muted transition-colors">
-                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                <ExternalLink className="size-3.5 text-muted-foreground" />
               </a>
             </TooltipTrigger>
             <TooltipContent side="top">Open link</TooltipContent>
@@ -460,7 +460,7 @@ function SortableLinkItem({ link, onEdit, onDelete, deletingId }: SortableLinkIt
         <Tooltip>
           <TooltipTrigger asChild>
             <button onClick={() => onEdit(link)} className="p-1.5 rounded-md hover:bg-muted transition-colors">
-              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+              <Pencil className="size-3.5 text-muted-foreground" />
             </button>
           </TooltipTrigger>
           <TooltipContent side="top">Edit link</TooltipContent>
@@ -469,7 +469,7 @@ function SortableLinkItem({ link, onEdit, onDelete, deletingId }: SortableLinkIt
         <Tooltip>
           <TooltipTrigger asChild>
             <button onClick={() => onDelete(link.id)} disabled={deletingId === link.id} className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors">
-              {deletingId === link.id ? <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" /> : <Trash2 className="h-3.5 w-3.5 text-destructive" />}
+              {deletingId === link.id ? <Loader2 className="size-3.5 animate-spin text-muted-foreground" /> : <Trash2 className="size-3.5 text-destructive" />}
             </button>
           </TooltipTrigger>
           <TooltipContent side="top">Delete link</TooltipContent>

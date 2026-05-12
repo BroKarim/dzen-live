@@ -137,7 +137,7 @@ export function AnalyticsTab({ profileId, links }: AnalyticsTabProps) {
   if (!stats || isLoadingStats) {
     return (
       <div className="flex items-center justify-center h-64">
-        <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+        <RefreshCw className="size-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -248,7 +248,7 @@ export function AnalyticsTab({ profileId, links }: AnalyticsTabProps) {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoadingStats || isRefreshing} className="w-full sm:w-auto text-xs sm:text-sm">
-                <RefreshCw className={`h-4 w-4 ${isLoadingStats || isRefreshing ? "animate-spin" : ""}`} />
+                <RefreshCw className={`size-4 ${isLoadingStats || isRefreshing ? "animate-spin" : ""}`} />
                 <span className="hidden sm:inline">Refresh</span>
                 <span className="sm:hidden">Refresh</span>
               </Button>
@@ -336,7 +336,7 @@ export function AnalyticsTab({ profileId, links }: AnalyticsTabProps) {
                 ) : (
                   <Empty className="py-8">
                     <EmptyIcon>
-                      <Globe className="h-8 w-8 opacity-20" />
+                      <Globe className="size-8 opacity-20" />
                     </EmptyIcon>
                     <EmptyTitle className="text-sm">No data yet</EmptyTitle>
                   </Empty>

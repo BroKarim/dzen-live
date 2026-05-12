@@ -39,13 +39,13 @@ export function SocialMediaEditor({ profile, onUpdate }: SocialMediaEditorProps)
   };
 
   const handleOpenEdit = (social: any) => {
-    setFormState({
-      ...formState,
+    setFormState(prev => ({
+      ...prev,
       editingId: social.id,
       selectedPlatform: social.platform,
       url: social.url,
       isOpen: true,
-    });
+    }));
   };
 
   const handleSave = () => {
@@ -87,7 +87,7 @@ export function SocialMediaEditor({ profile, onUpdate }: SocialMediaEditorProps)
         <div className="flex justify-end">
           <DialogTrigger asChild>
             <Button2 variant="blue" className="w-1/3 border-dashed rounded-md border text-xs">
-              <Plus className="h-4 w-4" /> Add Social Media
+              <Plus className="size-4" /> Add Social Media
             </Button2>
           </DialogTrigger>
         </div>
@@ -116,7 +116,7 @@ export function SocialMediaEditor({ profile, onUpdate }: SocialMediaEditorProps)
                           onClick={() => setFormState((prev) => ({ ...prev, selectedPlatform: platform.id }))}
                           className={`flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all hover:border-primary/50 ${isSelected ? "border-primary bg-primary/10 text-primary" : "border-muted bg-card"}`}
                         >
-                          <Icon className={`h-5 w-5 shrink-0 ${isSelected ? "text-primary" : ""}`} />
+                          <Icon className={`size-5 shrink-0 ${isSelected ? "text-primary" : ""}`} />
                           <span className="text-sm font-medium truncate">{platform.label}</span>
                         </button>
                       );
@@ -152,8 +152,8 @@ export function SocialMediaEditor({ profile, onUpdate }: SocialMediaEditorProps)
           return (
             <div key={social.id} className="flex items-center justify-between group rounded-xl border bg-card p-3 transition-all hover:border-primary/50">
               <button type="button" className="flex flex-1 items-center gap-3 cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-lg text-left" onClick={() => handleOpenEdit(social)}>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                  <Icon className="h-5 w-5" />
+                <div className="flex size-10 items-center justify-center rounded-lg bg-muted">
+                  <Icon className="size-5" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold capitalize">{platform?.label || social.platform}</p>
@@ -162,10 +162,10 @@ export function SocialMediaEditor({ profile, onUpdate }: SocialMediaEditorProps)
               </button>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <Button size="icon" variant="ghost" onClick={() => handleOpenEdit(social)}>
-                  <Edit2 className="h-4 w-4" />
+                  <Edit2 className="size-4" />
                 </Button>
                 <Button size="icon" variant="ghost" className="text-destructive" onClick={() => removeSocial(social.id)}>
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="size-4" />
                 </Button>
               </div>
             </div>

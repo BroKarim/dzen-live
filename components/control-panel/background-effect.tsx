@@ -54,7 +54,7 @@ export default function BackgroundEffects({ profile, onUpdate }: BackgroundEffec
     <Popover>
       <PopoverTrigger asChild>
         <Button2 variant="blue" className="flex-1 rounded-full">
-          <Settings2 className="h-4 w-4 mr-2" />
+          <Settings2 className="size-4 mr-2" />
           Effects
         </Button2>
       </PopoverTrigger>
@@ -65,8 +65,8 @@ export default function BackgroundEffects({ profile, onUpdate }: BackgroundEffec
               <h4 className="font-medium text-sm leading-none">Background Effects</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">Adjust visual effects for your background</p>
             </div>
-            <Button2 variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={handleReset} title="Reset to defaults">
-              <RotateCcw className="h-4 w-4" />
+            <Button2 variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-foreground" onClick={handleReset} title="Reset to defaults">
+              <RotateCcw className="size-4" />
             </Button2>
           </div>
 
@@ -79,7 +79,7 @@ export default function BackgroundEffects({ profile, onUpdate }: BackgroundEffec
                 <div key={item.id} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm font-medium">
-                      <Icon className="h-4 w-4 text-muted-foreground" />
+                      <Icon className="size-4 text-muted-foreground" />
                       <Label className="text-xs">{item.label}</Label>
                     </div>
                     <span className="text-xs font-mono text-muted-foreground">

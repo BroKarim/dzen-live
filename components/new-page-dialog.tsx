@@ -10,7 +10,7 @@ import { Loader2, ArrowRight, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { setupUsername, checkUsernameAvailability } from "@/server/user/settings/actions";
 
 export function NewPageDialog() {
-  const router = useRouter();
+  const { push } = useRouter();
   const [step, setStep] = useState<"welcome" | "handle">("welcome");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,7 +31,7 @@ export function NewPageDialog() {
 
       const result = await setupUsername(username);
       if (result.success) {
-        router.push(`/editor/${result.username}`);
+        push(`/editor/${result.username}`);
       }
     } catch (err) {
       setError("Something went wrong. Please try again.");
@@ -56,7 +56,7 @@ export function NewPageDialog() {
 function WelcomeScreen({ onNext }: { onNext: () => void }) {
   return (
     <div className="flex flex-col items-center text-center p-10 space-y-6 bg-gradient-to-b from-primary/5 to-background">
-      <div className="h-20 w-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg rotate-3">
+      <div className="size-20 rounded-2xl bg-primary flex items-center justify-center shadow-lg rotate-3">
         <span className="text-4xl font-bold text-white">O</span>
       </div>
       <div className="space-y-2">
@@ -64,7 +64,7 @@ function WelcomeScreen({ onNext }: { onNext: () => void }) {
         <p className="text-muted-foreground max-w-[300px] mx-auto">Let's get started with building your first page. We'll guide you step by step.</p>
       </div>
       <Button onClick={onNext} size="lg" className="w-full gap-2 group">
-        Get Started <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+        Get Started <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
       </Button>
       <p className="text-xs text-slate-400">Trusted by creators worldwide</p>
     </div>
@@ -78,7 +78,7 @@ function HandleScreen({ username, setUsername, error, loading, onConfirm, onBack
       <div className="w-full md:w-1/2 p-8 flex flex-col justify-between border-r border-slate-100 dark:border-slate-800">
         <div className="space-y-6">
           <Button variant="ghost" size="sm" onClick={onBack} className="w-fit -ml-2 text-muted-foreground hover:text-foreground gap-1">
-            <ArrowLeft className="h-4 w-4" /> Back
+            <ArrowLeft className="size-4" /> Back
           </Button>
           <div className="space-y-1">
             <h2 className="text-2xl font-bold tracking-tight">Choose your handle</h2>
@@ -90,7 +90,7 @@ function HandleScreen({ username, setUsername, error, loading, onConfirm, onBack
 
         <div className="pt-8 space-y-3">
           <Button onClick={onConfirm} className="w-full h-12 text-base font-bold" disabled={loading || !username}>
-            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Create My Page"}
+            {loading ? <Loader2 className="size-5 animate-spin" /> : "Create My Page"}
           </Button>
           <p className="text-[10px] text-center text-muted-foreground">By continuing, you agree to our Terms of Service.</p>
         </div>
@@ -126,7 +126,7 @@ function HandleStep({ username, setUsername, error }: { username: string; setUse
 
       <div className="grid grid-cols-1 gap-2">
         <div className="flex items-center gap-2 text-xs text-muted-foreground bg-slate-50 dark:bg-slate-800/50 p-2 rounded-md">
-          <CheckCircle2 className="h-3 w-3 text-green-500" />
+          <CheckCircle2 className="size-3 text-green-500" />
           Claim your unique identity
         </div>
       </div>
@@ -140,7 +140,7 @@ function PagePreview({ username }: { username: string }) {
       <div className="w-[200px] aspect-[9/18] bg-white dark:bg-black rounded-[2.5rem] border-[6px] border-slate-950 shadow-2xl overflow-hidden relative">
         {/* Mock Content */}
         <div className="flex flex-col items-center p-4 pt-10 space-y-3">
-          <div className="w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse" />
+          <div className="size-12 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse" />
           <div className="w-20 h-3 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse" />
           <div className="w-16 h-2 bg-slate-100 dark:bg-slate-900 rounded-full animate-pulse" />
 

@@ -143,7 +143,7 @@ export function VisitorLocations({ data }: VisitorLocationsProps) {
     return total > 0 ? ((value / total) * 100).toFixed(0) : "0";
   };
 
-  const sortedData = [...data].sort((a, b) => b.value - a.value).slice(0, 10);
+  const sortedData = data.toSorted((a, b) => b.value - a.value).slice(0, 10);
 
   return (
     <Card className="rounded-xl border-white/5 bg-white/5 shadow-none overflow-hidden">
@@ -152,7 +152,7 @@ export function VisitorLocations({ data }: VisitorLocationsProps) {
       </CardHeader>
       <CardContent className="p-3 pt-0">
         <div className="space-y-1">
-          <div className="grid grid-cols-[30px_1fr_50px_60px] gap-2 px-2 py-2 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider border-b border-white/5 mb-1">
+          <div className="grid grid-cols-[30px_1fr_50px_60px] gap-2 p-2 text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider border-b border-white/5 mb-1">
             <div className="text-center">#</div>
             <div>Country</div>
             <div className="text-right">Clicks</div>
@@ -165,7 +165,7 @@ export function VisitorLocations({ data }: VisitorLocationsProps) {
             const share = getShare(item.value, total);
 
             return (
-              <div key={item.name} className="grid grid-cols-[30px_1fr_50px_60px] gap-2 items-center px-2 py-2 rounded-lg hover:bg-white/5 transition-colors">
+              <div key={item.name} className="grid grid-cols-[30px_1fr_50px_60px] gap-2 items-center p-2 rounded-lg hover:bg-white/5 transition-colors">
                 <div className="text-lg text-center shrink-0 opacity-80">{flag}</div>
                 <div className="min-w-0">
                   <div className="text-xs font-medium truncate">{countryName}</div>

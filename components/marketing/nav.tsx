@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
@@ -20,9 +21,9 @@ export function MarketingNav() {
 
       {/* Center logo */}
       <div className="absolute left-1/2 -translate-x-1/2">
-        <div className="w-8 h-8 flex items-center justify-center">
+        <div className="size-8 flex items-center justify-center">
           <Link href="/">
-            <img src="/images/logo.png" alt="Logo" className="w-full object-contain" />
+            <Image src="/images/logo.png" alt="Logo" width={32} height={32} className="w-full object-contain" />
           </Link>
         </div>
       </div>

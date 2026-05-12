@@ -44,7 +44,7 @@ export function PreviewLinks({ profile, renderLink }: PreviewLinksProps) {
   const { links, cardTexture } = profile;
 
   // Sort links by position for correct display order
-  const sortedLinks = links ? [...links].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)) : [];
+  const sortedLinks = links ? links.toSorted((a, b) => (a.position ?? 0) - (b.position ?? 0)) : [];
 
   return (
     <div className="w-full space-y-4">

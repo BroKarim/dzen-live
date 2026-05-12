@@ -38,7 +38,7 @@ export function TexturedCard({ title, description, url, icon, imageUrl, videoUrl
           <div className="flex flex-1 items-center justify-end px-6 py-4 z-10">
             <div className="flex items-center gap-3">
               {icon && (
-                <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border border-white/10">
+                <div className="relative size-8 shrink-0 overflow-hidden rounded-full border border-white/10">
                   <Image src={icon} fill className="object-cover" alt="" sizes="32px" />
                 </div>
               )}
@@ -54,7 +54,7 @@ export function TexturedCard({ title, description, url, icon, imageUrl, videoUrl
         <div className="flex w-full items-center justify-center px-6 py-4 z-10">
           <div className="flex items-center gap-3">
             {icon && (
-              <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full border border-white/10">
+              <div className="relative size-8 shrink-0 overflow-hidden rounded-full border border-white/10">
                 <Image src={icon} fill className="object-cover" alt="" sizes="32px" />
               </div>
             )}
@@ -94,17 +94,17 @@ export function TexturedCard({ title, description, url, icon, imageUrl, videoUrl
           )}
           {imageUrl && !videoUrl && (
             <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="aspect-video w-full overflow-hidden rounded-xl bg-black/20 relative">
-              <Image src={imageUrl} fill className="object-cover" alt={title || ""} />
+              <Image src={imageUrl} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" alt={title || ""} />
             </m.div>
           )}
           {videoUrl && (
             <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="aspect-video w-full overflow-hidden rounded-xl bg-black/20 flex items-center justify-center  ">
-              <PlayCircle className="h-10 w-10 text-white/50" />
+              <PlayCircle className="size-10 text-white/50" />
             </m.div>
           )}
           {isStripeEnabled && (
             <m.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }} className="flex items-center gap-3 rounded-xl bg-white/10 p-3">
-              <CreditCard className="h-5 w-5 text-white" />
+              <CreditCard className="size-5 text-white" />
               <span className="text-xs font-bold text-white">Support via Stripe</span>
             </m.div>
           )}
@@ -117,7 +117,7 @@ export function TexturedCard({ title, description, url, icon, imageUrl, videoUrl
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-white py-2 text-sm font-bold text-black transition-transform hover:scale-[1.02]"
             onClick={(e) => e.stopPropagation()}
           >
-            Visit Link <ExternalLink className="h-3 w-3" />
+            Visit Link <ExternalLink className="size-3" />
           </m.a>
         </div>
       </m.div>

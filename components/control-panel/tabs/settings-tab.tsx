@@ -18,7 +18,7 @@ interface SettingsTabProps {
 }
 
 export function SettingsTab({ profile }: SettingsTabProps) {
-  const router = useRouter();
+  const { push, refresh } = useRouter();
   const [username, setUsername] = useState(profile.username);
   const [isPublished, setIsPublished] = useState(profile.isPublished);
   const [isPending, startTransition] = useTransition();
@@ -85,9 +85,9 @@ export function SettingsTab({ profile }: SettingsTabProps) {
         if (typeof window !== "undefined") {
           localStorage.removeItem("dzenn-editor-draft");
         }
-        router.push(`/editor/${username}`);
+        push(`/editor/${username}`);
       } else {
-        router.refresh();
+        refresh();
       }
     });
   };
@@ -114,7 +114,7 @@ export function SettingsTab({ profile }: SettingsTabProps) {
 
       // Redirect based on result
       if (result.redirect) {
-        router.push(result.redirect);
+        push(result.redirect);
       }
     } catch (error) {
       toast.error("Failed to delete profile", { id: toastId });
@@ -133,7 +133,7 @@ export function SettingsTab({ profile }: SettingsTabProps) {
               localStorage.removeItem("dzenn-editor-draft");
             }
             toast.success("Logged out successfully", { id: toastId });
-            router.push("/");
+            push("/");
           },
           onError: () => {
             toast.error("Failed to logout", { id: toastId });
@@ -152,7 +152,7 @@ export function SettingsTab({ profile }: SettingsTabProps) {
         {/* Username Section */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-muted-foreground" />
+            <User className="size-4 text-muted-foreground" />
             <Label htmlFor="username" className="text-sm font-medium">
               Username
             </Label>
@@ -179,7 +179,7 @@ export function SettingsTab({ profile }: SettingsTabProps) {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <Globe className="h-4 w-4 text-muted-foreground" />
+                <Globe className="size-4 text-muted-foreground" />
                 <Label htmlFor="publish-status" className="text-sm font-medium">
                   Publish Profile
                 </Label>
@@ -196,7 +196,7 @@ export function SettingsTab({ profile }: SettingsTabProps) {
         <Button onClick={handleSaveSettings} disabled={!hasChanges || isPending} className="w-full">
           {isPending ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 size-4 animate-spin" />
               Saving...
             </>
           ) : (
@@ -214,7 +214,7 @@ export function SettingsTab({ profile }: SettingsTabProps) {
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="w-full text-destructive border-white/5 bg-white/5 hover:bg-destructive/10 hover:border-destructive/50 transition-colors">
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="mr-2 size-4" />
                 Delete Profile
               </Button>
             </AlertDialogTrigger>
@@ -232,7 +232,7 @@ export function SettingsTab({ profile }: SettingsTabProps) {
                 <AlertDialogAction onClick={handleDeleteProfile} disabled={isDeleting} className="bg-destructive text-white hover:bg-destructive/90 border-none px-6">
                   {isDeleting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-2 size-4 animate-spin" />
                       Deleting...
                     </>
                   ) : (
@@ -247,7 +247,7 @@ export function SettingsTab({ profile }: SettingsTabProps) {
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="outline" className="w-full border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
-                <LogOut className="mr-2 h-4 w-4" />
+                <LogOut className="mr-2 size-4" />
                 Logout
               </Button>
             </AlertDialogTrigger>

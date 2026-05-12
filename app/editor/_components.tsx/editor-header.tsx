@@ -89,6 +89,7 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
         }
 
         // Updates, then Creations (capture real IDs for temp links)
+        const originalLinksMap = new Map(originalLinks.map((l) => [l.id, l]));
         for (let i = 0; i < resolvedLinks.length; i++) {
           const draftLink = resolvedLinks[i];
 
@@ -102,7 +103,7 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
             // Replace temp entry with real server data so the store stays consistent
             resolvedLinks[i] = res.data;
           } else {
-            const originalLink = originalLinks.find((l) => l.id === draftLink.id);
+            const originalLink = originalLinksMap.get(draftLink.id);
             if (originalLink && JSON.stringify(draftLink) !== JSON.stringify(originalLink)) {
               const { id, ...linkData } = draftLink;
               const res = await updateLink(id, linkData as any);
@@ -138,6 +139,7 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
           }
         }
 
+        const originalSocialsMap = new Map(originalSocials.map((s) => [s.id, s]));
         for (let i = 0; i < resolvedSocials.length; i++) {
           const draftSocial = resolvedSocials[i];
 
@@ -151,7 +153,7 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
             // Replace with real server data
             resolvedSocials[i] = res.data;
           } else {
-            const originalSocial = originalSocials.find((s) => s.id === draftSocial.id);
+            const originalSocial = originalSocialsMap.get(draftSocial.id);
             if (originalSocial && JSON.stringify(draftSocial) !== JSON.stringify(originalSocial)) {
               const { id, ...socialData } = draftSocial;
               const res = await updateSocialLink(id, socialData as any);
@@ -182,7 +184,7 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
       <div className="flex items-center justify-between gap-2">
         {/* Left: Logo + DomainView */}
         <div className="flex items-center gap-3 min-w-0">
-          <Link href="/" className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-[#222] border-none text-white font-bold text-sm transition-all hover:scale-105 active:scale-95 shrink-0 shadow-dzenn">
+          <Link href="/" className="size-9 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-[#222] border-none text-white font-bold text-sm transition-all hover:scale-105 active:scale-95 shrink-0 shadow-dzenn">
             Dz
           </Link>
           {/* DomainView hidden on mobile */}
@@ -206,20 +208,20 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
               <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Unsaved</span>
               {/* Discard: icon-only on mobile, with text on sm+ */}
               <Button onClick={handleDiscard} disabled={isPending} size="sm" variant="ghost" className="h-8 gap-1.5 text-xs hover:bg-destructive/10 hover:text-destructive transition-colors px-2">
-                <RotateCcw className="h-3.5 w-3.5" />
+                <RotateCcw className="size-3.5" />
                 <span className="hidden sm:inline">Discard</span>
               </Button>
             </div>
           )}
 
           <Button onClick={handleSave} disabled={!isDirty || isPending} size="sm" variant={isDirty ? "default" : "outline"} className="h-9 gap-2 shadow-sm relative overflow-hidden px-3">
-            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
             {/* "Save Changes" text hidden on very small screens */}
             <span className="hidden xs:inline font-semibold text-xs lowercase">{isPending ? "Saving..." : "Save Changes"}</span>
             {isDirty && !isPending && (
-              <span className="absolute right-0 top-0 flex h-2 w-2">
+              <span className="absolute right-0 top-0 flex size-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-foreground opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-foreground"></span>
+                <span className="relative inline-flex rounded-full size-2 bg-primary-foreground"></span>
               </span>
             )}
           </Button>

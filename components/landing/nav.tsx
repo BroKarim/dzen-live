@@ -21,7 +21,7 @@ export function LandingNav() {
   return (
     <nav className="fixed top-4 left-4 md:left-16 z-50 flex items-center gap-3">
       {/* logo */}
-      <Link href="/" className={cn("w-10 h-10 flex items-center justify-center rounded-full bg-[#222] border-none text-white font-bold text-sm transition-all hover:scale-105 active:scale-95 shrink-0", shadowClass)}>
+      <Link href="/" className={cn("size-10 flex items-center justify-center rounded-full bg-[#222] border-none text-white font-bold text-sm transition-all hover:scale-105 active:scale-95 shrink-0", shadowClass)}>
         Dz
       </Link>
 
@@ -40,7 +40,7 @@ export function LandingNav() {
         ) : session ? (
           <Link href="/editor" className="group px-4 py-1.5 rounded-full text-[13px] font-medium text-white bg-zinc-800 hover:bg-zinc-700 transition-all duration-200 flex items-center gap-1.5">
             Editor
-            <ArrowRightIcon className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+            <ArrowRightIcon className="size-3.5 transition-transform group-hover:translate-x-0.5" />
           </Link>
         ) : (
           <Link href="/login" className="px-4 py-1.5 rounded-full text-[13px] font-medium text-zinc-400 hover:text-white transition-colors duration-200">

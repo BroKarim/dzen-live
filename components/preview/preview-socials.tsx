@@ -33,7 +33,7 @@ export function PreviewSocials({ profile }: PreviewSocialsProps) {
 
           return (
             <DockIcon key={social.id} href={social.url} label={platform?.label || "Link"}>
-              <Icon className="h-5 w-5" />
+              <Icon className="size-5" />
             </DockIcon>
           );
         })}

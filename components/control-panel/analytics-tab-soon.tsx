@@ -6,8 +6,8 @@ export function AnalyticsTabSoon() {
   return (
     <div className="relative min-h-[400px] w-full flex flex-col items-center justify-center p-6 text-center">
       <div className="relative z-10 flex flex-col items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
-          <BarChart3 className="h-8 w-8 text-primary" />
+        <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20">
+          <BarChart3 className="size-8 text-primary" />
         </div>
 
         <div className="space-y-2">

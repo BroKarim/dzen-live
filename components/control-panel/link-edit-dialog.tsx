@@ -195,11 +195,11 @@ export function LinkEditDialog({ link, open, onOpenChange, onSave }: LinkEditDia
   };
 
   const handlePaymentSelect = (provider: "stripe" | "lemonsqueezy") => {
-    setEditData({
-      ...editData,
+    setEditData(prev => ({
+      ...prev,
       paymentProvider: provider,
       paymentAccountId: "dummy-account-id",
-    });
+    }));
   };
 
   const handleSave = async () => {
@@ -247,22 +247,22 @@ export function LinkEditDialog({ link, open, onOpenChange, onSave }: LinkEditDia
           {/* Icon Upload */}
           <div className="flex gap-3">
             <div className="relative shrink-0">
-              <input id="edit-icon-upload" type="file" accept="image/*" onChange={handleIconUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
+              <input id="edit-icon-upload" type="file" accept="image/*" onChange={handleIconUpload} className="absolute inset-0 size-full opacity-0 cursor-pointer z-20" />
               <label
                 htmlFor="edit-icon-upload"
-                className="h-12 w-12 rounded-lg border border-dashed border-border bg-muted/50 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden relative"
+                className="size-12 rounded-lg border border-dashed border-border bg-muted/50 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden relative"
               >
-                {uiState.iconPreview ? <Image src={uiState.iconPreview} alt="Icon" fill className="object-cover" unoptimized /> : <Plus className="h-4 w-4 text-muted-foreground" />}
+                {uiState.iconPreview ? <Image src={uiState.iconPreview} alt="Icon" fill sizes="40px" className="object-cover" unoptimized /> : <Plus className="size-4 text-muted-foreground" />}
               </label>
             </div>
 
             <div className="flex-1 space-y-2">
-              <Input value={editData.title} onChange={(e) => setEditData({ ...editData, title: e.target.value })} placeholder="Link title" className="h-10 text-sm" />
+              <Input value={editData.title} onChange={(e) => setEditData(prev => ({ ...prev, title: e.target.value }))} placeholder="Link title" className="h-10 text-sm" />
             </div>
           </div>
 
           {/* Description */}
-          <Input value={editData.description} onChange={(e) => setEditData({ ...editData, description: e.target.value })} placeholder="Description (optional)" className="h-10 text-sm" />
+          <Input value={editData.description} onChange={(e) => setEditData(prev => ({ ...prev, description: e.target.value }))} placeholder="Description (optional)" className="h-10 text-sm" />
 
           {/* Type Selector */}
           <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
@@ -279,7 +279,7 @@ export function LinkEditDialog({ link, open, onOpenChange, onSave }: LinkEditDia
                     ${isActive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}
                   `}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="size-3.5" />
                   <span>{type.label}</span>
                 </button>
               );
@@ -287,20 +287,20 @@ export function LinkEditDialog({ link, open, onOpenChange, onSave }: LinkEditDia
           </div>
 
           {/* Dynamic Content */}
-          {uiState.selectedType === "url" && <Input value={editData.url} onChange={(e) => setEditData({ ...editData, url: e.target.value })} placeholder="https://example.com" className="h-10 text-sm" />}
+          {uiState.selectedType === "url" && <Input value={editData.url} onChange={(e) => setEditData(prev => ({ ...prev, url: e.target.value }))} placeholder="https://example.com" className="h-10 text-sm" />}
 
           {uiState.selectedType === "media" && (
             <div className="relative">
-              <input id="edit-media-upload" type="file" accept="image/*" onChange={handleMediaUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" />
+              <input id="edit-media-upload" type="file" accept="image/*" onChange={handleMediaUpload} className="absolute inset-0 size-full opacity-0 cursor-pointer z-20" />
               <label
                 htmlFor="edit-media-upload"
                 className="h-20 rounded-lg border border-dashed border-border bg-muted/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden relative"
               >
                 {uiState.mediaPreview ? (
-                  <Image src={uiState.mediaPreview} alt="Media" fill className="object-cover" unoptimized />
+                  <Image src={uiState.mediaPreview} alt="Media" fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover" unoptimized />
                 ) : (
                   <>
-                    <ImageIcon className="h-5 w-5 text-muted-foreground mb-1" />
+                    <ImageIcon className="size-5 text-muted-foreground mb-1" />
                     <span className="text-[10px] text-muted-foreground">Click to upload</span>
                   </>
                 )}
@@ -311,7 +311,7 @@ export function LinkEditDialog({ link, open, onOpenChange, onSave }: LinkEditDia
           {/* Actions */}
           <div className="flex gap-2 pt-2">
             <Button onClick={handleSave} disabled={uiState.isSaving || !editData.title} size="sm" className="flex-1 h-9 text-sm">
-              {uiState.isSaving && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
+              {uiState.isSaving && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
               Save Changes
             </Button>
             <Button onClick={() => onOpenChange(false)} variant="ghost" size="sm" className="h-9 text-sm" disabled={uiState.isSaving}>

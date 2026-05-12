@@ -1,6 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import type { BackgroundPreset } from "./schema";
 
 /**
@@ -8,6 +10,8 @@ import type { BackgroundPreset } from "./schema";
  * Returns empty array if no presets found
  */
 export async function getBackgroundPresets(): Promise<BackgroundPreset[]> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) return [];
   try {
     const presets = await db.backgroundPreset.findMany({
       orderBy: {
@@ -30,6 +34,8 @@ export async function getBackgroundPresets(): Promise<BackgroundPreset[]> {
  * Get background presets by category
  */
 export async function getBackgroundPresetsByCategory(category: string): Promise<BackgroundPreset[]> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) return [];
   try {
     const presets = await db.backgroundPreset.findMany({
       where: {

@@ -63,7 +63,7 @@ function TrafficSourceList({ data, getLabel, getIcon }: TrafficSourceListProps) 
         return (
           <div key={label} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors">
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              {IconComponent || (ReferrerIcon && <ReferrerIcon className="h-3.5 w-3.5 opacity-70" />)}
+              {IconComponent || (ReferrerIcon && <ReferrerIcon className="size-3.5 opacity-70" />)}
               <span className="text-xs font-medium truncate">{label}</span>
             </div>
             <div className="flex items-center gap-3">
@@ -88,16 +88,16 @@ export function TrafficSourcesSection({ referrers = EMPTY_SOURCES, utmSources = 
       <CardContent className="p-4 pt-2">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-white/5 gap-0.5">
-            <TabsTrigger value="referrers" className="py-1 px-1 h-7 text-[9px] leading-tight">
+            <TabsTrigger value="referrers" className="p-1 h-7 text-[9px] leading-tight">
               Referrers
             </TabsTrigger>
-            <TabsTrigger value="utm-sources" className="py-1 px-1 h-7 text-[9px] leading-tight">
+            <TabsTrigger value="utm-sources" className="p-1 h-7 text-[9px] leading-tight">
               UTM Source
             </TabsTrigger>
-            <TabsTrigger value="utm-mediums" className="py-1 px-1 h-7 text-[9px] leading-tight">
+            <TabsTrigger value="utm-mediums" className="p-1 h-7 text-[9px] leading-tight">
               UTM Medium
             </TabsTrigger>
-            <TabsTrigger value="utm-campaigns" className="py-1 px-1 h-7 text-[9px] leading-tight">
+            <TabsTrigger value="utm-campaigns" className="p-1 h-7 text-[9px] leading-tight">
               Campaign
             </TabsTrigger>
           </TabsList>

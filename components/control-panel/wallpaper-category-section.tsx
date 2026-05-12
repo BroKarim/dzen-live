@@ -52,7 +52,7 @@ export default function WallpaperCategorySection({ category, wallpapers, selecte
             onClick={handleExpand}
             className="relative h-20 overflow-hidden rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 hover:bg-muted/40 hover:border-primary/50 transition-colors hover:scale-105 flex flex-col items-center justify-center gap-1"
           >
-            <ChevronDown className="h-6 w-6 text-muted-foreground" />
+            <ChevronDown className="size-6 text-muted-foreground" />
             <span className="text-[10px] font-medium text-muted-foreground">+{wallpapers.length - initialDisplayCount} more</span>
           </button>
         )}
@@ -61,7 +61,7 @@ export default function WallpaperCategorySection({ category, wallpapers, selecte
       {/* Collapse Button - Shown when expanded */}
       {isExpanded && hasMore && (
         <button onClick={handleCollapse} className="w-full py-2 rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 hover:bg-muted/40 hover:border-primary/50 transition-colors flex items-center justify-center gap-2">
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          <ChevronUp className="size-4 text-muted-foreground" />
           <span className="text-xs font-medium text-muted-foreground">Show Less</span>
         </button>
       )}

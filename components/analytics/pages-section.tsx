@@ -80,7 +80,7 @@ export function PagesSection({ link, timeAnalysis = EMPTY_TIME_ANALYSIS }: Pages
             ) : (
               <Empty className="py-8">
                 <EmptyIcon>
-                  <Clock className="h-8 w-8 opacity-20" />
+                  <Clock className="size-8 opacity-20" />
                 </EmptyIcon>
                 <EmptyTitle className="text-sm">No analysis data</EmptyTitle>
               </Empty>

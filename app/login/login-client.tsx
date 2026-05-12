@@ -21,7 +21,7 @@ export function LoginClient() {
         <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
           <Link href="/">
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="size-4" />
               <span className="hidden sm:inline font-medium">Back</span>
             </Button>
           </Link>

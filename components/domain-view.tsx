@@ -49,12 +49,12 @@ export function DomainView({ value, placeholder, buttonCopy, className }: Domain
         >
           {isCopied ? (
             <>
-              <Check className="h-3 w-3" />
+              <Check className="size-3" />
               {buttonCopy.success}
             </>
           ) : (
             <>
-              <Copy className="h-3 w-3" />
+              <Copy className="size-3" />
               {buttonCopy.idle}
             </>
           )}

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { MarketingNav } from "@/components/marketing/nav";
 
 const BACKGROUND_STYLE = {
@@ -23,7 +24,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             {/* Minimal Footer */}
           </div>
           <footer className="mt-auto w-full py-8  flex items-center justify-center gap-2 text-xs text-gray-600">
-            <img src="/images/logo.png" alt="dzenn logo" className="w-4 h-4 opacity-60 grayscale" />
+            <Image src="/images/logo.png" alt="dzenn logo" width={16} height={16} className="opacity-60 grayscale" />
             <span>
               <span className="font-bold">dzenn.live</span> &copy; 2026 dzenn
             </span>

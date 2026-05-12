@@ -20,7 +20,7 @@ export function MetricCard({ title, value, change, icon: Icon, iconColor, isPosi
     <Card className="rounded-xl border-white/5 bg-white/5 shadow-none">
       <CardHeader className="p-3 pb-1">
         <CardTitle className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
-          <Icon className={`h-3 w-3 ${iconColor}`} />
+          <Icon className={`size-3 ${iconColor}`} />
           {title}
         </CardTitle>
       </CardHeader>
@@ -28,7 +28,7 @@ export function MetricCard({ title, value, change, icon: Icon, iconColor, isPosi
         <p className="text-xl font-bold">{value}</p>
         {showChange && (
           <div className="flex items-center gap-1 mt-0.5">
-            {positive ? <ArrowUp className="h-3 w-3 text-emerald-500" /> : <ArrowDown className="h-3 w-3 text-red-500" />}
+            {positive ? <ArrowUp className="size-3 text-emerald-500" /> : <ArrowDown className="size-3 text-red-500" />}
             <span className={`text-[10px] font-medium ${positive ? "text-emerald-500" : "text-red-500"}`}>{changeValue.toFixed(0)}%</span>
           </div>
         )}

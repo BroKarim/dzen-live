@@ -21,16 +21,16 @@ export default async function LoginPage() {
     let onboardingInfo;
     try {
       onboardingInfo = await getOnboardingStatus();
-      const { isOnboarded, username } = onboardingInfo;
-
-      if (!isOnboarded || !username) {
-        redirect("/new");
-      } else {
-        redirect(`/editor/${username}`);
-      }
     } catch (error) {
       console.error("Auth navigation error:", error);
-      redirect("/new"); // Fallback to onboarding
+      redirect("/new");
+    }
+
+    const { isOnboarded, username } = onboardingInfo!;
+    if (!isOnboarded || !username) {
+      redirect("/new");
+    } else {
+      redirect(`/editor/${username}`);
     }
   }
 

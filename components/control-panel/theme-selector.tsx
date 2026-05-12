@@ -25,9 +25,9 @@ interface ThemeIconProps {
 function ThemeIcon({ theme, className }: ThemeIconProps) {
   if (theme.icon && Icons[theme.icon as keyof typeof Icons]) {
     const Icon = Icons[theme.icon as keyof typeof Icons];
-    return <Icon className={cn("h-4 w-4 shrink-0", className)} />;
+    return <Icon className={cn("size-4 shrink-0", className)} />;
   }
-  return <div className={cn("h-4 w-4 shrink-0 rounded-full border border-black/5 dark:border-white/10 shadow-sm", className)} style={{ background: theme.variables["--primary"] || theme.variables["--foreground"] }} />;
+  return <div className={cn("size-4 shrink-0 rounded-full border border-black/5 dark:border-white/10 shadow-sm", className)} style={{ background: theme.variables["--primary"] || theme.variables["--foreground"] }} />;
 }
 
 // Extract theme item to separate component for better performance
@@ -41,14 +41,14 @@ function ThemeItem({ theme, isActive, onSelect }: { theme: ProfileTheme & { font
     >
       <div className="flex items-center gap-3">
         <div className={cn("p-2 rounded-lg transition-colors", isActive ? "bg-white dark:bg-zinc-950 shadow-sm border border-zinc-200 dark:border-zinc-700" : "bg-zinc-100 dark:bg-zinc-900")}>
-          <ThemeIcon theme={theme} className="h-4 w-4" />
+          <ThemeIcon theme={theme} className="size-4" />
         </div>
         <div className="flex flex-col">
           <span className={cn("text-sm font-medium", isActive ? "text-foreground" : "text-muted-foreground")}>{theme.name}</span>
           <span className="text-[10px] text-muted-foreground/60 capitalize leading-none pt-0.5">{theme.fontName}</span>
         </div>
       </div>
-      {isActive && <Check className="h-4 w-4 text-primary" />}
+      {isActive && <Check className="size-4 text-primary" />}
     </button>
   );
 }
@@ -107,20 +107,20 @@ export function ThemeSelector({ profile, onUpdate }: ThemeSelectorProps) {
           >
             <div className="flex items-center gap-3">
               <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                <ThemeIcon theme={currentTheme} className="h-4 w-4" />
+                <ThemeIcon theme={currentTheme} className="size-4" />
               </div>
               <div className="flex flex-col items-start leading-tight">
                 <span className="text-sm font-semibold">{currentTheme.name}</span>
                 <span className="text-[10px] text-muted-foreground opacity-70 uppercase tracking-tighter transition-all">Typography Preset</span>
               </div>
             </div>
-            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+            <ChevronDown className="ml-2 size-4 shrink-0 opacity-50 transition-transform duration-200 group-data-[state=open]:rotate-180" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[310px] p-0 overflow-hidden border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-2xl" align="center" sideOffset={8}>
           <div className="p-2 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/30 flex items-center gap-2">
             <div className="p-1 rounded bg-zinc-200 dark:bg-zinc-800">
-              <Palette className="h-3 w-3 text-zinc-500" />
+              <Palette className="size-3 text-zinc-500" />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Select Typography</span>
           </div>

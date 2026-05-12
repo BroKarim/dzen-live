@@ -29,6 +29,8 @@ export async function getOnboardingStatus() {
 }
 
 export async function checkUsernameAvailability(username: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session?.user) throw new Error("Unauthorized");
   const existing = await db.profile.findUnique({
     where: { username: username.toLowerCase() },
   });

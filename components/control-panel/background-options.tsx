@@ -70,26 +70,26 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
     <Tabs value={profile.bgType} defaultValue="wallpaper" onValueChange={(v) => handleBackgroundChange({ bgType: v as any })}>
       <TabsList className="grid w-full grid-cols-4 h-auto bg-transparent  p-1 gap-1">
         <TabsTrigger value="color" className="p-0 h-full w-full">
-          <div className="w-full h-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
-            <Palette className="h-6 w-6 text-muted-foreground" />
+          <div className="size-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
+            <Palette className="size-6 text-muted-foreground" />
             <span className="text-[10px] font-medium text-muted-foreground">Color</span>
           </div>
         </TabsTrigger>
         <TabsTrigger value="gradient" className="p-0 h-full w-full">
-          <div className="w-full h-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
-            <Rainbow className="h-6 w-6 text-muted-foreground" />
+          <div className="size-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
+            <Rainbow className="size-6 text-muted-foreground" />
             <span className="text-[10px] font-medium text-muted-foreground">Gradient</span>
           </div>
         </TabsTrigger>
         <TabsTrigger value="wallpaper" className="p-0 h-full w-full">
-          <div className="w-full h-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
-            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+          <div className="size-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
+            <ImageIcon className="size-6 text-muted-foreground" />
             <span className="text-[10px] font-medium text-muted-foreground">Wallpaper</span>
           </div>
         </TabsTrigger>
         <TabsTrigger value="image" className="p-0 h-full w-full">
-          <div className="w-full h-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
-            <Upload className="h-6 w-6 text-muted-foreground" />
+          <div className="size-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
+            <Upload className="size-6 text-muted-foreground" />
             <span className="text-[10px] font-medium text-muted-foreground">Image</span>
           </div>
         </TabsTrigger>
@@ -101,7 +101,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
             <button
               key={color}
               onClick={() => handleBackgroundChange({ bgType: "color", bgColor: color })}
-              className={`relative aspect-square h-10 w-10 rounded-md transition-all duration-200 ${
+              className={`relative aspect-square size-10 rounded-md transition-all duration-200 ${
                 profile.bgColor === color ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 z-10" : "hover:scale-110 active:scale-95 border border-black/5"
               }`}
               style={{ backgroundColor: color }}
@@ -125,7 +125,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
             <button
               key={`${gradient.from}-${gradient.to}`}
               onClick={() => handleBackgroundChange({ bgType: "gradient", bgGradientFrom: gradient.from, bgGradientTo: gradient.to })}
-              className={`relative aspect-square h-10 w-10 rounded-md transition-all duration-200 ${
+              className={`relative aspect-square size-10 rounded-md transition-all duration-200 ${
                 profile.bgGradientFrom === gradient.from && profile.bgGradientTo === gradient.to ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 z-10" : "hover:scale-110 active:scale-95 border border-black/5"
               }`}
               style={{ background: `linear-gradient(135deg, ${gradient.from}, ${gradient.to})` }}
@@ -146,7 +146,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
           </div>
         ) : wallpaperPresets.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/10 py-12 text-center">
-            <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+            <ImageIcon className="size-8 text-muted-foreground/50" />
             <p className="text-sm font-medium text-muted-foreground">No wallpapers available</p>
             <p className="text-xs text-muted-foreground/70">Wallpapers will appear here once added</p>
           </div>
@@ -160,7 +160,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
       </TabsContent>
       <TabsContent value="image" className="space-y-4 pt-4">
         <div className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/10 py-12 text-center">
-          {/* <Upload className="h-8 w-8 text-muted-foreground/50" />
+          {/* <Upload className="size-8 text-muted-foreground/50" />
           <p className="text-sm font-medium text-muted-foreground">Custom Image Upload</p> */}
           <span className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest border border-primary/20 mt-1">Coming Soon</span>
           {/* <p className="text-[10px] text-muted-foreground/70 max-w-[180px] mt-1">We're optimizing our storage to give you the best performance.</p> */}
@@ -173,7 +173,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
               <Image src={profile.bgImage} fill className="rounded-lg object-cover" alt="upload" />
             ) : (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <Upload className="h-6 w-6" />
+                <Upload className="size-6" />
                 <span className="text-xs">Upload Background</span>
               </div>
             )}

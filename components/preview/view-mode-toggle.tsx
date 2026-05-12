@@ -18,7 +18,7 @@ export function ViewModeToggle({ viewMode, setViewMode }: ViewModeToggleProps) {
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Icons.phone className="h-4 w-4" />
+          <Icons.phone className="size-4" />
           Mobile
         </button>
         <button
@@ -29,7 +29,7 @@ export function ViewModeToggle({ viewMode, setViewMode }: ViewModeToggleProps) {
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Icons.monitor className="h-4 w-4" />
+          <Icons.monitor className="size-4" />
           Desktop
         </button>
       </div>

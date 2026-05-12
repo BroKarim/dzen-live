@@ -60,7 +60,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
     <Popover>
       <PopoverTrigger asChild>
         <Button2 variant="blue" className="flex-1 rounded-full">
-          <Grid3x3 className="h-4 w-4 mr-2" />
+          <Grid3x3 className="size-4 mr-2" />
          Pattern
         </Button2>
       </PopoverTrigger>
@@ -71,8 +71,8 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
               <h4 className="font-medium text-sm leading-none">Background Pattern</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">Add geometric patterns to your background</p>
             </div>
-            <Button2 variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={handleReset} title="Reset to defaults">
-              <RotateCcw className="h-4 w-4" />
+            <Button2 variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-foreground" onClick={handleReset} title="Reset to defaults">
+              <RotateCcw className="size-4" />
             </Button2>
           </div>
 
@@ -90,7 +90,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                     onClick={() => handleUpdatePattern({ type: pattern.id })}
                     className={`flex flex-col items-center gap-1.5 p-2 rounded-md border transition-all ${isActive ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/50"}`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="size-4" />
                     <span className="text-[10px] font-medium">{pattern.label}</span>
                   </button>
                 );
