@@ -61,18 +61,8 @@ describe("LinkSchema", () => {
       title: "Photo",
       url: "https://example.com/photo",
       mediaUrl: "https://example.com/image.jpg",
-      mediaType: "image",
     });
     expect(result.success).toBe(true);
-  });
-
-  it("rejects invalid mediaType", () => {
-    const result = LinkSchema.safeParse({
-      title: "Test",
-      url: "https://example.com",
-      mediaType: "gif",
-    });
-    expect(result.success).toBe(false);
   });
 
   it("uses default isActive true", () => {

@@ -43,11 +43,28 @@ Phase 1
 - **Status:** pending
 
 ### Phase 5: Verification
-- [ ] Run full test suite
-- [ ] TypeScript type check
-- [ ] Lint check
-- [ ] Build check
-- **Status:** pending
+- [x] Run full test suite
+- [x] TypeScript type check
+- [x] Lint check
+- [x] Build check
+- **Status:** completed
+
+### Phase 6: UX Simplification — Link Model Fields
+- [x] Remove `icon`, `mediaType`, `paymentProvider`, `paymentAccountId` from `prisma/schema.prisma` + delete `MediaType`/`PaymentProvider` enums
+- [x] Clean `server/user/links/schema.ts` — remove 4 fields from Zod
+- [x] Clean `server/user/links/actions.ts` — remove icon S3 cleanup
+- [x] Clean `server/user/profile/payloads.ts` — remove 4 fields from selects
+- [x] Clean `server/website/profile/payloads.ts` — remove 4 fields from public payload
+- [x] Simplify `link-card-editor.tsx` — remove icon upload, mediaType, payment handlers
+- [x] Simplify `link-edit-dialog.tsx` — same removals
+- [x] Simplify `preview-links.tsx` — remove icon, mediaType, isStripeEnabled props
+- [x] Simplify `texture-card.tsx` — remove icon, videoUrl, isStripeEnabled props + Stripe badge
+- [x] `prisma db push` + `prisma generate`
+- [x] Verify: tsc --noEmit, tests (23/23), build
+- **Status:** completed
+
+### Phase 7: Theme → Design Tab + Auto-Contrast (pending discussion)
+- [ ] TBD after user discussion
 
 ## Decisions Made
 | Decision | Rationale |

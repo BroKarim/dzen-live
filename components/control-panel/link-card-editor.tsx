@@ -21,7 +21,7 @@ interface LinkCardEditorProps {
   onUpdate: (profile: ProfileEditorData) => void;
 }
 
-type LinkType = "url" | "payment" | "media";
+type LinkType = "url" | "media";
 
 export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
   const [uiState, setUiState] = useState({
@@ -30,7 +30,6 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
     selectedType: "url" as LinkType,
     deleteDialogOpen: false,
     deletingId: null as string | null,
-    logoPreview: null as string | null,
     mediaPreview: null as string | null,
     editingLink: null as any | null,
     editDialogOpen: false,
@@ -40,30 +39,8 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
     title: "",
     url: "",
     description: "",
-    icon: null as string | null,
     mediaUrl: null as string | null,
-    mediaType: null as "image" | "video" | null,
-    paymentProvider: null as "stripe" | "lemonsqueezy" | null,
-    paymentAccountId: null as string | null,
   });
-
-  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const publicUrl = await uploadFile(file, {
-        allowedTypes: ["image/jpeg", "image/png", "image/webp", "image/x-icon", "image/vnd.microsoft.icon", "image/svg+xml", "image/jpg"],
-        maxSizeMB: 5,
-        compression: { maxSizeMB: 0.1, maxWidthOrHeight: 256 },
-        skipCompressionFor: ["svg", "icon"],
-      });
-      setNewLink((prev) => ({ ...prev, icon: publicUrl }));
-      setUiState((prev) => ({ ...prev, logoPreview: publicUrl }));
-    } catch (error: any) {
-      toast.error(error.message || "Error uploading icon");
-    }
-  };
 
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -75,19 +52,11 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
         maxSizeMB: 10,
         compression: { maxSizeMB: 0.5, maxWidthOrHeight: 800 },
       });
-      setNewLink((prev) => ({ ...prev, mediaUrl: publicUrl, mediaType: "image" }));
+      setNewLink((prev) => ({ ...prev, mediaUrl: publicUrl }));
       setUiState((prev) => ({ ...prev, mediaPreview: publicUrl }));
     } catch (error: any) {
       toast.error(error.message || "Error uploading media");
     }
-  };
-
-  const handlePaymentSelect = (provider: "stripe" | "lemonsqueezy") => {
-    setNewLink(prev => ({
-      ...prev,
-      paymentProvider: provider,
-      paymentAccountId: "dummy-account-id",
-    }));
   };
 
   const handleAdd = async () => {
@@ -96,11 +65,7 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
       title: newLink.title,
       url: newLink.url.trim(),
       description: newLink.description || null,
-      icon: newLink.icon || null,
       mediaUrl: newLink.mediaUrl || null,
-      mediaType: newLink.mediaType || null,
-      paymentProvider: newLink.paymentProvider || null,
-      paymentAccountId: newLink.paymentAccountId || null,
       position: profile.links.length,
       isActive: true,
     } as any;
@@ -131,18 +96,13 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
       ...prev,
       isAdding: false,
       selectedType: "url",
-      logoPreview: null,
       mediaPreview: null,
     }));
     setNewLink({
       title: "",
       url: "",
       description: "",
-      icon: null,
       mediaUrl: null,
-      mediaType: null,
-      paymentProvider: null,
-      paymentAccountId: null,
     });
   };
 
@@ -180,7 +140,6 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
 
   const typeOptions = [
     { id: "url" as LinkType, icon: LinkIcon, label: "URL" },
-    // { id: "payment" as LinkType, icon: CreditCard, label: "Payment" },
     { id: "media" as LinkType, icon: ImageIcon, label: "Media" },
   ];
 
@@ -205,21 +164,10 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
           </div>
 
           <div className="p-3 space-y-3">
-            <div className="flex gap-2">
-              <div className="relative shrink-0">
-                <input id="add-icon-upload" type="file" accept="image/*" onChange={handleLogoUpload} className="absolute inset-0 size-full opacity-0 cursor-pointer z-20" />
-                <label
-                  htmlFor="add-icon-upload"
-                  className="size-10 rounded-lg border border-dashed border-border bg-muted/50 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden relative"
-                >
-                  {uiState.logoPreview ? <Image src={uiState.logoPreview} alt="Icon" fill sizes="40px" className="object-cover" unoptimized /> : <Plus className="size-4 text-muted-foreground" />}
-                </label>
-              </div>
-
-              <Input value={newLink.title} onChange={(e) => setNewLink(prev => ({ ...prev, title: e.target.value }))} placeholder="Link title" className="h-10 flex-1 text-sm" />
-            </div>
+            <Input value={newLink.title} onChange={(e) => setNewLink(prev => ({ ...prev, title: e.target.value }))} placeholder="Link title" className="h-10 text-sm" />
 
             <Input value={newLink.description} onChange={(e) => setNewLink(prev => ({ ...prev, description: e.target.value }))} placeholder="Description (optional)" className="h-10 text-sm" />
+
             <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
               {typeOptions.map((type) => {
                 const Icon = type.icon;
@@ -240,7 +188,7 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
                 );
               })}
             </div>
-            {/* Dynamic Content Based on Type */}
+
             {uiState.selectedType === "url" && <Input value={newLink.url} onChange={(e) => setNewLink(prev => ({ ...prev, url: e.target.value }))} placeholder="https://example.com" className="h-10 text-sm" />}
 
             {uiState.selectedType === "media" && (
@@ -262,7 +210,6 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
               </div>
             )}
 
-            {/* Action Buttons */}
             <div className="flex gap-2 pt-1">
               <Button onClick={handleAdd} disabled={uiState.isSaving || !newLink.title} size="sm" className="flex-1 h-9 text-sm">
                 {uiState.isSaving && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
@@ -280,7 +227,6 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={profile.links?.map((l) => l.id) || []} strategy={verticalListSortingStrategy}>
             <TooltipProvider>
-              {/* link preview */}
               {profile.links?.map((link: any) => (
                 <SortableLinkItem key={link.id} link={link} onEdit={handleEdit} onDelete={handleDelete} deletingId={uiState.deletingId} />
               ))}
@@ -346,15 +292,9 @@ function SortableLinkItem({ link, onEdit, onDelete, deletingId }: SortableLinkIt
         <GripVertical className="size-3.5 text-muted-foreground" />
       </div>
 
-      {link.icon ? (
-        <div className="size-10 rounded-md overflow-hidden shrink-0 relative">
-          <Image src={link.icon} alt={link.title} fill sizes="40px" className="object-cover" unoptimized />
-        </div>
-      ) : (
-        <div className="size-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-          <LinkIcon className="size-4 text-muted-foreground" />
-        </div>
-      )}
+      <div className="size-10 rounded-md bg-muted flex items-center justify-center shrink-0">
+        <LinkIcon className="size-4 text-muted-foreground" />
+      </div>
 
       {/* Title */}
       <div className="flex-1 min-w-0">

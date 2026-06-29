@@ -30,6 +30,18 @@
 - Net: -595 lines (916 deleted, 321 added)
 - 15 files changed, 2 new files created
 
+## Session 2026-06-29 (Phase 6: UX Simplification — Link Model)
+
+### Part A: Link Model Simplification — complete
+- Removed from schema: `icon`, `mediaType`, `paymentProvider`, `paymentAccountId`
+- Removed enums: `MediaType`, `PaymentProvider`
+- Cleaned up: Zod schema, S3 actions, payloads (3 files), editors (2 files), preview components (2 files)
+- Tests: 23/23 passing (1 mediaType test removed)
+- 0 TS errors, build passes, DB synced
+- Net: 10 files changed, 2 enums deleted, ~200 lines removed
+
+### Part B: Theme → Design Tab + Auto-Contrast — pending discussion
+
 ## Prior sessions preserved below
 
 ### Bug: Google OAuth Login P2022 Error

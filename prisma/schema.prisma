@@ -178,14 +178,9 @@ model Link {
   
   title       String
   url         String
-  icon        String?
   description String?
   
   mediaUrl    String?   
-  mediaType   MediaType? 
-  
-  paymentProvider PaymentProvider? 
-  paymentAccountId String?
   
   position    Int      @default(0)
   isActive    Boolean  @default(true)
@@ -201,16 +196,6 @@ model Link {
   
   @@index([profileId])
   @@map("link")
-}
-
-enum MediaType {
-  image
-  video
-}
-
-enum PaymentProvider {
-  stripe
-  lemonsqueezy
 }
 
 model LinkClick {

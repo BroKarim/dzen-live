@@ -23,10 +23,7 @@ function LinkItem({ link, cardTexture, renderLink }: LinkItemProps) {
       title={link.title}
       url={link.url}
       description={link.description ?? undefined}
-      icon={link.icon ?? undefined}
-      imageUrl={link.mediaType === "image" ? (link.mediaUrl ?? undefined) : undefined}
-      videoUrl={link.mediaType === "video" ? (link.mediaUrl ?? undefined) : undefined}
-      isStripeEnabled={!!link.paymentProvider}
+      imageUrl={link.mediaUrl ?? undefined}
       backgroundColor="bg-[#222]"
       titleColor={cardTexture === "glassy" ? "text-white" : "text-[var(--accent)]"}
       texture={cardTexture}

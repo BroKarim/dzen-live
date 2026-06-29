@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { m, AnimatePresence, LazyMotion, domAnimation } from "framer-motion";
-import { ExternalLink, PlayCircle, CreditCard } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { GlassEffect } from "./control-panel/glass-effect";
 import type { CardTexture } from "@/lib/generated/prisma/client";
 
@@ -11,10 +11,7 @@ interface LinkItem {
   title: string;
   url: string;
   description?: string;
-  icon?: string;
   imageUrl?: string;
-  videoUrl?: string;
-  isStripeEnabled?: boolean;
   backgroundColor?: string;
 }
 
@@ -26,22 +23,16 @@ interface TexturedCardProps extends Partial<LinkItem> {
   onBeforeNavigate?: () => void;
 }
 
-export function TexturedCard({ title, description, url, icon, imageUrl, videoUrl, isStripeEnabled, backgroundColor = "bg-zinc-800", titleColor = "text-white", texture = "base", className = "", onBeforeNavigate }: TexturedCardProps) {
+export function TexturedCard({ title, description, url, imageUrl, backgroundColor = "bg-zinc-800", titleColor = "text-white", texture = "base", className = "", onBeforeNavigate }: TexturedCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const hasExtraContent = !!(description || imageUrl || videoUrl || isStripeEnabled);
+  const hasExtraContent = !!(description || imageUrl);
 
   const CardHeader = (
     <div className="relative flex w-full min-h-16">
       {imageUrl ? (
-        // Layout 2 kolom saat ada image
         <>
           <div className="flex flex-1 items-center justify-end px-6 py-4 z-10">
             <div className="flex items-center gap-3">
-              {icon && (
-                <div className="relative size-8 shrink-0 overflow-hidden rounded-full border border-white/10">
-                  <Image src={icon} fill className="object-cover" alt="" sizes="32px" />
-                </div>
-              )}
               <h2 className={`${texture === "glassy" ? "text-white" : titleColor} text-lg font-semibold tracking-tighter line-clamp-2 text-right leading-snug`}>{title}</h2>
             </div>
           </div>
@@ -50,14 +41,8 @@ export function TexturedCard({ title, description, url, icon, imageUrl, videoUrl
           </div>
         </>
       ) : (
-        // Layout normal tanpa image
         <div className="flex w-full items-center justify-center px-6 py-4 z-10">
           <div className="flex items-center gap-3">
-            {icon && (
-              <div className="relative size-8 shrink-0 overflow-hidden rounded-full border border-white/10">
-                <Image src={icon} fill className="object-cover" alt="" sizes="32px" />
-              </div>
-            )}
             <h2 className={`${texture === "glassy" ? "text-white" : titleColor} text-lg font-semibold tracking-tighter line-clamp-2 text-center leading-snug max-w-[200px]`}>{title}</h2>
           </div>
         </div>
@@ -92,20 +77,9 @@ export function TexturedCard({ title, description, url, icon, imageUrl, videoUrl
               {description}
             </m.p>
           )}
-          {imageUrl && !videoUrl && (
+          {imageUrl && (
             <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="aspect-video w-full overflow-hidden rounded-xl bg-black/20 relative">
               <Image src={imageUrl} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" alt={title || ""} />
-            </m.div>
-          )}
-          {videoUrl && (
-            <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="aspect-video w-full overflow-hidden rounded-xl bg-black/20 flex items-center justify-center  ">
-              <PlayCircle className="size-10 text-white/50" />
-            </m.div>
-          )}
-          {isStripeEnabled && (
-            <m.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }} className="flex items-center gap-3 rounded-xl bg-white/10 p-3">
-              <CreditCard className="size-5 text-white" />
-              <span className="text-xs font-bold text-white">Support via Stripe</span>
             </m.div>
           )}
           <m.a

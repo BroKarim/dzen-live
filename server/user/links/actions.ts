@@ -63,15 +63,12 @@ export const createLink = withAuth("links/actions", async (user, data: LinkInput
 export const updateLink = withAuth("links/actions", async (user, id: string, data: Partial<LinkInput>) => {
   const existing = await db.link.findUnique({
     where: { id },
-    select: { icon: true, mediaUrl: true },
+    select: { mediaUrl: true },
   });
 
   if (!existing) throw new Error("Link not found");
 
-  // Delete old S3 assets if replaced (non-blocking)
-  if (data.icon && existing.icon && data.icon !== existing.icon) {
-    deleteFromS3(existing.icon).catch(console.error);
-  }
+  // Delete old S3 asset if replaced (non-blocking)
   if (data.mediaUrl && existing.mediaUrl && data.mediaUrl !== existing.mediaUrl) {
     deleteFromS3(existing.mediaUrl).catch(console.error);
   }
@@ -85,14 +82,13 @@ export const updateLink = withAuth("links/actions", async (user, id: string, dat
 export const deleteLink = withAuth("links/actions", async (user, id: string) => {
   const link = await db.link.findUnique({
     where: { id },
-    select: { icon: true, mediaUrl: true },
+    select: { mediaUrl: true },
   });
 
   // Guard: record may already be gone (e.g. duplicate save scenario)
   if (!link) return { success: true as const };
 
-  // Delete S3 assets first (non-blocking)
-  if (link.icon) deleteFromS3(link.icon).catch(console.error);
+  // Delete S3 asset first (non-blocking)
   if (link.mediaUrl) deleteFromS3(link.mediaUrl).catch(console.error);
 
   // deleteMany avoids P2025 if record was already deleted between the findUnique and delete
