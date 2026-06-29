@@ -17,13 +17,13 @@ export async function proxy(request: NextRequest) {
         select: { isOnboarded: true },
       });
 
-      const redirectUrl = user?.isOnboarded ? "/dashboard" : "/onboarding/username";
+      const redirectUrl = user?.isOnboarded ? "/editor" : "/editor";
       return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
   }
 
   if (!session?.user) {
-    if (pathname.startsWith("/dashboard") || pathname.startsWith("/onboarding")) {
+    if (pathname.startsWith("/editor")) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
@@ -32,6 +32,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/onboarding/:path*", "/login", "/signup"],
+  matcher: ["/editor/:path*", "/login", "/signup"],
 };
 

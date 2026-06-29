@@ -8,8 +8,7 @@ import { Loader2, Plus, Link as LinkIcon, Image as ImageIcon, X, GripVertical, P
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
-import { getUploadUrl } from "@/server/upload/actions";
-import { compressImage } from "@/lib/media";
+import { uploadFile } from "@/lib/upload";
 import { LinkEditDialog } from "./link-edit-dialog";
 import { toast } from "sonner";
 import { Button2 } from "@/components/ui/button-2";
@@ -49,118 +48,37 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
   });
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let file = e.target.files?.[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/x-icon", "image/vnd.microsoft.icon", "image/svg+xml", "image/jpg"];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Invalid file type. Please upload JPG, PNG, WebP, ICO or SVG.");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image size too large (max 5MB)");
-      return;
-    }
-
     try {
-      // 1. Client-side Compression (skip for ICO/SVG)
-      if (!file.type.includes("svg") && !file.type.includes("icon")) {
-        try {
-          const compressed = await compressImage(file, {
-            maxSizeMB: 0.1, // Icon can be very small (100KB)
-            maxWidthOrHeight: 256,
-          });
-          file = compressed;
-        } catch (err) {
-          console.warn("Compression failed, using original", err);
-        }
-      }
-
-      // 2. Get Presigned URL
-      const uploadRes = await getUploadUrl(file.name, file.type);
-      const url = uploadRes.url;
-      const publicUrl = uploadRes.publicUrl;
-
-      if (!uploadRes.success || !url) {
-        const fallbackMsg = uploadRes.error || "Failed to get upload URL";
-        throw new Error(fallbackMsg);
-      }
-
-      // 3. Upload to S3
-      const res = await fetch(url, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
+      const publicUrl = await uploadFile(file, {
+        allowedTypes: ["image/jpeg", "image/png", "image/webp", "image/x-icon", "image/vnd.microsoft.icon", "image/svg+xml", "image/jpg"],
+        maxSizeMB: 5,
+        compression: { maxSizeMB: 0.1, maxWidthOrHeight: 256 },
+        skipCompressionFor: ["svg", "icon"],
       });
-
-      if (!res.ok) throw new Error("Failed to upload icon to S3");
-
-      setNewLink(prev => ({ ...prev, icon: publicUrl! }));
-      setUiState((prev) => ({ ...prev, logoPreview: publicUrl! }));
+      setNewLink((prev) => ({ ...prev, icon: publicUrl }));
+      setUiState((prev) => ({ ...prev, logoPreview: publicUrl }));
     } catch (error: any) {
-      console.error(error);
       toast.error(error.message || "Error uploading icon");
-      setUiState((prev) => ({ ...prev, logoPreview: null }));
     }
   };
 
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let file = e.target.files?.[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Invalid file type. Please upload JPG, PNG or WebP.");
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image size too large (max 10MB)");
-      return;
-    }
-
     try {
-      // 1. Client-side Compression
-      try {
-        const compressed = await compressImage(file, {
-          maxSizeMB: 0.5,
-          maxWidthOrHeight: 800,
-        });
-        file = compressed;
-      } catch (err) {
-        console.warn("Compression failed, using original", err);
-      }
-
-      // 2. Get Presigned URL
-      const mediaUploadRes = await getUploadUrl(file.name, file.type);
-      const mediaUrl = mediaUploadRes.url;
-      const mediaPublicUrl = mediaUploadRes.publicUrl;
-
-      if (!mediaUploadRes.success || !mediaUrl) {
-        const fallbackMsg = mediaUploadRes.error || "Failed to get upload URL";
-        throw new Error(fallbackMsg);
-      }
-
-      // 3. Upload to S3
-      const res = await fetch(mediaUrl, {
-        method: "PUT",
-        body: file,
-        headers: { "Content-Type": file.type },
+      const publicUrl = await uploadFile(file, {
+        allowedTypes: ["image/jpeg", "image/png", "image/webp", "image/jpg"],
+        maxSizeMB: 10,
+        compression: { maxSizeMB: 0.5, maxWidthOrHeight: 800 },
       });
-
-      if (!res.ok) throw new Error("Failed to upload media to S3");
-
-      setNewLink(prev => ({
-        ...prev,
-        mediaUrl: mediaPublicUrl!,
-        mediaType: "image",
-      }));
-      setUiState((prev) => ({ ...prev, mediaPreview: mediaPublicUrl! }));
+      setNewLink((prev) => ({ ...prev, mediaUrl: publicUrl, mediaType: "image" }));
+      setUiState((prev) => ({ ...prev, mediaPreview: publicUrl }));
     } catch (error: any) {
-      console.error(error);
       toast.error(error.message || "Error uploading media");
-      setUiState((prev) => ({ ...prev, mediaPreview: null }));
     }
   };
 

@@ -1,19 +1,10 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { withAuth } from "@/server/user/auth";
 import { SocialLinkSchema, LinkSchema, SocialLinkInput, LinkInput } from "./schema";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { deleteFromS3 } from "@/lib/s3";
-
-// ─── Auth Helper ──────────────────────────────────────────────────────────────
-
-async function getSession() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) throw new Error("Unauthorized");
-  return session.user;
-}
 
 async function getProfileId(userId: string) {
   const profile = await db.profile.findFirst({
@@ -24,21 +15,9 @@ async function getProfileId(userId: string) {
   return profile.id;
 }
 
-function withAuth<TArgs extends any[], TReturn>(fn: (user: Awaited<ReturnType<typeof getSession>>, ...args: TArgs) => Promise<TReturn>) {
-  return async (...args: TArgs): Promise<{ success: true; data?: any } | { success: false; error: string }> => {
-    try {
-      const user = await getSession();
-      return (await fn(user, ...args)) as any;
-    } catch (error: any) {
-      console.error(`[links/actions] ${error.message}`);
-      return { success: false, error: error.message || "An error occurred" };
-    }
-  };
-}
-
 // ─── Social Links ─────────────────────────────────────────────────────────────
 
-export const createSocialLink = withAuth(async (user, data: SocialLinkInput) => {
+export const createSocialLink = withAuth("links/actions", async (user, data: SocialLinkInput) => {
   const profileId = await getProfileId(user.id);
   const validated = SocialLinkSchema.parse(data);
 
@@ -47,29 +26,29 @@ export const createSocialLink = withAuth(async (user, data: SocialLinkInput) => 
   });
 
   revalidatePath(`/${user.username}`);
-  return { success: true, data: socialLink };
+  return { success: true as const, data: socialLink };
 });
 
-export const updateSocialLink = withAuth(async (user, id: string, data: SocialLinkInput) => {
+export const updateSocialLink = withAuth("links/actions", async (user, id: string, data: SocialLinkInput) => {
   const validated = SocialLinkSchema.parse(data);
 
   await db.socialLink.update({ where: { id }, data: validated });
 
   revalidatePath(`/${user.username}`);
-  return { success: true };
+  return { success: true as const };
 });
 
-export const deleteSocialLink = withAuth(async (user, id: string) => {
+export const deleteSocialLink = withAuth("links/actions", async (user, id: string) => {
   // deleteMany avoids P2025 if record was already deleted
   await db.socialLink.deleteMany({ where: { id } });
 
   revalidatePath(`/${user.username}`);
-  return { success: true };
+  return { success: true as const };
 });
 
 // ─── Links ────────────────────────────────────────────────────────────────────
 
-export const createLink = withAuth(async (user, data: LinkInput) => {
+export const createLink = withAuth("links/actions", async (user, data: LinkInput) => {
   const profileId = await getProfileId(user.id);
   const validated = LinkSchema.parse(data);
 
@@ -78,10 +57,10 @@ export const createLink = withAuth(async (user, data: LinkInput) => {
   });
 
   revalidatePath(`/${user.username}`);
-  return { success: true, data: link };
+  return { success: true as const, data: link };
 });
 
-export const updateLink = withAuth(async (user, id: string, data: Partial<LinkInput>) => {
+export const updateLink = withAuth("links/actions", async (user, id: string, data: Partial<LinkInput>) => {
   const existing = await db.link.findUnique({
     where: { id },
     select: { icon: true, mediaUrl: true },
@@ -100,17 +79,17 @@ export const updateLink = withAuth(async (user, id: string, data: Partial<LinkIn
   await db.link.update({ where: { id }, data });
 
   revalidatePath(`/${user.username}`);
-  return { success: true };
+  return { success: true as const };
 });
 
-export const deleteLink = withAuth(async (user, id: string) => {
+export const deleteLink = withAuth("links/actions", async (user, id: string) => {
   const link = await db.link.findUnique({
     where: { id },
     select: { icon: true, mediaUrl: true },
   });
 
   // Guard: record may already be gone (e.g. duplicate save scenario)
-  if (!link) return { success: true };
+  if (!link) return { success: true as const };
 
   // Delete S3 assets first (non-blocking)
   if (link.icon) deleteFromS3(link.icon).catch(console.error);
@@ -120,13 +99,13 @@ export const deleteLink = withAuth(async (user, id: string) => {
   await db.link.deleteMany({ where: { id } });
 
   revalidatePath(`/${user.username}`);
-  return { success: true };
+  return { success: true as const };
 });
 
-export const reorderLinks = withAuth(async (user, linkIds: string[]) => {
+export const reorderLinks = withAuth("links/actions", async (user, linkIds: string[]) => {
   // updateMany silently skips missing IDs instead of throwing P2025
   await db.$transaction(linkIds.map((id, index) => db.link.updateMany({ where: { id }, data: { position: index } })));
 
   revalidatePath(`/${user.username}`);
-  return { success: true };
+  return { success: true as const };
 });

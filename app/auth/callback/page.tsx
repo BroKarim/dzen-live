@@ -20,6 +20,5 @@ export default async function AuthCallbackPage() {
 
   const { username } = await ensureUserHasProfile();
 
-  // Directly redirect on server for better performance and to satisfy react-doctor rules
   redirect(`/editor/${username}`);
 }
