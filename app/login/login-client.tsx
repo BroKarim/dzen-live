@@ -14,7 +14,7 @@ export function LoginClient() {
   return (
     <main className="grid min-h-screen grid-cols-1 lg:grid-cols-2 bg-background">
       {/* Left side - Background Image */}
-      <div className="hidden bg-[url('https://res.cloudinary.com/dctl5pihh/image/upload/v1768287477/background_valoru.jpg')] bg-center bg-cover bg-no-repeat lg:block grayscale-[0.5] opacity-80" />
+      <div className="hidden bg-[url('https://res.cloudinary.com/dctl5pihh/image/upload/f_auto,q_auto,w_1920/v1768287477/background_valoru.jpg')] bg-center bg-cover bg-no-repeat lg:block grayscale-[0.5] opacity-80" />
 
       {/* Right side - Auth Content */}
       <div className="relative flex flex-col items-center justify-center gap-4 p-4 sm:p-6 md:p-8">

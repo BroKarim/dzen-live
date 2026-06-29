@@ -43,7 +43,7 @@ function FeatureMedia({ src, alt }: { src: string; alt: string }) {
   const isVideo = src.endsWith(".mp4") || src.endsWith(".webm");
 
   return (
-    <div className="w-full relative ring bg-foreground/5 ring-foreground/10 ring-inset rounded-md overflow-hidden transition-opacity duration-500 opacity-100">
+    <div className="w-full relative rounded-md overflow-hidden bg-foreground/5 border border-foreground/10">
       {isVideo ? <video src={src} className="w-full h-auto object-cover" autoPlay muted loop playsInline preload="metadata" /> : <img src={src} alt={alt} className="w-full h-auto object-cover block" loading="lazy" decoding="async" />}
       <div className="absolute inset-0 rounded-md border border-foreground/20 z-10 pointer-events-none" />
     </div>
@@ -103,7 +103,7 @@ export default function MarketingPageClient() {
       <section className="w-full max-w-4xl mx-auto">
         <div className="flex flex-col">
           {DEMO_FEATURES.map((feature, idx) => (
-            <div key={feature.tag} style={{ animationDelay: `${0.1 * (idx + 1)}s` }} className="flex flex-col gap-4 px-4 sm:px-8 py-12 border-b border-primary/20 animate-blur-fade-slide-in">
+            <div key={feature.tag} style={{ animationDelay: `${0.1 * (idx + 1)}s` }} className="flex flex-col gap-4 px-4 sm:px-8 py-12 border-b border-primary/20 animate-blur-fade-slide-in [will-change:transform,opacity]">
               <div>
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">{feature.tag}</span>
                 <h3 className="text-2xl font-medium tracking-tight md:text-3xl text-gray-900 mt-2 mb-6">{feature.title}</h3>
