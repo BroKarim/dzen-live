@@ -40,7 +40,22 @@
 - 0 TS errors, build passes, DB synced
 - Net: 10 files changed, 2 enums deleted, ~200 lines removed
 
-### Part B: Theme → Design Tab + Auto-Contrast — pending discussion
+### Part B: Theme Removal + Per-Element Text Style — complete
+- **Theme system removed**: deleted `lib/themes.ts`, `theme-selector.tsx`, `Profile.theme` field, `updateTheme` action
+- **Tab renamed**: "Theme" → "Design", content = background settings only
+- **Per-element style fields added**: `displayNameStyle`, `bioStyle` (Profile), `titleStyle` (Link) as JSON columns
+- **Font catalog**: 12 Google Fonts via `next/font/google` mounted in layout, with `lib/font-catalog.ts` as single source of truth
+- **Zod schema**: `TextStyleSchema` (color, fontFamily), `TextStyleInputSchema` coerces empty `{}` → null
+- **Preview components**: `PreviewProfile`, `PreviewLinks`, `TexturedCard` now accept `mode: "editor" | "public"`, expose `data-style-target` for clickable edit
+- **Editor UX**: click text element in preview → `TextStylePopover` opens anchored to click, with `ColorPicker` (8 preset + HSL gradient) + `FontPicker` (searchable, each font rendered in own typography)
+- **Switch in place**: clicking another text element moves the popover without close-reopen
+- **Hover affordance**: dashed outline on hover for editable text in editor mode
+- **Reset indicator**: tab Design header shows "N custom styles active · Reset all" with breakdown
+- **Font loading**: `loadStyleFonts` injects `<link>` for each unique fontFamily referenced, cleanup on unmount
+- **Save flow**: `saveAllProfileChanges` accepts `displayNameStyle`/`bioStyle`/`links[].titleStyle`; `null` → `Prisma.JsonNull` for DB NULL
+- **Tests**: 23/23 passing, 0 TS errors, build passes, DB synced (`--accept-data-loss` for theme column)
+- **Files**: 9 new (lib/text-style, lib/font-catalog, components/editor/*), 11 modified, 2 deleted
+- **Net**: +1,540 lines (most of it color picker + font picker + popover UI)
 
 ## Prior sessions preserved below
 

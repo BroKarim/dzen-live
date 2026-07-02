@@ -12,7 +12,8 @@ export const publicProfilePayload = {
   avatarUrl: true,
   layout: true,
   isPublished: true,
-  theme: true,
+  displayNameStyle: true,
+  bioStyle: true,
   padding: true,
 
   // User Info (via relation)
@@ -55,6 +56,7 @@ export const publicProfilePayload = {
       description: true,
       mediaUrl: true,
       position: true,
+      titleStyle: true,
     },
     where: { isActive: true },
     orderBy: { position: "asc" as const },

@@ -1,12 +1,20 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
+import { applyStyleToProfile, type StyleTarget } from "@/lib/text-style";
+
+interface PopoverAnchor {
+  target: StyleTarget;
+  x: number;
+  y: number;
+}
 
 interface EditorState {
   originalProfile: ProfileEditorData | null;
   draftProfile: ProfileEditorData | null;
   isDirty: boolean;
   _hasHydrated: boolean;
+  stylePopover: PopoverAnchor | null;
 
   setHasHydrated: (state: boolean) => void;
   initializeEditor: (profile: ProfileEditorData) => void;
@@ -14,6 +22,9 @@ interface EditorState {
   markAsSaved: () => void;
   discardChanges: () => void;
   clearDraft: () => void;
+  openStylePopover: (anchor: PopoverAnchor) => void;
+  closeStylePopover: () => void;
+  setElementStyle: (target: StyleTarget, style: { color?: string; fontFamily?: string } | null) => void;
 }
 
 export const useEditorStore = create<EditorState>()(
@@ -23,6 +34,7 @@ export const useEditorStore = create<EditorState>()(
       draftProfile: null,
       isDirty: false,
       _hasHydrated: false,
+      stylePopover: null,
 
       setHasHydrated: (state) => set({ _hasHydrated: state }),
 
@@ -86,6 +98,19 @@ export const useEditorStore = create<EditorState>()(
 
       clearDraft: () => {
         set({ originalProfile: null, draftProfile: null, isDirty: false });
+      },
+
+      openStylePopover: (anchor) => set({ stylePopover: anchor }),
+      closeStylePopover: () => set({ stylePopover: null }),
+
+      setElementStyle: (target, style) => {
+        const { draftProfile, originalProfile } = get();
+        if (!draftProfile) return;
+        const next = applyStyleToProfile(draftProfile, target, style) as typeof draftProfile;
+        set({
+          draftProfile: next,
+          isDirty: JSON.stringify(next) !== JSON.stringify(originalProfile),
+        });
       },
     }),
     {

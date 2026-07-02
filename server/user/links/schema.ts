@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TextStyleSchema, TextStyleInputSchema } from "@/lib/text-style";
 
 export const SocialLinkSchema = z.object({
   platform: z.string().min(1, "Platform is required"),
@@ -13,7 +14,10 @@ export const LinkSchema = z.object({
   mediaUrl: z.string().url("Invalid media URL").optional().nullable(),
   position: z.number().int().min(0).optional(),
   isActive: z.boolean().default(true),
+  titleStyle: TextStyleInputSchema.optional().nullable(),
 });
 
 export type SocialLinkInput = z.infer<typeof SocialLinkSchema>;
 export type LinkInput = z.infer<typeof LinkSchema>;
+export { TextStyleSchema };
+export type { TextStyle } from "@/lib/text-style";

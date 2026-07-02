@@ -49,7 +49,9 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
           draftProfile.bgImage !== originalProfile?.bgImage ||
           draftProfile.cardTexture !== originalProfile?.cardTexture ||
           JSON.stringify(draftProfile.bgEffects) !== JSON.stringify(originalProfile?.bgEffects) ||
-          JSON.stringify(draftProfile.bgPattern) !== JSON.stringify(originalProfile?.bgPattern);
+          JSON.stringify(draftProfile.bgPattern) !== JSON.stringify(originalProfile?.bgPattern) ||
+          JSON.stringify(draftProfile.displayNameStyle) !== JSON.stringify(originalProfile?.displayNameStyle) ||
+          JSON.stringify(draftProfile.bioStyle) !== JSON.stringify(originalProfile?.bioStyle);
 
         if (profileChanged) {
           const res = await saveAllProfileChanges({
@@ -66,6 +68,8 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
             bgEffects: draftProfile.bgEffects as any,
             bgPattern: draftProfile.bgPattern as any,
             cardTexture: draftProfile.cardTexture as any,
+            displayNameStyle: draftProfile.displayNameStyle as any,
+            bioStyle: draftProfile.bioStyle as any,
           });
           if (!res.success) {
             toast.error(`Failed to save profile: ${res.error}`, { id: toastId });

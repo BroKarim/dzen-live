@@ -1,6 +1,6 @@
 import { Palette, BarChart3, Settings, User, LucideIcon } from "lucide-react";
 
-export type TabType = "profile" | "theme" | "analytic" | "setting";
+export type TabType = "profile" | "design" | "analytic" | "setting";
 
 interface TabNavigationProps {
   activeTab: TabType;
@@ -10,7 +10,7 @@ interface TabNavigationProps {
 export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
   const tabs: { id: TabType; icon: LucideIcon; label: string }[] = [
     { id: "profile", icon: User, label: "Profile" },
-    { id: "theme", icon: Palette, label: "Theme" },
+    { id: "design", icon: Palette, label: "Design" },
     { id: "analytic", icon: BarChart3, label: "Analytics" },
     { id: "setting", icon: Settings, label: "Settings" },
   ];

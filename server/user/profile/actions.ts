@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { withAuth } from "@/server/user/auth";
 import { revalidatePath } from "next/cache";
 import { deleteFromS3 } from "@/lib/s3";
+import { Prisma } from "@/lib/generated/prisma/client";
+import { TextStyleInputSchema, type TextStyle } from "@/lib/text-style";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -12,6 +14,8 @@ interface SaveAllProfileChangesInput {
   bio?: string | null;
   avatarUrl?: string | null;
   layout?: string | null;
+  displayNameStyle?: TextStyle | null;
+  bioStyle?: TextStyle | null;
   bgType?: string | null;
   bgColor?: string | null;
   bgGradientFrom?: string | null;
@@ -21,6 +25,13 @@ interface SaveAllProfileChangesInput {
   bgEffects?: { blur: number; noise: number; brightness: number; saturation: number; contrast: number } | null;
   bgPattern?: { type: string; color: string; opacity: number; thickness: number; scale: number } | null;
   cardTexture?: string | null;
+  links?: Array<{ id: string; titleStyle?: TextStyle | null }>;
+}
+
+function toJsonInput(v: unknown): Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined {
+  if (v === null) return Prisma.JsonNull;
+  if (v === undefined) return undefined;
+  return v as Prisma.InputJsonValue;
 }
 
 // ─── Actions ──────────────────────────────────────────────────────────────────
@@ -38,6 +49,8 @@ export const saveAllProfileChanges = withAuth("profile/actions", async (user, da
   if (data.bio !== undefined) updateData.bio = data.bio;
   if (data.avatarUrl !== undefined) updateData.avatarUrl = data.avatarUrl;
   if (data.layout !== undefined) updateData.layout = data.layout;
+  if (data.displayNameStyle !== undefined) updateData.displayNameStyle = toJsonInput(data.displayNameStyle);
+  if (data.bioStyle !== undefined) updateData.bioStyle = toJsonInput(data.bioStyle);
   if (data.bgType !== undefined) updateData.bgType = data.bgType;
   if (data.bgColor !== undefined) updateData.bgColor = data.bgColor;
   if (data.bgGradientFrom !== undefined) updateData.bgGradientFrom = data.bgGradientFrom;
@@ -53,26 +66,20 @@ export const saveAllProfileChanges = withAuth("profile/actions", async (user, da
     data: updateData,
   });
 
+  if (data.links) {
+    for (const link of data.links) {
+      if (link.titleStyle !== undefined) {
+        await db.link.update({
+          where: { id: link.id },
+          data: { titleStyle: toJsonInput(link.titleStyle) },
+        });
+      }
+    }
+  }
+
   if (data.avatarUrl && currentProfile.avatarUrl && currentProfile.avatarUrl !== data.avatarUrl) {
     deleteFromS3(currentProfile.avatarUrl).catch(console.error);
   }
-
-  revalidatePath(`/${user.username}`);
-  return { success: true as const };
-});
-
-export const updateTheme = withAuth("profile/actions", async (user, theme: string) => {
-  const profile = await db.profile.findFirst({
-    where: { userId: user.id },
-    select: { id: true },
-  });
-
-  if (!profile) throw new Error("Profile not found");
-
-  await db.profile.update({
-    where: { id: profile.id },
-    data: { theme },
-  });
 
   revalidatePath(`/${user.username}`);
   return { success: true as const };

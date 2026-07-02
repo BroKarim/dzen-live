@@ -2,36 +2,20 @@
 
 import { PreviewBackground, PreviewProfile, PreviewSocials, PreviewLinks } from "@/components/preview";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
-import { getThemeById } from "@/lib/themes";
 import { useEffect } from "react";
+import { loadStyleFonts, type StyleTarget } from "@/lib/text-style";
 
 interface PreviewProps {
   profile: ProfileEditorData;
   viewMode: "mobile" | "desktop";
+  onStyleTargetClick?: (target: StyleTarget) => void;
 }
 
-export default function Preview({ profile, viewMode }: PreviewProps) {
-  const theme = getThemeById(profile.theme);
-
+export default function Preview({ profile, viewMode, onStyleTargetClick }: PreviewProps) {
   useEffect(() => {
-    if (!theme.fontUrl) return;
-
-    const fontId = `theme-font-${theme.id}`;
-    if (document.getElementById(fontId)) return;
-
-    const link = document.createElement("link");
-    link.id = fontId;
-    link.rel = "stylesheet";
-    link.href = theme.fontUrl;
-    document.head.appendChild(link);
-
-    return () => {
-      const existingLink = document.getElementById(fontId);
-      if (existingLink) {
-        existingLink.remove();
-      }
-    };
-  }, [theme.id, theme.fontUrl]);
+    const cleanup = loadStyleFonts(profile);
+    return cleanup;
+  }, [profile]);
 
   return (
     <div className="flex flex-1 flex-col gap-4 overflow-hidden">
@@ -40,13 +24,7 @@ export default function Preview({ profile, viewMode }: PreviewProps) {
           className={`relative transition-all duration-500  ease-in-out overflow-hidden shadow-2xl ${
             viewMode === "mobile" ? "aspect-9/19 w-full max-w-[360px] rounded-[2.5rem] border-4 border-zinc-950" : "h-full w-full rounded-xl border-border border"
           }`}
-          style={
-            {
-              ...theme.variables,
-              fontFamily: theme.variables["--font-sans"],
-              backgroundColor: "transparent",
-            } as React.CSSProperties
-          }
+          style={{ backgroundColor: "transparent" }}
         >
           <div className="absolute inset-0 rounded-[inherit] overflow-hidden pointer-events-none">
             <PreviewBackground profile={profile} />
@@ -54,8 +32,26 @@ export default function Preview({ profile, viewMode }: PreviewProps) {
 
           <div className="relative h-full overflow-y-auto  no-scrollbar" style={{ padding: `${profile.padding}px` }}>
             <div className="mx-auto space-y-4 flex w-full  rounded-2xl max-w-[420px] flex-col items-center pb-24 pt-12">
-              <PreviewProfile profile={profile} />
-              <PreviewLinks profile={profile} />
+              <PreviewProfile
+                profile={{
+                  displayName: profile.displayName,
+                  bio: profile.bio,
+                  avatarUrl: profile.avatarUrl,
+                  layout: profile.layout as unknown as string,
+                  displayNameStyle: (profile.displayNameStyle as any) ?? null,
+                  bioStyle: (profile.bioStyle as any) ?? null,
+                }}
+                mode="editor"
+                onStyleTargetClick={onStyleTargetClick}
+              />
+              <PreviewLinks
+                profile={{
+                  links: (profile.links ?? []).map((l) => ({ ...l, titleStyle: (l as any).titleStyle ?? null })),
+                  cardTexture: profile.cardTexture,
+                }}
+                mode="editor"
+                onStyleTargetClick={onStyleTargetClick}
+              />
             </div>
           </div>
           <PreviewSocials profile={profile} />

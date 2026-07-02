@@ -4,42 +4,18 @@ import React, { useEffect } from "react";
 import { PreviewBackground, PreviewProfile, PreviewSocials, PreviewLinks } from "@/components/preview";
 import { sendTrackingBeacon } from "./link-click-tracker";
 import { ProfileHeaderButtons } from "./profile-header-buttons";
-import { getThemeById } from "@/lib/themes";
+import { loadStyleFonts } from "@/lib/text-style";
 
 export function ProfileView({ user: profile }: { user: any }) {
   const avatarUrl = profile.avatarUrl || null;
-  const theme = getThemeById(profile.theme);
 
   useEffect(() => {
-    if (!theme.fontUrl) return;
-
-    const fontId = `theme-font-${theme.id}`;
-    if (document.getElementById(fontId)) return;
-
-    const link = document.createElement("link");
-    link.id = fontId;
-    link.rel = "stylesheet";
-    link.href = theme.fontUrl;
-    document.head.appendChild(link);
-
-    return () => {
-      const existingLink = document.getElementById(fontId);
-      if (existingLink) {
-        existingLink.remove();
-      }
-    };
-  }, [theme.id, theme.fontUrl]);
+    const cleanup = loadStyleFonts(profile);
+    return cleanup;
+  }, [profile]);
 
   return (
-    <div
-      className="relative min-h-screen w-full overflow-x-hidden transition-colors duration-300"
-      style={
-        {
-          ...theme.variables,
-          fontFamily: theme.variables["--font-sans"],
-        } as React.CSSProperties
-      }
-    >
+    <div className="relative min-h-screen w-full overflow-x-hidden transition-colors duration-300">
       <PreviewBackground profile={profile} />
 
       <div className="relative z-10 min-h-screen" style={{ padding: `${profile.padding || 32}px` }}>
@@ -48,10 +24,11 @@ export function ProfileView({ user: profile }: { user: any }) {
         </div>
 
         <div className="mx-auto flex w-full max-w-[420px] flex-col items-center pb-24 pt-12 space-y-4">
-          <PreviewProfile profile={profile} isFullBio={true} />
+          <PreviewProfile profile={profile} isFullBio={true} mode="public" />
           <PreviewSocials profile={profile} />
           <PreviewLinks
             profile={profile}
+            mode="public"
             renderLink={(link, card) =>
               React.cloneElement(card as React.ReactElement<any>, {
                 onBeforeNavigate: () => sendTrackingBeacon(link.id),

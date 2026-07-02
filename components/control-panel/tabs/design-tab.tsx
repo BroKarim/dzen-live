@@ -2,21 +2,19 @@ import BackgroundOptions from "@/components/control-panel/background-options";
 import BackgroundPattern from "@/components/control-panel/background-pattern";
 import BackgroundEffect from "@/components/control-panel/background-effect";
 import { CardTextureSelector } from "@/components/control-panel/texture-selector";
-import { ThemeSelector } from "@/components/control-panel/theme-selector";
+import { ResetStylesIndicator } from "@/components/editor/reset-styles-indicator";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 
-interface ThemeTabProps {
+interface DesignTabProps {
   profile: ProfileEditorData;
   onUpdate: (profile: ProfileEditorData) => void;
 }
 
-export function ThemeTab({ profile, onUpdate }: ThemeTabProps) {
+export function DesignTab({ profile, onUpdate }: DesignTabProps) {
   return (
     <div className="px-3 pb-4">
       <div className="space-y-6">
-        <div>
-          <ThemeSelector profile={profile} onUpdate={onUpdate} />
-        </div>
+        <ResetStylesIndicator profile={profile} onUpdate={onUpdate} />
 
         <div className="w-full flex gap-x-2 justify-between items-center">
           <BackgroundPattern profile={profile} onUpdate={onUpdate} />
@@ -34,3 +32,4 @@ export function ThemeTab({ profile, onUpdate }: ThemeTabProps) {
     </div>
   );
 }
+

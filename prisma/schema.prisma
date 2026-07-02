@@ -118,7 +118,10 @@ model Profile {
   bio         String?
   avatarUrl   String?
   layout      ProfileLayout @default(center)
-  theme       String        @default("glass-dark")
+
+  // --- Per-element text styles ---
+  displayNameStyle Json?
+  bioStyle         Json?
 
   // --- Background Settings ---
   bgType      BackgroundType @default(color)
@@ -188,6 +191,7 @@ model Link {
   // --- Styling ---
   buttonColor     String?
   buttonTextColor String?
+  titleStyle      Json?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

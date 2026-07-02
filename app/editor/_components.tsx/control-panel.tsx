@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TabNavigation, TabType, ProfileTab, ThemeTab, AnalyticsTab, SettingsTab } from "@/components/control-panel";
+import { TabNavigation, TabType, ProfileTab, DesignTab, AnalyticsTab, SettingsTab } from "@/components/control-panel";
 // import { AnalyticsTabSoon } from "@/components/control-panel/analytics-tab-soon";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 
@@ -27,7 +27,7 @@ export default function ControlPanel({ profile, onUpdate }: ControlPanelProps) {
 
       <div className="flex-1">
         <div className={activeTab === "profile" ? "block" : "hidden"}>{mountedTabs.profile && <ProfileTab profile={profile} onUpdate={onUpdate} />}</div>
-        <div className={activeTab === "theme" ? "block" : "hidden"}>{mountedTabs.theme && <ThemeTab profile={profile} onUpdate={onUpdate} />}</div>
+        <div className={activeTab === "design" ? "block" : "hidden"}>{mountedTabs.design && <DesignTab profile={profile} onUpdate={onUpdate} />}</div>
         <div className={activeTab === "analytic" ? "block" : "hidden"}>{mountedTabs.analytic && <AnalyticsTab links={profile.links} />}</div>
         <div className={activeTab === "setting" ? "block" : "hidden"}>{mountedTabs.setting && <SettingsTab profile={profile} />}</div>
       </div>

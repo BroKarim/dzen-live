@@ -1,12 +1,4 @@
-import { Instrument_Serif } from "next/font/google";
-
-export const instrumentSerif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-instrument-serif",
-  display: "swap",
-});
-
+export { instrumentSerif, FONT_CATALOG, FONT_CATALOG_NAMES, getFontVariable } from "./font-catalog";
 export const GOOGLE_FONTS_BASE_URL = "https://fonts.googleapis.com/css2";
 
 /**

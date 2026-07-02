@@ -1,5 +1,5 @@
 export * from "./tab-navigation"
 export * from "./tabs/profile-tab"
-export * from "./tabs/theme-tab"
+export * from "./tabs/design-tab"
 export * from "./tabs/analytics-tab"
 export * from "./tabs/settings-tab"

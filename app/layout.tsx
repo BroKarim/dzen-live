@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
+import { FONT_CATALOG_CLASSNAMES } from "@/lib/font-catalog";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -63,7 +64,7 @@ export default function RootLayout({
           <Script src="//unpkg.com/react-scan/dist/auto.global.js" crossOrigin="anonymous" strategy="beforeInteractive" />
         )} 
       </head>*/}
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${FONT_CATALOG_CLASSNAMES} antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

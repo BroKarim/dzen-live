@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import EditorHeader from "./editor-header";
 import Preview from "./editor-preview";
 import ControlPanel from "./control-panel";
@@ -9,6 +9,8 @@ import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
 import { NavigationGuard } from "./navigation-guard";
 import { useEditorStore } from "@/lib/stores/editor-store";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
+import { TextStylePopover } from "@/components/editor/text-style-popover";
+import { styleTargetId, type StyleTarget } from "@/lib/text-style";
 
 interface EditorClientProps {
   initialProfile: ProfileEditorData;
@@ -19,7 +21,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const hasInitialized = useRef(false);
 
-  const { draftProfile, isDirty, initializeEditor, updateDraft, discardChanges, _hasHydrated } = useEditorStore();
+  const { draftProfile, isDirty, initializeEditor, updateDraft, discardChanges, _hasHydrated, openStylePopover } = useEditorStore();
 
   useEffect(() => {
     if (_hasHydrated && !hasInitialized.current) {
@@ -45,6 +47,21 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
     discardChanges();
     setShowUnsavedDialog(false);
   };
+
+  const handlePreviewStyleClick = useCallback(
+    (target: StyleTarget) => {
+      const id = styleTargetId(target);
+      const el = document.querySelector(`[data-style-target="${id}"]`) as HTMLElement | null;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      openStylePopover({
+        target,
+        x: rect.left + rect.width / 2,
+        y: rect.bottom,
+      });
+    },
+    [openStylePopover],
+  );
 
   if (!_hasHydrated) {
     return (
@@ -75,7 +92,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
         <EditorHeader profile={currentProfile} />
 
         <div className="flex flex-1 gap-6 overflow-hidden p-6" style={{ zoom: 0.9 }}>
-          <Preview profile={currentProfile} viewMode={viewMode} />
+          <Preview profile={currentProfile} viewMode={viewMode} onStyleTargetClick={handlePreviewStyleClick} />
 
           <ControlPanel profile={currentProfile} onUpdate={updateDraft} />
         </div>
@@ -83,6 +100,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
         <EditorDock viewMode={viewMode} setViewMode={setViewMode} />
       </div>
 
+      <TextStylePopover />
       <UnsavedChangesDialog open={showUnsavedDialog} onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
     </main>
   );

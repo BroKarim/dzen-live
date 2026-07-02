@@ -5,6 +5,7 @@ import { withAuth } from "@/server/user/auth";
 import { SocialLinkSchema, LinkSchema, SocialLinkInput, LinkInput } from "./schema";
 import { revalidatePath } from "next/cache";
 import { deleteFromS3 } from "@/lib/s3";
+import { Prisma } from "@/lib/generated/prisma/client";
 
 async function getProfileId(userId: string) {
   const profile = await db.profile.findFirst({
@@ -13,6 +14,14 @@ async function getProfileId(userId: string) {
   });
   if (!profile) throw new Error("Profile not found");
   return profile.id;
+}
+
+// Convert `null` to Prisma.JsonNull so the field is set to NULL in the DB
+// (vs `undefined` which leaves the field unchanged).
+function toJsonInput(v: unknown): Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined {
+  if (v === null) return Prisma.JsonNull;
+  if (v === undefined) return undefined;
+  return v as Prisma.InputJsonValue;
 }
 
 // ─── Social Links ─────────────────────────────────────────────────────────────
@@ -52,8 +61,10 @@ export const createLink = withAuth("links/actions", async (user, data: LinkInput
   const profileId = await getProfileId(user.id);
   const validated = LinkSchema.parse(data);
 
+  const { titleStyle, ...rest } = validated;
+
   const link = await db.link.create({
-    data: { ...validated, profileId },
+    data: { ...rest, titleStyle: toJsonInput(titleStyle), profileId },
   });
 
   revalidatePath(`/${user.username}`);
@@ -73,7 +84,15 @@ export const updateLink = withAuth("links/actions", async (user, id: string, dat
     deleteFromS3(existing.mediaUrl).catch(console.error);
   }
 
-  await db.link.update({ where: { id }, data });
+  const { titleStyle, ...rest } = data;
+
+  await db.link.update({
+    where: { id },
+    data: {
+      ...rest,
+      ...(titleStyle !== undefined ? { titleStyle: toJsonInput(titleStyle) } : {}),
+    },
+  });
 
   revalidatePath(`/${user.username}`);
   return { success: true as const };

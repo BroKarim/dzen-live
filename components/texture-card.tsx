@@ -5,6 +5,10 @@ import { m, AnimatePresence, LazyMotion, domAnimation } from "framer-motion";
 import { ExternalLink } from "lucide-react";
 import { GlassEffect } from "./control-panel/glass-effect";
 import type { CardTexture } from "@/lib/generated/prisma/client";
+import { styleTargetId, type StyleTarget, type TextStyle } from "@/lib/text-style";
+import { getFontVariable } from "@/lib/font-catalog";
+
+type Mode = "editor" | "public";
 
 interface LinkItem {
   id: string;
@@ -13,19 +17,70 @@ interface LinkItem {
   description?: string;
   imageUrl?: string;
   backgroundColor?: string;
+  titleStyle?: TextStyle | null;
 }
 
 interface TexturedCardProps extends Partial<LinkItem> {
   texture?: CardTexture;
-  titleColor?: string;
   className?: string;
-  /** Called immediately when the card is clicked, before navigation or expand. Use for analytics tracking. */
+  mode?: Mode;
+  onStyleTargetClick?: (target: StyleTarget) => void;
   onBeforeNavigate?: () => void;
 }
 
-export function TexturedCard({ title, description, url, imageUrl, backgroundColor = "bg-zinc-800", titleColor = "text-white", texture = "base", className = "", onBeforeNavigate }: TexturedCardProps) {
+export function TexturedCard({
+  id,
+  title,
+  description,
+  url,
+  imageUrl,
+  backgroundColor = "bg-zinc-800",
+  texture = "base",
+  className = "",
+  mode = "public",
+  titleStyle,
+  onStyleTargetClick,
+  onBeforeNavigate,
+}: TexturedCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const hasExtraContent = !!(description || imageUrl);
+  const isEditor = mode === "editor";
+  const titleColorClass = texture === "glassy" ? "text-white" : "text-[var(--accent)]";
+
+  const handleWrapperClick = (e: React.MouseEvent<HTMLElement>) => {
+    if (isEditor) {
+      e.stopPropagation();
+      return;
+    }
+    if (hasExtraContent) {
+      setIsExpanded(!isExpanded);
+    } else {
+      window.open(url, "_blank");
+    }
+  };
+
+  const handleTitleClick = (e: React.MouseEvent<HTMLElement>) => {
+    if (!isEditor || !id) return;
+    e.stopPropagation();
+    onStyleTargetClick?.({ type: "link", id, field: "title" });
+  };
+
+  const handleNavClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onBeforeNavigate?.();
+  };
+
+  const titleFontVar = titleStyle?.fontFamily ? getFontVariable(titleStyle.fontFamily) : undefined;
+  const titleFontFamily = titleStyle?.fontFamily
+    ? titleFontVar
+      ? `var(${titleFontVar}), var(--font-geist-sans)`
+      : `"${titleStyle.fontFamily}", var(--font-sans)`
+    : undefined;
+
+  const titleStyleObj: React.CSSProperties = {
+    ...(titleStyle?.color ? { color: titleStyle.color } : {}),
+    ...(titleFontFamily ? { fontFamily: titleFontFamily } : {}),
+  };
 
   const CardHeader = (
     <div className="relative flex w-full min-h-16">
@@ -33,7 +88,14 @@ export function TexturedCard({ title, description, url, imageUrl, backgroundColo
         <>
           <div className="flex flex-1 items-center justify-end px-6 py-4 z-10">
             <div className="flex items-center gap-3">
-              <h2 className={`${texture === "glassy" ? "text-white" : titleColor} text-lg font-semibold tracking-tighter line-clamp-2 text-right leading-snug`}>{title}</h2>
+              <h2
+                {...(id ? { "data-style-target": styleTargetId({ type: "link", id, field: "title" }) } : {})}
+                onClick={handleTitleClick}
+                style={titleStyleObj}
+                className={`${titleColorClass} text-lg font-semibold tracking-tighter line-clamp-2 text-right leading-snug ${isEditor ? "cursor-pointer rounded transition-all duration-150 hover:outline hover:outline-1 hover:outline-dashed hover:outline-white/40 hover:outline-offset-2" : ""}`}
+              >
+                {title}
+              </h2>
             </div>
           </div>
           <div className={`relative w-20 shrink-0 overflow-hidden rounded-r-md transition-opacity duration-300 ${isExpanded ? "opacity-0 pointer-events-none" : "opacity-100"}`}>
@@ -43,7 +105,14 @@ export function TexturedCard({ title, description, url, imageUrl, backgroundColo
       ) : (
         <div className="flex w-full items-center justify-center px-6 py-4 z-10">
           <div className="flex items-center gap-3">
-            <h2 className={`${texture === "glassy" ? "text-white" : titleColor} text-lg font-semibold tracking-tighter line-clamp-2 text-center leading-snug max-w-[200px]`}>{title}</h2>
+            <h2
+              {...(id ? { "data-style-target": styleTargetId({ type: "link", id, field: "title" }) } : {})}
+              onClick={handleTitleClick}
+              style={titleStyleObj}
+              className={`${titleColorClass} text-lg font-semibold tracking-tighter line-clamp-2 text-center leading-snug max-w-[200px] ${isEditor ? "cursor-pointer rounded transition-all duration-150 hover:outline hover:outline-1 hover:outline-dashed hover:outline-white/40 hover:outline-offset-2" : ""}`}
+            >
+              {title}
+            </h2>
           </div>
         </div>
       )}
@@ -89,7 +158,7 @@ export function TexturedCard({ title, description, url, imageUrl, backgroundColo
             href={url}
             target="_blank"
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-white py-2 text-sm font-bold text-black transition-transform hover:scale-[1.02]"
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleNavClick}
           >
             Visit Link <ExternalLink className="size-3" />
           </m.a>
@@ -98,18 +167,9 @@ export function TexturedCard({ title, description, url, imageUrl, backgroundColo
     </m.div>
   );
 
-  const handleClick = () => {
-    onBeforeNavigate?.();
-    if (hasExtraContent) {
-      setIsExpanded(!isExpanded);
-    } else {
-      window.open(url, "_blank");
-    }
-  };
-
   const WrapperProps = {
-    onClick: handleClick,
-    className: `group relative w-full cursor-pointer overflow-hidden rounded-md transition-all duration-300 ${!isExpanded && "hover:scale-[1.02] active:scale-[0.98]"} ${className} ${texture !== "glassy" ? backgroundColor : ""} ${
+    onClick: handleWrapperClick,
+    className: `group relative w-full ${isEditor ? "" : "cursor-pointer"} overflow-hidden rounded-md transition-all duration-300 ${!isExpanded && !isEditor && "hover:scale-[1.02] active:scale-[0.98]"} ${className} ${texture !== "glassy" ? backgroundColor : ""} ${
       texture === "base" ? "shadow-dzenn border-none" : ""
     }`,
   };
