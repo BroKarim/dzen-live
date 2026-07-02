@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { getUploadUrl } from "@/server/upload/actions";
 import { compressImage } from "@/lib/media";
 import { toast } from "sonner";
+import { LinkSchema } from "@/server/user/links/schema";
 
 type LinkType = "url" | "media";
 
@@ -82,7 +83,8 @@ export function LinkEditDialog({ link, open, onOpenChange, onSave }: LinkEditDia
 
       if (!mediaUploadRes.success || !mediaUrl) {
         const fallbackMsg = mediaUploadRes.error || "Failed to get upload URL";
-        throw new Error(fallbackMsg);
+        toast.error(fallbackMsg);
+        return;
       }
 
       const res = await fetch(mediaUrl, {
@@ -91,7 +93,10 @@ export function LinkEditDialog({ link, open, onOpenChange, onSave }: LinkEditDia
         headers: { "Content-Type": file.type },
       });
 
-      if (!res.ok) throw new Error("Failed to upload media to S3");
+      if (!res.ok) {
+        toast.error("Failed to upload media to S3");
+        return;
+      }
 
       const updatedData = { ...editData, mediaUrl: mediaPublicUrl! };
       setEditData(updatedData);
@@ -113,7 +118,6 @@ export function LinkEditDialog({ link, open, onOpenChange, onSave }: LinkEditDia
   const handleSave = async () => {
     if (!link) return;
 
-    const { LinkSchema } = await import("@/server/user/links/schema");
     const payload = {
       title: editData.title,
       url: editData.url.trim(),

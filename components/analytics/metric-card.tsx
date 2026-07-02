@@ -11,9 +11,12 @@ interface MetricCardProps {
   isPositive?: (change: number) => boolean;
 }
 
-export function MetricCard({ title, value, change, icon: Icon, iconColor, isPositive = (c) => c >= 0 }: MetricCardProps) {
+const defaultIsPositive = (c: number) => c >= 0;
+
+export function MetricCard({ title, value, change, icon: Icon, iconColor, isPositive }: MetricCardProps) {
+  const checkPositive = isPositive ?? defaultIsPositive;
   const showChange = change !== undefined;
-  const positive = showChange ? isPositive(change) : true;
+  const positive = showChange ? checkPositive(change) : true;
   const changeValue = showChange ? Math.abs(change) : 0;
 
   return (

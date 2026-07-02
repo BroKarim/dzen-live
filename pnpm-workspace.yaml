@@ -4,3 +4,6 @@ allowBuilds:
   prisma: true
   sharp: true
   unrs-resolver: true
+minimumReleaseAge: "3 days"
+trustPolicy:
+  no-downgrade: true

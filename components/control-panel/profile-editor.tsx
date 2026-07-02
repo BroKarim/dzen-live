@@ -34,7 +34,7 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
 
     setIsUploading(true);
 
-    try {
+    (async () => {
       try {
         const compressed = await compressImage(file, {
           maxSizeMB: 0.5,
@@ -51,7 +51,8 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
 
       if (!uploadResult.success || !url) {
         const fallbackMsg = uploadResult.error || "Failed to get upload URL";
-        throw new Error(fallbackMsg);
+        toast.error(fallbackMsg);
+        return;
       }
 
       const uploadResponse = await fetch(url, {
@@ -63,20 +64,20 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
       });
 
       if (!uploadResponse.ok) {
-        throw new Error("Failed to upload to storage");
+        toast.error("Failed to upload to storage");
+        return;
       }
 
-      // 3. Update Profile
       onUpdate({
         ...profile,
         avatarUrl: publicUrl!,
       });
-    } catch (error: any) {
+    })().catch((error: any) => {
       console.error("Upload error:", error);
       toast.error(error.message || "Failed to upload avatar");
-    } finally {
+    }).finally(() => {
       setIsUploading(false);
-    }
+    });
   };
 
   return (

@@ -8,7 +8,7 @@ import { BACKGROUND_COLORS } from "@/lib/background-colors";
 import { BACKGROUND_GRADIENTS } from "@/lib/background-gradients";
 import { getBackgroundPresets } from "@/server/website/background-presets/actions";
 import type { BackgroundPreset } from "@/server/website/background-presets/schema";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import WallpaperCategorySection from "./wallpaper-category-section";
 
 interface BackgroundOptionsProps {
@@ -34,8 +34,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
     onUpdate({ ...profile, ...updates });
   };
 
-  // Group wallpapers by category
-  const wallpapersByCategory = useMemo(() => {
+  const wallpapersByCategory = (() => {
     const grouped = new Map<string, BackgroundPreset[]>();
 
     wallpaperPresets.forEach((preset) => {
@@ -50,7 +49,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
       category,
       wallpapers,
     }));
-  }, [wallpaperPresets]);
+  })();
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

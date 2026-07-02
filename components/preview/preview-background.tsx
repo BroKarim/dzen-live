@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { PatternRenderer } from "./pattern-renderer";
 import { getBackgroundStyle, getFilterStyle, shouldScaleForBlur } from "@/lib/utils/preview-background";
 import type { BackgroundEffects } from "@/lib/utils/preview-background";
@@ -20,14 +19,13 @@ export function PreviewBackground({ profile }: PreviewBackgroundProps) {
   const bgEffects = profile.bgEffects as BackgroundEffects | null;
   const bgPattern = (profile.bgPattern as any) || { type: "none", color: "#ffffff", opacity: 10, thickness: 1, scale: 20 };
 
-  // Memoize expensive computations
-  const backgroundStyle = useMemo(() => getBackgroundStyle(profile), [profile]);
+  const backgroundStyle = getBackgroundStyle(profile);
 
-  const filterStyle = useMemo(() => getFilterStyle(bgEffects), [bgEffects]);
+  const filterStyle = getFilterStyle(bgEffects);
 
-  const shouldScale = useMemo(() => shouldScaleForBlur(bgEffects?.blur), [bgEffects?.blur]);
+  const shouldScale = shouldScaleForBlur(bgEffects?.blur);
 
-  const noiseOpacity = useMemo(() => (bgEffects?.noise ?? 0) / 100, [bgEffects?.noise]);
+  const noiseOpacity = (bgEffects?.noise ?? 0) / 100;
 
   return (
     <>

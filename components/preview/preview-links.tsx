@@ -33,10 +33,14 @@ function LinkItem({ link, cardTexture, mode, onStyleTargetClick, renderLink }: {
   );
 
   if (renderLink) {
-    return <>{renderLink(link, card)}</>;
+    return <RenderLinkWrapper renderLink={renderLink} link={link} card={card} />;
   }
 
   return card;
+}
+
+function RenderLinkWrapper({ renderLink, link, card }: { renderLink: (link: any, children: React.ReactNode) => React.ReactNode; link: any; card: React.ReactNode }) {
+  return <>{renderLink(link, card)}</>;
 }
 
 export function PreviewLinks({ profile, mode = "public", onStyleTargetClick, renderLink }: PreviewLinksProps) {

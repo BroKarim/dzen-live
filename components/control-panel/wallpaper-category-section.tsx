@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import Image from "next/image";
 import type { BackgroundPreset } from "@/server/website/background-presets/schema";
@@ -15,9 +15,8 @@ interface WallpaperCategorySectionProps {
 export default function WallpaperCategorySection({ category, wallpapers, selectedWallpaper, onSelect }: WallpaperCategorySectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Memoize handlers to avoid recreating on every render
-  const handleExpand = useCallback(() => setIsExpanded(true), []);
-  const handleCollapse = useCallback(() => setIsExpanded(false), []);
+  const handleExpand = () => setIsExpanded(true);
+  const handleCollapse = () => setIsExpanded(false);
 
   // Tampilkan 5 gambar pertama + 1 button expand
   const initialDisplayCount = 5;

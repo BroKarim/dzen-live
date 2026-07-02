@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
@@ -15,6 +15,7 @@ import { Button2 } from "@/components/ui/button-2";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { LinkSchema } from "@/server/user/links/schema";
 
 interface LinkCardEditorProps {
   profile: ProfileEditorData;
@@ -34,6 +35,8 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
     editingLink: null as any | null,
     editDialogOpen: false,
   });
+
+  const tempIdCounter = useRef(0);
 
   const [newLink, setNewLink] = useState({
     title: "",
@@ -61,7 +64,7 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
 
   const handleAdd = async () => {
     const payload = {
-      id: `temp-${Date.now()}`,
+      id: `temp-${++tempIdCounter.current}`,
       title: newLink.title,
       url: newLink.url.trim(),
       description: newLink.description || null,
@@ -70,7 +73,6 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
       isActive: true,
     } as any;
 
-    const { LinkSchema } = await import("@/server/user/links/schema");
     const { id, ...validationPayload } = payload;
     const validation = LinkSchema.safeParse(validationPayload);
 

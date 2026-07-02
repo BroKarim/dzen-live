@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState } from "react";
 import EditorHeader from "./editor-header";
 import Preview from "./editor-preview";
 import ControlPanel from "./control-panel";
@@ -19,25 +19,24 @@ interface EditorClientProps {
 export default function EditorClient({ initialProfile }: EditorClientProps) {
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
-  const hasInitialized = useRef(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const { draftProfile, isDirty, initializeEditor, updateDraft, discardChanges, _hasHydrated, openStylePopover } = useEditorStore();
 
-  useEffect(() => {
-    if (_hasHydrated && !hasInitialized.current) {
-      initializeEditor(initialProfile);
-
-      // Check for unsaved changes (conflicts) only on initial load/hydration
-      if (isDirty && draftProfile) {
-        const hasDraftFromPreviousSession = JSON.stringify(draftProfile) !== JSON.stringify(initialProfile);
-        if (hasDraftFromPreviousSession) {
-          setShowUnsavedDialog(true);
-        }
-      }
-
-      hasInitialized.current = true;
+  // Check for draft conflict inline during render (not in an effect)
+  if (_hasHydrated && !hasInitialized && isDirty && draftProfile) {
+    const hasDraft = JSON.stringify(draftProfile) !== JSON.stringify(initialProfile);
+    if (hasDraft) {
+      setShowUnsavedDialog(true);
     }
-  }, [_hasHydrated, initialProfile, initializeEditor, isDirty, draftProfile]);
+    setHasInitialized(true);
+  }
+
+  useEffect(() => {
+    if (_hasHydrated && hasInitialized) {
+      initializeEditor(initialProfile);
+    }
+  }, [_hasHydrated, hasInitialized, initializeEditor, initialProfile]);
 
   const handleRestoreDraft = () => {
     setShowUnsavedDialog(false);

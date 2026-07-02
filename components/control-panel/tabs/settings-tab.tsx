@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useCallback, useMemo } from "react";
+import { useState, useTransition } from "react";
 import { User, Globe, Trash2, LogOut, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -24,14 +24,12 @@ export function SettingsTab({ profile }: SettingsTabProps) {
   const [isPending, startTransition] = useTransition();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Memoize expensive computations
-  const hasChanges = useMemo(() => username !== profile.username || isPublished !== profile.isPublished, [username, profile.username, isPublished, profile.isPublished]);
+  const hasChanges = username !== profile.username || isPublished !== profile.isPublished;
 
-  // Memoize username sanitization to avoid recreating function on every render
-  const handleUsernameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
     setUsername(sanitized);
-  }, []);
+  };
 
   const handleSaveSettings = () => {
     startTransition(async () => {
