@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { PreviewBackground, PreviewProfile, PreviewSocials, PreviewLinks } from "@/components/preview";
-import { sendTrackingBeacon } from "./link-click-tracker";
+import { sendTrackingBeacon } from "./tracking";
 import { ProfileHeaderButtons } from "./profile-header-buttons";
 import { loadStyleFonts } from "@/lib/text-style";
 

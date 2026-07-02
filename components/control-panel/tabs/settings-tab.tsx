@@ -165,6 +165,7 @@ export function SettingsTab({ profile }: SettingsTabProps) {
                 value={username}
                 onChange={handleUsernameChange}
                 placeholder="your-username"
+                aria-label="Username"
                 className="w-full text-sm pl-[88px] pr-4 py-2 h-10 transition-all bg-muted/30 hover:bg-muted/50 border border-border rounded-full text-foreground font-medium focus:outline-none focus:ring-1 focus:ring-primary/20"
               />
             </div>

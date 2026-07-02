@@ -31,6 +31,7 @@ export function ProfileLayoutSelector({ profile, onUpdate }: ProfileLayoutSelect
           return (
             <button
               key={layoutItem.id}
+              type="button"
               onClick={() => handleLayoutChange(layoutItem.id)}
               className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 p-2.5 transition-all ${
                 isActive ? "shadow-dzenn border-none bg-primary/10 text-primary" : "border-white/5 bg-transparent text-muted-foreground hover:border-white/10 hover:text-foreground"

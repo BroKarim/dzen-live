@@ -25,6 +25,8 @@ export default async function LoginPage() {
       onboardingInfo = await getOnboardingStatus();
     } catch (error) {
       console.error("Auth navigation error:", error);
+    }
+    if (!onboardingInfo) {
       redirect("/new");
     }
 

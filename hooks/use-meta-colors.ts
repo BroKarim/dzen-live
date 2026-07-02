@@ -6,16 +6,14 @@ export const META_THEME_COLORS = {
   dark: "#0a0a0a",
 };
 
+const setMetaColor = (color: string) => {
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", color);
+};
+
 export function useMetaColor() {
   const { resolvedTheme } = useTheme();
 
-  const metaColor = React.useMemo(() => {
-    return resolvedTheme !== "dark" ? META_THEME_COLORS.light : META_THEME_COLORS.dark;
-  }, [resolvedTheme]);
-
-  const setMetaColor = React.useCallback((color: string) => {
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", color);
-  }, []);
+  const metaColor = resolvedTheme !== "dark" ? META_THEME_COLORS.light : META_THEME_COLORS.dark;
 
   return {
     metaColor,

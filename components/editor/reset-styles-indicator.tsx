@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { Sparkles, RotateCcw } from "lucide-react";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 import { isStyleEmpty, type TextStyle } from "@/lib/text-style";
@@ -11,26 +10,25 @@ interface ResetStylesIndicatorProps {
 }
 
 export function ResetStylesIndicator({ profile, onUpdate }: ResetStylesIndicatorProps) {
-  const counts = useMemo(() => {
-    let total = 0;
-    let profileCount = 0;
-    let linkCount = 0;
-    if (!isStyleEmpty(profile.displayNameStyle as TextStyle | null)) {
+  let total = 0;
+  let profileCount = 0;
+  let linkCount = 0;
+  if (!isStyleEmpty(profile.displayNameStyle as TextStyle | null)) {
+    total++;
+    profileCount++;
+  }
+  if (!isStyleEmpty(profile.bioStyle as TextStyle | null)) {
+    total++;
+    profileCount++;
+  }
+  const links = profile.links ?? [];
+  for (const l of links) {
+    if (!isStyleEmpty(l.titleStyle as TextStyle | null)) {
       total++;
-      profileCount++;
+      linkCount++;
     }
-    if (!isStyleEmpty(profile.bioStyle as TextStyle | null)) {
-      total++;
-      profileCount++;
-    }
-    profile.links?.forEach((l) => {
-      if (!isStyleEmpty(l.titleStyle as TextStyle | null)) {
-        total++;
-        linkCount++;
-      }
-    });
-    return { total, profileCount, linkCount };
-  }, [profile.displayNameStyle, profile.bioStyle, profile.links]);
+  }
+  const counts = { total, profileCount, linkCount };
 
   if (counts.total === 0) {
     return (
@@ -67,7 +65,7 @@ export function ResetStylesIndicator({ profile, onUpdate }: ResetStylesIndicator
         <div className="text-[11px] font-medium leading-tight">{counts.total} custom style{counts.total > 1 ? "s" : ""} active</div>
         <div className="text-[10px] text-muted-foreground leading-tight truncate">{breakdown}</div>
       </div>
-      <button onClick={handleReset} className="flex items-center gap-1 h-7 px-2.5 text-[10px] font-medium rounded-md bg-white/5 hover:bg-destructive/20 hover:text-destructive text-muted-foreground transition-colors shrink-0" title="Reset all custom styles">
+      <button type="button" onClick={handleReset} className="flex items-center gap-1 h-7 px-2.5 text-[10px] font-medium rounded-md bg-white/5 hover:bg-destructive/20 hover:text-destructive text-muted-foreground transition-colors shrink-0" title="Reset all custom styles">
         <RotateCcw className="size-3" />
         <span>Reset all</span>
       </button>

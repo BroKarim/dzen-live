@@ -87,6 +87,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                 return (
                   <button
                     key={pattern.id}
+                    type="button"
                     onClick={() => handleUpdatePattern({ type: pattern.id })}
                     className={`flex flex-col items-center gap-1.5 p-2 rounded-md border transition-all ${isActive ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/50"}`}
                   >

@@ -51,6 +51,8 @@ export function PreviewProfile({ profile, isFullBio, mode = "public", onStyleTar
   return (
     <div
       onClick={handleClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(e as any); }}
+      role="presentation"
       className={`mb-8 flex w-full gap-4 transition-all duration-300 ${profile.layout === "center" ? "flex-col items-center text-center" : profile.layout === "left_stack" ? "flex-col items-start text-left" : "items-center  text-left"}`}
     >
       <div className="size-20 shrink-0 overflow-hidden rounded-full shadow-lg border-2 border-white/10 relative">

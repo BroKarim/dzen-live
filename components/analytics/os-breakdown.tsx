@@ -30,16 +30,16 @@ const getOSColor = (osName: string, index: number) => {
   return { bg: "", badge: "bg-gray-500" };
 };
 
+const getShare = (value: number, total: number) => {
+  return total > 0 ? ((value / total) * 100).toFixed(2) : "0";
+};
+
 export function OSBreakdown({ data }: OSBreakdownProps) {
   if (data.length === 0) {
     return null;
   }
 
   const total = data.reduce((sum, item) => sum + item.value, 0) || 1;
-
-  const getShare = (value: number, total: number) => {
-    return total > 0 ? ((value / total) * 100).toFixed(2) : "0";
-  };
 
   const sortedData = data.toSorted((a, b) => b.value - a.value);
 

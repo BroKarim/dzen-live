@@ -95,7 +95,7 @@ export function ShareDialog({ open, onOpenChange, name, username, avatarUrl }: S
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button onClick={handleCopy} className="flex size-8 items-center justify-center rounded-md hover:bg-accent transition-colors shrink-0" aria-label="Copy link">
+                    <button type="button" onClick={handleCopy} className="flex size-8 items-center justify-center rounded-md hover:bg-accent transition-colors shrink-0" aria-label="Copy link">
                       {copied ? <Check className="size-4 text-primary" /> : <Copy className="size-4 text-muted-foreground" />}
                     </button>
                   </TooltipTrigger>

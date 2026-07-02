@@ -35,12 +35,14 @@ export function DomainView({ value, placeholder, buttonCopy, className }: Domain
           readOnly
           value={value}
           placeholder={placeholder}
+          aria-label={placeholder || "Domain value"}
           className={clsx(
             "w-full text-sm pl-4 pr-24 py-2 h-10 transition-all bg-muted/30 hover:bg-muted/50 border border-border rounded-full text-muted-foreground font-medium",
             "focus:outline-none focus:ring-1 focus:ring-primary/20 cursor-default",
           )}
         />
         <button
+          type="button"
           onClick={handleCopy}
           className={clsx(
             "absolute right-1 h-8 px-4 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5",

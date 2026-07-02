@@ -19,15 +19,15 @@ interface DeviceBrowserChartsProps {
 
 const EMPTY_ARRAY: DataItem[] = [];
 
+const totalForShare = (data: DataItem[]) => {
+  return data.reduce((sum, item) => sum + item.value, 0) || 1;
+};
+
+const getShare = (value: number, total: number) => {
+  return total > 0 ? ((value / total) * 100).toFixed(2) : "0";
+};
+
 export function DeviceBrowserCharts({ deviceData = EMPTY_ARRAY, browserData = EMPTY_ARRAY }: DeviceBrowserChartsProps) {
-  const totalForShare = (data: DataItem[]) => {
-    return data.reduce((sum, item) => sum + item.value, 0) || 1;
-  };
-
-  const getShare = (value: number, total: number) => {
-    return total > 0 ? ((value / total) * 100).toFixed(2) : "0";
-  };
-
   if (deviceData.length === 0 && browserData.length === 0) {
     return null;
   }

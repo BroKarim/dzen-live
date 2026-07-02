@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { instrumentSerif } from "@/lib/fonts";
 import { useSession } from "@/lib/auth-client";
 import Link from "next/link";
+import Image from "next/image";
 
 const HIGHLIGHT_FEATURES = [
   {
@@ -44,7 +45,7 @@ function FeatureMedia({ src, alt }: { src: string; alt: string }) {
 
   return (
     <div className="w-full relative rounded-md overflow-hidden bg-foreground/5 border border-foreground/10">
-      {isVideo ? <video src={src} className="w-full h-auto object-cover" autoPlay muted loop playsInline preload="metadata" /> : <img src={src} alt={alt} className="w-full h-auto object-cover block" loading="lazy" decoding="async" />}
+      {isVideo ? <video src={src} className="w-full h-auto object-cover" autoPlay muted loop playsInline preload="metadata" aria-label={alt} /> : <Image src={src} alt={alt} width={1200} height={800} className="w-full h-auto object-cover block" sizes="(max-width: 768px) 100vw, 50vw" />}
       <div className="absolute inset-0 rounded-md border border-foreground/20 z-10 pointer-events-none" />
     </div>
   );
@@ -87,7 +88,7 @@ export default function MarketingPageClient() {
       {/* App Preview Window */}
       <section className="w-full max-w-4xl mx-auto pb-10">
         <div className="px-4 sm:px-8 pb-8 max-h-[450px] overflow-hidden animate-fade-in">
-          <img src="/images/demo1.webp" alt="App Preview" className="w-full h-auto object-cover rounded-xl shadow-popover" />
+          <Image src="/images/demo1.webp" alt="App Preview" width={3132} height={2060} className="w-full h-auto object-cover rounded-xl shadow-popover" sizes="(max-width: 768px) 100vw, 800px" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 border-y border-primary/20">
           {HIGHLIGHT_FEATURES.map((feature, i) => (

@@ -86,7 +86,7 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
           <div className="size-14 rounded-xl overflow-hidden shadow-dzenn border-none flex items-center justify-center transition-all group-hover:border-primary/50 relative">
             {profile.avatarUrl ? <Image src={profile.avatarUrl} alt="Avatar" fill sizes="56px" className="object-cover" unoptimized /> : <Camera className="size-5 text-muted-foreground" />}
           </div>
-          <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleImageUpload} disabled={isUploading} />
+          <input type="file" accept="image/*" aria-label="Upload avatar" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleImageUpload} disabled={isUploading} />
           <div className="absolute inset-0 flex items-center justify-center rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-black/40">
             {isUploading ? <Loader2 className="size-4 text-white animate-spin" /> : <Camera className="size-4 text-white" />}
           </div>

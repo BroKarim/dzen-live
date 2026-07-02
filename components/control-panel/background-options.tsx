@@ -100,6 +100,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
           {BACKGROUND_COLORS.map((color) => (
             <button
               key={color}
+              type="button"
               onClick={() => handleBackgroundChange({ bgType: "color", bgColor: color })}
               className={`relative aspect-square size-10 rounded-md transition-all duration-200 ${
                 profile.bgColor === color ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 z-10" : "hover:scale-110 active:scale-95 border border-black/5"
@@ -124,6 +125,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
           {BACKGROUND_GRADIENTS.map((gradient) => (
             <button
               key={`${gradient.from}-${gradient.to}`}
+              type="button"
               onClick={() => handleBackgroundChange({ bgType: "gradient", bgGradientFrom: gradient.from, bgGradientTo: gradient.to })}
               className={`relative aspect-square size-10 rounded-md transition-all duration-200 ${
                 profile.bgGradientFrom === gradient.from && profile.bgGradientTo === gradient.to ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 z-10" : "hover:scale-110 active:scale-95 border border-black/5"

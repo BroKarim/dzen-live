@@ -48,20 +48,17 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
     setShowUnsavedDialog(false);
   };
 
-  const handlePreviewStyleClick = useCallback(
-    (target: StyleTarget) => {
-      const id = styleTargetId(target);
-      const el = document.querySelector(`[data-style-target="${id}"]`) as HTMLElement | null;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      openStylePopover({
-        target,
-        x: rect.left + rect.width / 2,
-        y: rect.bottom,
-      });
-    },
-    [openStylePopover],
-  );
+  const handlePreviewStyleClick = (target: StyleTarget) => {
+    const id = styleTargetId(target);
+    const el = document.querySelector(`[data-style-target="${id}"]`) as HTMLElement | null;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    openStylePopover({
+      target,
+      x: rect.left + rect.width / 2,
+      y: rect.bottom,
+    });
+  };
 
   if (!_hasHydrated) {
     return (

@@ -82,10 +82,10 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
         // Work on a mutable copy so we can swap temp-IDs with real IDs inline
         const resolvedLinks = [...(draftProfile.links || [])];
 
-        // Deletions first
-        const draftIds = new Set(resolvedLinks.map((l) => l.id));
-        for (const link of originalLinks.filter((l) => !draftIds.has(l.id))) {
-          const res = await deleteLink(link.id);
+        // Deletions first (all independent)
+        const toDelete = originalLinks.filter((l) => !new Set(resolvedLinks.map((l) => l.id)).has(l.id));
+        const deleteResults = await Promise.all(toDelete.map((link) => deleteLink(link.id)));
+        for (const res of deleteResults) {
           if (!res.success) {
             toast.error(`Failed to delete link: ${res.error}`, { id: toastId });
             return;
@@ -94,28 +94,38 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
 
         // Updates, then Creations (capture real IDs for temp links)
         const originalLinksMap = new Map(originalLinks.map((l) => [l.id, l]));
+        const linkCreateOps: { index: number; data: any }[] = [];
+        const linkUpdateOps: { id: string; data: any }[] = [];
+
         for (let i = 0; i < resolvedLinks.length; i++) {
           const draftLink = resolvedLinks[i];
-
           if (String(draftLink.id).startsWith("temp-")) {
             const { id: _tempId, ...linkData } = draftLink;
-            const res = await createLink(linkData as any);
-            if (!res.success) {
-              toast.error(`Failed to create link "${draftLink.title}": ${res.error}`, { id: toastId });
-              return;
-            }
-            // Replace temp entry with real server data so the store stays consistent
-            resolvedLinks[i] = res.data;
+            linkCreateOps.push({ index: i, data: linkData as any });
           } else {
             const originalLink = originalLinksMap.get(draftLink.id);
             if (originalLink && JSON.stringify(draftLink) !== JSON.stringify(originalLink)) {
               const { id, ...linkData } = draftLink;
-              const res = await updateLink(id, linkData as any);
-              if (!res.success) {
-                toast.error(`Failed to update link "${draftLink.title}": ${res.error}`, { id: toastId });
-                return;
-              }
+              linkUpdateOps.push({ id, data: linkData as any });
             }
+          }
+        }
+
+        const linkCreateResults = await Promise.all(linkCreateOps.map((op) => createLink(op.data)));
+        for (let i = 0; i < linkCreateResults.length; i++) {
+          const res = linkCreateResults[i];
+          if (!res.success) {
+            toast.error(`Failed to create link: ${res.error}`, { id: toastId });
+            return;
+          }
+          resolvedLinks[linkCreateOps[i].index] = res.data;
+        }
+
+        const linkUpdateResults = await Promise.all(linkUpdateOps.map((op) => updateLink(op.id, op.data)));
+        for (const res of linkUpdateResults) {
+          if (!res.success) {
+            toast.error(`Failed to update link: ${res.error}`, { id: toastId });
+            return;
           }
         }
 
@@ -134,9 +144,15 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
         const originalSocials = originalProfile?.socials || [];
         const resolvedSocials = [...(draftProfile.socials || [])];
 
-        const draftSocialIds = new Set(resolvedSocials.map((s) => s.id));
-        for (const social of originalSocials.filter((s) => !draftSocialIds.has(s.id))) {
-          const res = await deleteSocialLink(social.id);
+        const resolvedSocialIds = new Set(resolvedSocials.map((s) => s.id));
+        const socialDeleteOps: ReturnType<typeof deleteSocialLink>[] = [];
+        for (const s of originalSocials) {
+          if (!resolvedSocialIds.has(s.id)) {
+            socialDeleteOps.push(deleteSocialLink(s.id));
+          }
+        }
+        const socialDeleteResults = await Promise.all(socialDeleteOps);
+        for (const res of socialDeleteResults) {
           if (!res.success) {
             toast.error(`Failed to delete social: ${res.error}`, { id: toastId });
             return;
@@ -144,28 +160,38 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
         }
 
         const originalSocialsMap = new Map(originalSocials.map((s) => [s.id, s]));
+        const socialCreateOps: { index: number; data: any }[] = [];
+        const socialUpdateOps: { id: string; data: any }[] = [];
+
         for (let i = 0; i < resolvedSocials.length; i++) {
           const draftSocial = resolvedSocials[i];
-
           if (String(draftSocial.id).startsWith("temp-")) {
             const { id: _tempId, ...socialData } = draftSocial;
-            const res = await createSocialLink(socialData as any);
-            if (!res.success) {
-              toast.error(`Failed to create social: ${res.error}`, { id: toastId });
-              return;
-            }
-            // Replace with real server data
-            resolvedSocials[i] = res.data;
+            socialCreateOps.push({ index: i, data: socialData as any });
           } else {
             const originalSocial = originalSocialsMap.get(draftSocial.id);
             if (originalSocial && JSON.stringify(draftSocial) !== JSON.stringify(originalSocial)) {
               const { id, ...socialData } = draftSocial;
-              const res = await updateSocialLink(id, socialData as any);
-              if (!res.success) {
-                toast.error(`Failed to update social: ${res.error}`, { id: toastId });
-                return;
-              }
+              socialUpdateOps.push({ id, data: socialData as any });
             }
+          }
+        }
+
+        const socialCreateResults = await Promise.all(socialCreateOps.map((op) => createSocialLink(op.data)));
+        for (let i = 0; i < socialCreateResults.length; i++) {
+          const res = socialCreateResults[i];
+          if (!res.success) {
+            toast.error(`Failed to create social: ${res.error}`, { id: toastId });
+            return;
+          }
+          resolvedSocials[socialCreateOps[i].index] = res.data;
+        }
+
+        const socialUpdateResults = await Promise.all(socialUpdateOps.map((op) => updateSocialLink(op.id, op.data)));
+        for (const res of socialUpdateResults) {
+          if (!res.success) {
+            toast.error(`Failed to update social: ${res.error}`, { id: toastId });
+            return;
           }
         }
 

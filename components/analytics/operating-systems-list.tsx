@@ -12,16 +12,16 @@ interface OperatingSystemsListProps {
   data: OSItem[];
 }
 
+const getShare = (value: number, total: number) => {
+  return total > 0 ? ((value / total) * 100).toFixed(2) : "0";
+};
+
 export function OperatingSystemsList({ data }: OperatingSystemsListProps) {
   if (data.length === 0) {
     return null;
   }
 
   const totalForShare = data.reduce((sum, item) => sum + item.value, 0) || 1;
-
-  const getShare = (value: number, total: number) => {
-    return total > 0 ? ((value / total) * 100).toFixed(2) : "0";
-  };
 
   return (
     <Card className="rounded-none">

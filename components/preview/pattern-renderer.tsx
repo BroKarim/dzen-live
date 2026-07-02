@@ -53,6 +53,17 @@ function MaskContent({ type, actualScale, holeSize }: MaskContentProps) {
   }
 }
 
+const hexToRgb = (hex: string) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : { r: 255, g: 255, b: 255 };
+};
+
 export function PatternRenderer({ type, color, opacity, thickness, scale }: PatternRendererProps) {
   if (type === "none") return null;
 
@@ -63,18 +74,6 @@ export function PatternRenderer({ type, color, opacity, thickness, scale }: Patt
   const actualScale = (scale / 100) * 40;
 
   const holeSize = (thickness / 200) * actualScale;
-
-  // Convert hex color to RGB
-  const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result
-      ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
-        }
-      : { r: 255, g: 255, b: 255 };
-  };
 
   const rgb = hexToRgb(color);
 

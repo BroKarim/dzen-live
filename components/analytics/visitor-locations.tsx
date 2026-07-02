@@ -132,16 +132,16 @@ const getCountryFlag = (countryCode: string): string => {
   return String.fromCodePoint(...codePoints);
 };
 
+const getShare = (value: number, total: number) => {
+  return total > 0 ? ((value / total) * 100).toFixed(0) : "0";
+};
+
 export function VisitorLocations({ data }: VisitorLocationsProps) {
   if (data.length === 0) {
     return null;
   }
 
   const total = data.reduce((sum, item) => sum + item.value, 0) || 1;
-
-  const getShare = (value: number, total: number) => {
-    return total > 0 ? ((value / total) * 100).toFixed(0) : "0";
-  };
 
   const sortedData = data.toSorted((a, b) => b.value - a.value).slice(0, 10);
 

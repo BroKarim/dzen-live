@@ -158,7 +158,7 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
         <div className="border border-border rounded-xl bg-card overflow-hidden animate-in slide-in-from-top-2 duration-200">
           <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-muted/30">
             <span className="text-xs font-medium text-foreground">New Link</span>
-            <button onClick={resetForm} className="p-1 rounded-md hover:bg-muted transition-colors">
+            <button type="button" onClick={resetForm} className="p-1 rounded-md hover:bg-muted transition-colors">
               <X className="size-3.5 text-muted-foreground" />
             </button>
           </div>
@@ -176,6 +176,7 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
                 return (
                   <button
                     key={type.id}
+                    type="button"
                     onClick={() => setUiState((prev) => ({ ...prev, selectedType: type.id }))}
                     className={`
                       flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium transition-all
@@ -317,7 +318,7 @@ function SortableLinkItem({ link, onEdit, onDelete, deletingId }: SortableLinkIt
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <button onClick={() => onEdit(link)} className="p-1.5 rounded-md hover:bg-muted transition-colors">
+            <button type="button" onClick={() => onEdit(link)} className="p-1.5 rounded-md hover:bg-muted transition-colors">
               <Pencil className="size-3.5 text-muted-foreground" />
             </button>
           </TooltipTrigger>
@@ -326,7 +327,7 @@ function SortableLinkItem({ link, onEdit, onDelete, deletingId }: SortableLinkIt
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <button onClick={() => onDelete(link.id)} disabled={deletingId === link.id} className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors">
+            <button type="button" onClick={() => onDelete(link.id)} disabled={deletingId === link.id} className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors">
               {deletingId === link.id ? <Loader2 className="size-3.5 animate-spin text-muted-foreground" /> : <Trash2 className="size-3.5 text-destructive" />}
             </button>
           </TooltipTrigger>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const PRESET_COLORS = [
@@ -82,62 +82,73 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
   const gradientRef = useRef<HTMLDivElement>(null);
   const hueRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef<"sat" | "hue" | null>(null);
+  const onChangeRef = useRef(onChange);
+  const hslRef = useRef(hsl);
+  const prevHslRef = useRef(hsl);
 
   useEffect(() => {
-    if (value && isValidHex(value)) {
-      setHsl(hexToHsl(value));
-    }
-  }, [value]);
-
-  const updateColor = useCallback(
-    (next: Hsl) => {
-      setHsl(next);
-      const hex = hslToHex(next);
-      onChange(hex);
-    },
-    [onChange],
-  );
-
-  const updateFromGradient = useCallback(
-    (clientX: number, clientY: number) => {
-      const el = gradientRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const x = clamp(clientX - rect.left, 0, rect.width);
-      const y = clamp(clientY - rect.top, 0, rect.height);
-      const s = (x / rect.width) * 100;
-      const l = 100 - (y / rect.height) * 100;
-      updateColor({ h: hsl.h, s, l });
-    },
-    [hsl.h, updateColor],
-  );
-
-  const updateHue = useCallback(
-    (clientX: number) => {
-      const el = hueRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const x = clamp(clientX - rect.left, 0, rect.width);
-      const h = (x / rect.width) * 360;
-      updateColor({ h, s: hsl.s, l: hsl.l });
-    },
-    [hsl.s, hsl.l, updateColor],
-  );
+    onChangeRef.current = onChange;
+    hslRef.current = hsl;
+  });
 
   useEffect(() => {
-    if (!draggingRef.current) return;
-    const handler = (e: MouseEvent) => {
-      if (draggingRef.current === "sat") updateFromGradient(e.clientX, e.clientY);
-      else if (draggingRef.current === "hue") updateHue(e.clientX);
+    const onMove = (e: MouseEvent) => {
+      if (draggingRef.current === "sat") {
+        const el = gradientRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const x = clamp(e.clientX - rect.left, 0, rect.width);
+        const y = clamp(e.clientY - rect.top, 0, rect.height);
+        const s = (x / rect.width) * 100;
+        const l = 100 - (y / rect.height) * 100;
+        const next: Hsl = { h: hslRef.current.h, s, l };
+        setHsl(next);
+        onChangeRef.current(hslToHex(next));
+      } else if (draggingRef.current === "hue") {
+        const el = hueRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const x = clamp(e.clientX - rect.left, 0, rect.width);
+        const h = (x / rect.width) * 360;
+        const next: Hsl = { h, s: hslRef.current.s, l: hslRef.current.l };
+        setHsl(next);
+        onChangeRef.current(hslToHex(next));
+      }
     };
-    const up = () => (draggingRef.current = null);
-    window.addEventListener("mousemove", handler);
-    window.addEventListener("mouseup", up);
+    const onUp = () => (draggingRef.current = null);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
     return () => {
-      window.removeEventListener("mousemove", handler);
-      window.removeEventListener("mouseup", up);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
     };
-  }, [updateFromGradient, updateHue]);
+  }, []);
+
+  const handleGradientMouseDown = (e: React.MouseEvent) => {
+    draggingRef.current = "sat";
+    const el = gradientRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = clamp(e.clientX - rect.left, 0, rect.width);
+    const y = clamp(e.clientY - rect.top, 0, rect.height);
+    const s = (x / rect.width) * 100;
+    const l = 100 - (y / rect.height) * 100;
+    const next: Hsl = { h: hsl.h, s, l };
+    setHsl(next);
+    onChange(hslToHex(next));
+  };
+
+  const handleHueMouseDown = (e: React.MouseEvent) => {
+    draggingRef.current = "hue";
+    const el = hueRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = clamp(e.clientX - rect.left, 0, rect.width);
+    const h = (x / rect.width) * 360;
+    const next: Hsl = { h, s: hsl.s, l: hsl.l };
+    setHsl(next);
+    onChange(hslToHex(next));
+  };
 
   const handlePreset = (hex: string) => {
     onChange(hex);
@@ -158,6 +169,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
             className={cn("aspect-square rounded-md border border-white/10 transition-all hover:scale-110", currentHex.toLowerCase() === c.value.toLowerCase() && "ring-2 ring-white ring-offset-2 ring-offset-zinc-950")}
             style={{ backgroundColor: c.value }}
             title={c.name}
+            aria-label={c.name}
           />
         ))}
       </div>
@@ -166,10 +178,14 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
       <div className="space-y-2.5 rounded-lg border border-white/10 bg-zinc-900/50 p-2.5">
         <div
           ref={gradientRef}
-          onMouseDown={(e) => {
-            draggingRef.current = "sat";
-            updateFromGradient(e.clientX, e.clientY);
-          }}
+          onMouseDown={handleGradientMouseDown}
+          role="slider"
+          tabIndex={0}
+          aria-label="Saturation and lightness"
+          aria-valuenow={Math.round(hsl.s)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuetext={`saturation ${Math.round(hsl.s)}%, lightness ${Math.round(hsl.l)}%`}
           className="relative h-28 w-full rounded-md cursor-crosshair touch-none"
           style={{
             backgroundColor: hslToHex({ h: hsl.h, s: 100, l: 50 }),
@@ -181,10 +197,14 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
 
         <div
           ref={hueRef}
-          onMouseDown={(e) => {
-            draggingRef.current = "hue";
-            updateHue(e.clientX);
-          }}
+          onMouseDown={handleHueMouseDown}
+          role="slider"
+          tabIndex={0}
+          aria-label="Hue"
+          aria-valuenow={Math.round(hsl.h)}
+          aria-valuemin={0}
+          aria-valuemax={360}
+          aria-valuetext={`${Math.round(hsl.h)} degrees`}
           className="relative h-2.5 w-full rounded-full cursor-pointer touch-none"
           style={{ background: "linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%)" }}
         >

@@ -27,16 +27,16 @@ const getDeviceColor = (deviceName: string) => {
   return DEVICE_COLORS.desktop;
 };
 
+const getShare = (value: number, total: number) => {
+  return total > 0 ? ((value / total) * 100).toFixed(2) : "0";
+};
+
 export function DeviceBreakdown({ data }: DeviceBreakdownProps) {
   if (data.length === 0) {
     return null;
   }
 
   const total = data.reduce((sum, item) => sum + item.value, 0) || 1;
-
-  const getShare = (value: number, total: number) => {
-    return total > 0 ? ((value / total) * 100).toFixed(2) : "0";
-  };
 
   const sortedData = data.toSorted((a, b) => b.value - a.value);
 

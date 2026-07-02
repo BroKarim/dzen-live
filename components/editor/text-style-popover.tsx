@@ -28,12 +28,9 @@ export function TextStylePopover() {
   const [showFonts, setShowFonts] = useState(false);
   const [showColors, setShowColors] = useState(false);
   const [placement, setPlacement] = useState<Placement>("bottom");
-
-  useEffect(() => {
-    if (!stylePopover) return;
-    setShowFonts(false);
-    setShowColors(false);
-  }, [stylePopover?.target]);
+  const styleTargetKey = stylePopover?.target
+    ? `${stylePopover.target.type}:${"id" in stylePopover.target ? stylePopover.target.id : ""}:${stylePopover.target.field}`
+    : null;
 
   useEffect(() => {
     if (!stylePopover) return;
@@ -81,7 +78,7 @@ export function TextStylePopover() {
   };
 
   return createPortal(
-    <div ref={popoverRef} onClick={(e) => e.stopPropagation()}>
+    <div key={styleTargetKey} ref={popoverRef} onClick={(e) => e.stopPropagation()}>
       <StylePopoverInner
         stylePopover={stylePopover}
         targetEl={targetEl}
@@ -122,6 +119,7 @@ export function TextStylePopover() {
                   className={cn("size-8 shrink-0 rounded-full border-2 transition-colors", showColors ? "border-white/40" : "border-white/20 hover:border-white/40")}
                   style={{ backgroundColor: currentStyle?.color || "#ffffff" }}
                   title={currentStyle?.color || "Default color"}
+                  aria-label={currentStyle?.color || "Default color"}
                 />
               </PopoverTrigger>
               <PopoverContent side="bottom" align="end" sideOffset={12} className="w-64 rounded-xl border border-white/10 bg-zinc-950/95 backdrop-blur-xl shadow-2xl p-3 text-white z-[10000]">

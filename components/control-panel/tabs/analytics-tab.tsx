@@ -80,6 +80,14 @@ function formatDuration(seconds: number): string {
   return `${minutes}m ${secs}s`;
 }
 
+const totalForShare = (data: Array<{ clicks?: number; value?: number }>) => {
+  return data.reduce((sum, item) => sum + (item.clicks || item.value || 0), 0) || 1;
+};
+
+const getShare = (clicks: number, total: number) => {
+  return total > 0 ? ((clicks / total) * 100).toFixed(2) : "0";
+};
+
 export function AnalyticsTab({ profileId, links }: AnalyticsTabProps) {
   const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -195,14 +203,6 @@ export function AnalyticsTab({ profileId, links }: AnalyticsTabProps) {
         value: item.clicks,
       }))
     : [];
-
-  const totalForShare = (data: Array<{ clicks?: number; value?: number }>) => {
-    return data.reduce((sum, item) => sum + (item.clicks || item.value || 0), 0) || 1;
-  };
-
-  const getShare = (clicks: number, total: number) => {
-    return total > 0 ? ((clicks / total) * 100).toFixed(2) : "0";
-  };
 
   const clicksOverTimeData = stats.clicksOverTime
     ? stats.clicksOverTime.map((item: { date: string; clicks: number; sessions?: number; visitors?: number }) => ({

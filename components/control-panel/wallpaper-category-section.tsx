@@ -33,6 +33,7 @@ export default function WallpaperCategorySection({ category, wallpapers, selecte
           return (
             <button
               key={preset.id}
+              type="button"
               onClick={() => onSelect(preset.url)}
               className={`relative h-20 overflow-hidden rounded-lg border-2 transition-[border-color,transform] duration-200 ${
                 isSelected ? "border-primary ring-2 ring-primary/20 ring-offset-2 ring-offset-background scale-105" : "border-transparent hover:border-primary/50 hover:scale-105"
@@ -49,6 +50,7 @@ export default function WallpaperCategorySection({ category, wallpapers, selecte
         {/* Expand/Collapse Button - Positioned at cell 6 (row 2, col 3) */}
         {hasMore && !isExpanded && (
           <button
+            type="button"
             onClick={handleExpand}
             className="relative h-20 overflow-hidden rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 hover:bg-muted/40 hover:border-primary/50 transition-colors hover:scale-105 flex flex-col items-center justify-center gap-1"
           >
@@ -60,7 +62,7 @@ export default function WallpaperCategorySection({ category, wallpapers, selecte
 
       {/* Collapse Button - Shown when expanded */}
       {isExpanded && hasMore && (
-        <button onClick={handleCollapse} className="w-full py-2 rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 hover:bg-muted/40 hover:border-primary/50 transition-colors flex items-center justify-center gap-2">
+        <button type="button" onClick={handleCollapse} className="w-full py-2 rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 hover:bg-muted/40 hover:border-primary/50 transition-colors flex items-center justify-center gap-2">
           <ChevronUp className="size-4 text-muted-foreground" />
           <span className="text-xs font-medium text-muted-foreground">Show Less</span>
         </button>

@@ -90,7 +90,7 @@ export function TexturedCard({
             <div className="flex items-center gap-3">
               <h2
                 {...(id ? { "data-style-target": styleTargetId({ type: "link", id, field: "title" }) } : {})}
-                onClick={handleTitleClick}
+                {...(isEditor && id ? { onClick: handleTitleClick, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleTitleClick(e as any); } }, tabIndex: 0, role: "button" as const } : {})}
                 style={titleStyleObj}
                 className={`${titleColorClass} text-lg font-semibold tracking-tighter line-clamp-2 text-right leading-snug ${isEditor ? "cursor-pointer rounded transition-all duration-150 hover:outline hover:outline-1 hover:outline-dashed hover:outline-white/40 hover:outline-offset-2" : ""}`}
               >
@@ -107,7 +107,7 @@ export function TexturedCard({
           <div className="flex items-center gap-3">
             <h2
               {...(id ? { "data-style-target": styleTargetId({ type: "link", id, field: "title" }) } : {})}
-              onClick={handleTitleClick}
+              {...(isEditor && id ? { onClick: handleTitleClick, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleTitleClick(e as any); } }, tabIndex: 0, role: "button" as const } : {})}
               style={titleStyleObj}
               className={`${titleColorClass} text-lg font-semibold tracking-tighter line-clamp-2 text-center leading-snug max-w-[200px] ${isEditor ? "cursor-pointer rounded transition-all duration-150 hover:outline hover:outline-1 hover:outline-dashed hover:outline-white/40 hover:outline-offset-2" : ""}`}
             >

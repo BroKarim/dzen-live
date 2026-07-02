@@ -158,6 +158,7 @@ export function LinkEditDialog({ link, open, onOpenChange, onSave }: LinkEditDia
               return (
                 <button
                   key={type.id}
+                  type="button"
                   onClick={() => setUiState((prev) => ({ ...prev, selectedType: type.id }))}
                   className={`
                     flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium transition-all

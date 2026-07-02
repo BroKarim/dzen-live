@@ -11,6 +11,7 @@ export function ViewModeToggle({ viewMode, setViewMode }: ViewModeToggleProps) {
     <div className="flex justify-center">
       <div className="flex items-center gap-1 rounded-lg   p-1">
         <button
+          type="button"
           onClick={() => setViewMode("mobile")}
           className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
             viewMode === "mobile"
@@ -22,6 +23,7 @@ export function ViewModeToggle({ viewMode, setViewMode }: ViewModeToggleProps) {
           Mobile
         </button>
         <button
+          type="button"
           onClick={() => setViewMode("desktop")}
           className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
             viewMode === "desktop"

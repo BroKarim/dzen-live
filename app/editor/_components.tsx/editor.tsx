@@ -8,13 +8,12 @@ import EditorClient from "../_components.tsx/editor-client";
 export default async function EditorContent({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
 
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const [session, profile] = await Promise.all([
+    auth.api.getSession({ headers: await headers() }),
+    findProfileByUsername(username),
+  ]);
 
   if (!session?.user) redirect("/login");
-
-  const profile = await findProfileByUsername(username);
 
   if (!profile) notFound();
   if (profile.userId !== session.user.id) redirect("/editor");

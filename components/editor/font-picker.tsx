@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Check, Search, Type } from "lucide-react";
 import { FONT_CATALOG, type FontEntry } from "@/lib/font-catalog";
 import { cn } from "@/lib/utils";
@@ -13,20 +13,18 @@ interface FontPickerProps {
 export function FontPicker({ value, onChange }: FontPickerProps) {
   const [query, setQuery] = useState("");
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return FONT_CATALOG;
-    return FONT_CATALOG.filter((f) => f.name.toLowerCase().includes(q) || f.category.includes(q));
-  }, [query]);
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? FONT_CATALOG.filter((f) => f.name.toLowerCase().includes(q) || f.category.includes(q))
+    : FONT_CATALOG;
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, FontEntry[]>();
-    filtered.forEach((f) => {
+  const grouped = Array.from(
+    filtered.reduce((map, f) => {
       if (!map.has(f.category)) map.set(f.category, []);
       map.get(f.category)!.push(f);
-    });
-    return Array.from(map.entries());
-  }, [filtered]);
+      return map;
+    }, new Map<string, FontEntry[]>()),
+  );
 
   return (
     <div className="space-y-2 w-full">
@@ -37,8 +35,8 @@ export function FontPicker({ value, onChange }: FontPickerProps) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search fonts…"
+          aria-label="Search fonts"
           className="w-full h-8 pl-8 pr-2 text-xs rounded-md bg-zinc-900/50 border border-white/10 outline-none focus:border-white/30 text-white"
-          autoFocus // Bagus untuk UX agar langsung bisa ngetik saat popover terbuka
         />
       </div>
 
@@ -52,7 +50,7 @@ export function FontPicker({ value, onChange }: FontPickerProps) {
               {fonts.map((f) => {
                 const isActive = value === f.name;
                 return (
-                  <button key={f.name} onClick={() => onChange(f.name)} className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-left", isActive ? "bg-white/10" : "hover:bg-white/5")}>
+                  <button key={f.name} type="button" onClick={() => onChange(f.name)} className={cn("w-full flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-left", isActive ? "bg-white/10" : "hover:bg-white/5")}>
                     <div className={cn("flex items-center justify-center size-6 rounded shrink-0 text-[10px]", isActive ? "bg-white text-zinc-900" : "bg-white/5 text-muted-foreground")}>
                       {isActive ? <Check className="size-3" /> : <Type className="size-3" />}
                     </div>

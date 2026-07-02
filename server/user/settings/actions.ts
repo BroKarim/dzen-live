@@ -28,10 +28,12 @@ export async function getOnboardingStatus() {
 }
 
 export async function checkUsernameAvailability(username: string) {
-  const user = await getSession();
-  const existing = await db.profile.findUnique({
-    where: { username: username.toLowerCase() },
-  });
+  const [user, existing] = await Promise.all([
+    getSession(),
+    db.profile.findUnique({
+      where: { username: username.toLowerCase() },
+    }),
+  ]);
   return !existing;
 }
 

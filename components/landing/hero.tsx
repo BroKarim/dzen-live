@@ -71,6 +71,7 @@ export function Hero() {
                       value={username}
                       onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
                       required
+                      aria-label="Username"
                       className="flex-1 border-none text-white placeholder:text-white/20 h-full px-1  focus:outline-none  rounded-none font-medium text-sm sm:text-base cursor-text"
                     />
                   </div>

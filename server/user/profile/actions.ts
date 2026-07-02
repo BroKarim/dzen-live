@@ -67,14 +67,16 @@ export const saveAllProfileChanges = withAuth("profile/actions", async (user, da
   });
 
   if (data.links) {
-    for (const link of data.links) {
-      if (link.titleStyle !== undefined) {
-        await db.link.update({
-          where: { id: link.id },
-          data: { titleStyle: toJsonInput(link.titleStyle) },
-        });
-      }
-    }
+    await Promise.all(
+      data.links
+        .filter((link) => link.titleStyle !== undefined)
+        .map((link) =>
+          db.link.update({
+            where: { id: link.id },
+            data: { titleStyle: toJsonInput(link.titleStyle) },
+          }),
+        ),
+    );
   }
 
   if (data.avatarUrl && currentProfile.avatarUrl && currentProfile.avatarUrl !== data.avatarUrl) {

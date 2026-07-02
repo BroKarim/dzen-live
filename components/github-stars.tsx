@@ -5,9 +5,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import Link from "next/link";
 import { useGitHubStars } from "@/lib/hooks/use-github-stars";
 
-const fmtCompact = (n: number) =>
-  new Intl.NumberFormat("en-US", { notation: "compact", compactDisplay: "short" }).format(n);
-const fmtLong = (n: number) => new Intl.NumberFormat("en-US").format(n);
+const compactFormatter = new Intl.NumberFormat("en-US", { notation: "compact", compactDisplay: "short" });
+const longFormatter = new Intl.NumberFormat("en-US");
+const fmtCompact = (n: number) => compactFormatter.format(n);
+const fmtLong = (n: number) => longFormatter.format(n);
 
 
 type GitHubStarsProps = {
@@ -32,10 +33,7 @@ export function GitHubStars({ repo }: GitHubStarsProps) {
                 <span className="text-sm font-medium tabular-nums text-muted-foreground">...</span>
               ) : (
                 <span className="text-sm font-medium tabular-nums text-muted-foreground">
-                  {new Intl.NumberFormat("en-US", {
-                    notation: "compact",
-                    compactDisplay: "short",
-                  }).format(stargazersCount)}
+                  {fmtCompact(stargazersCount)}
                 </span>
               )}
             </Link>

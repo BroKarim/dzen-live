@@ -30,15 +30,15 @@ interface TrafficSourceListProps {
   getIcon?: (item: TrafficSource) => React.ReactNode;
 }
 
+const totalForShare = (data: TrafficSource[]) => {
+  return data.reduce((sum, item) => sum + item.clicks, 0) || 1;
+};
+
+const getShare = (clicks: number, total: number) => {
+  return total > 0 ? ((clicks / total) * 100).toFixed(2) : "0";
+};
+
 function TrafficSourceList({ data, getLabel, getIcon }: TrafficSourceListProps) {
-  const totalForShare = (data: TrafficSource[]) => {
-    return data.reduce((sum, item) => sum + item.clicks, 0) || 1;
-  };
-
-  const getShare = (clicks: number, total: number) => {
-    return total > 0 ? ((clicks / total) * 100).toFixed(2) : "0";
-  };
-
   if (data.length === 0) {
     return (
       <Empty>

@@ -19,6 +19,12 @@ const formatNumber = (num: number): string => {
   return num.toString();
 };
 
+const getShare = (value: number, total: number) => {
+  return total > 0 ? ((value / total) * 100).toFixed(2) : "0";
+};
+
+const isFirstRow = (index: number) => index === 0;
+
 export function BrowserBreakdown({ data }: BrowserBreakdownProps) {
   if (data.length === 0) {
     return null;
@@ -26,12 +32,7 @@ export function BrowserBreakdown({ data }: BrowserBreakdownProps) {
 
   const total = data.reduce((sum, item) => sum + item.value, 0) || 1;
 
-  const getShare = (value: number, total: number) => {
-    return total > 0 ? ((value / total) * 100).toFixed(2) : "0";
-  };
-
   const sortedData = data.toSorted((a, b) => b.value - a.value);
-  const isFirstRow = (index: number) => index === 0;
 
   return (
     <Card className="rounded-xl border-white/5 bg-white/5 shadow-none overflow-hidden">
