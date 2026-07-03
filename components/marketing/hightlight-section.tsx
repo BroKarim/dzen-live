@@ -1,35 +1,29 @@
-import { CodeIcon, DatabaseIcon, GridIcon, TerminalIcon } from "./icons";
+import { Heart, Code2, ChartLine } from "lucide-react";
 
 const highlights = [
   {
-    icon: CodeIcon,
-    title: "Languages",
-    description: "Add syntax, LSP, formatting, and tooling support.",
+    icon: Heart,
+    title: "100% Free",
+    description: "All core features are completely free, no hidden fees or subscription required.",
     className: "border-primary/20 bg-primary/10 text-primary",
   },
   {
-    icon: DatabaseIcon,
-    title: "Databases",
-    description: "Browse schemas and query project data inline.",
-    className: "border-success-foreground/20 bg-success-surface text-success-foreground",
-  },
-  {
-    icon: GridIcon,
-    title: "Themes",
-    description: "Install editor themes and file icon packs.",
+    icon: Code2,
+    title: "Open Source",
+    description: "Fully transparent codebase you can audit, fork, and contribute to.",
     className: "border-sky-500/20 bg-sky-500/10 text-sky-500 dark:text-sky-300",
   },
   {
-    icon: TerminalIcon,
-    title: "Agent tools",
-    description: "Connect coding agents and command-line helpers.",
+    icon: ChartLine,
+    title: "360° Deep Analytics",
+    description: "Gain comprehensive insights with real‑time, granular analytics for every link.",
     className: "border-warning-foreground/20 bg-warning-surface text-warning-foreground",
   },
 ];
 
 export function HighlightsSection() {
   return (
-    <section className="mx-auto grid max-w-6xl gap-8 px-8 sm:grid-cols-2 sm:px-10 lg:grid-cols-4 lg:px-16 xl:px-24" aria-label="Athas highlights">
+    <section className="mx-auto grid max-w-6xl gap-8 px-8 sm:grid-cols-2 sm:px-10 lg:grid-cols-3 lg:px-16 xl:px-24" aria-label="Dzenn highlights">
       {highlights.map((item) => (
         <div key={item.title} className="min-w-0">
           <div className={`inline-flex size-11 items-center justify-center rounded-lg border ${item.className}`}>

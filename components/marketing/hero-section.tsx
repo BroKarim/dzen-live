@@ -40,7 +40,7 @@ export function HeroSection() {
 
           <div className="mt-16">
             <div className="overflow-hidden">
-              <Image src="/images/athas/athas-window-light.webp" alt="Athas Code Editor" width={2400} height={1552} className="w-full" priority />
+              <Image src="/images/demo1.webp" alt="Athas Code Editor" width={2400} height={1552} className="w-full" priority />
             </div>
           </div>
         </div>

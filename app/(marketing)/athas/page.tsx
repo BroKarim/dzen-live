@@ -5,7 +5,7 @@ import { FeaturesSection } from "@/components/marketing/feature-section";
 import { FooterCTA } from "@/components/marketing/footer-cta";
 import { Footer } from "@/components/marketing/footer";
 
-export default function AthasHome() {
+export default function DzennHome() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header />
