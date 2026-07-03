@@ -256,6 +256,20 @@ function AnimatedConfigControls({
                 {String(config[field.key] ?? field.default)}
               </span>
             </div>
+          ) : field.type === "boolean" ? (
+            <button
+              type="button"
+              onClick={() => handleChange(field.key, !(config[field.key] ?? field.default))}
+              className={`relative h-6 w-11 rounded-full transition-colors ${
+                config[field.key] ?? field.default ? "bg-primary" : "bg-muted-foreground/30"
+              }`}
+            >
+              <span
+                className={`absolute left-0.5 top-0.5 size-5 rounded-full bg-white transition-transform ${
+                  config[field.key] ?? field.default ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
           ) : field.type === "number" ? (
             <input
               type="number"
