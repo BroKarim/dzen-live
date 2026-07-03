@@ -20,7 +20,7 @@ enum Role {
 
 enum BackgroundType {
   color
-  gradient
+  animated
   wallpaper
   image
 }
@@ -126,8 +126,8 @@ model Profile {
   // --- Background Settings ---
   bgType      BackgroundType @default(color)
   bgColor     String         @default("#1a1a1a")
-  bgGradientFrom String?
-  bgGradientTo   String?
+  bgAnimated     String?
+  bgAnimatedConfig Json?
   bgWallpaper    String?
   bgImage        String?     
   

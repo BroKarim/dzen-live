@@ -3,8 +3,6 @@ import type { CSSProperties } from "react";
 interface BackgroundStyleConfig {
   bgType: string;
   bgColor: string;
-  bgGradientFrom: string | null;
-  bgGradientTo: string | null;
   bgWallpaper: string | null;
   bgImage: string | null;
 }
@@ -23,10 +21,8 @@ export interface BackgroundEffects {
  */
 export function getBackgroundStyle(config: BackgroundStyleConfig): CSSProperties {
   switch (config.bgType) {
-    case "gradient":
-      return {
-        background: `linear-gradient(135deg, ${config.bgGradientFrom} 0%, ${config.bgGradientTo} 100%)`,
-      };
+    case "animated":
+      return { backgroundColor: config.bgColor };
     case "wallpaper": {
       const url = config.bgWallpaper;
       const finalUrl = url?.includes("cloudfront-base") ? url : url?.startsWith("http") ? url : `https://d1uuiykksp6inc.cloudfront.net/wallappers/${url}`;

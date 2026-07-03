@@ -43,8 +43,8 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
           draftProfile.layout !== originalProfile?.layout ||
           draftProfile.bgType !== originalProfile?.bgType ||
           draftProfile.bgColor !== originalProfile?.bgColor ||
-          draftProfile.bgGradientFrom !== originalProfile?.bgGradientFrom ||
-          draftProfile.bgGradientTo !== originalProfile?.bgGradientTo ||
+          draftProfile.bgAnimated !== originalProfile?.bgAnimated ||
+          JSON.stringify(draftProfile.bgAnimatedConfig) !== JSON.stringify(originalProfile?.bgAnimatedConfig) ||
           draftProfile.bgWallpaper !== originalProfile?.bgWallpaper ||
           draftProfile.bgImage !== originalProfile?.bgImage ||
           draftProfile.cardTexture !== originalProfile?.cardTexture ||
@@ -61,8 +61,8 @@ export default function EditorHeader({ profile }: EditorHeaderProps) {
             layout: draftProfile.layout as any,
             bgType: draftProfile.bgType as any,
             bgColor: draftProfile.bgColor,
-            bgGradientFrom: draftProfile.bgGradientFrom,
-            bgGradientTo: draftProfile.bgGradientTo,
+            bgAnimated: draftProfile.bgAnimated,
+            bgAnimatedConfig: draftProfile.bgAnimatedConfig as any,
             bgWallpaper: draftProfile.bgWallpaper,
             bgImage: draftProfile.bgImage,
             bgEffects: draftProfile.bgEffects as any,

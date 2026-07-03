@@ -27,8 +27,8 @@ export const publicProfilePayload = {
   // Background
   bgType: true,
   bgColor: true,
-  bgGradientFrom: true,
-  bgGradientTo: true,
+  bgAnimated: true,
+  bgAnimatedConfig: true,
   bgWallpaper: true,
   bgImage: true,
   bgEffects: true,

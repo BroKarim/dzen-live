@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Github } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -30,7 +30,11 @@ function SignInInner() {
   const [isGithubLoading, setIsGithubLoading] = useState(false);
   const [isDiscordLoading, setIsDiscordLoading] = useState(false);
 
-  const lastMethod = authClient.getLastUsedLoginMethod();
+  const [lastMethod, setLastMethod] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLastMethod(authClient.getLastUsedLoginMethod());
+  }, []);
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -44,7 +48,7 @@ function SignInInner() {
       const result = await authClient.signIn.social({
         provider: "google",
         callbackURL: getCallbackUrl(),
-        errorCallbackURL: `${appUrl}/login-new`,
+        errorCallbackURL: `${appUrl}/login`,
       });
       if (result.error) {
         throw new Error(result.error.message);
@@ -61,7 +65,7 @@ function SignInInner() {
       const result = await authClient.signIn.social({
         provider: "github",
         callbackURL: getCallbackUrl(),
-        errorCallbackURL: `${appUrl}/login-new`,
+        errorCallbackURL: `${appUrl}/login`,
       });
       if (result.error) {
         throw new Error(result.error.message);
@@ -78,7 +82,7 @@ function SignInInner() {
       const result = await authClient.signIn.social({
         provider: "discord",
         callbackURL: getCallbackUrl(),
-        errorCallbackURL: `${appUrl}/login-new`,
+        errorCallbackURL: `${appUrl}/login`,
       });
       if (result.error) {
         throw new Error(result.error.message);

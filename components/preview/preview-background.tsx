@@ -1,13 +1,14 @@
 import { PatternRenderer } from "./pattern-renderer";
 import { getBackgroundStyle, getFilterStyle, shouldScaleForBlur } from "@/lib/utils/preview-background";
+import { getAnimatedBackgroundComponent } from "@/lib/animated-backgrounds";
 import type { BackgroundEffects } from "@/lib/utils/preview-background";
 
 interface PreviewBackgroundProps {
   profile: {
     bgType: string;
     bgColor: string;
-    bgGradientFrom: string | null;
-    bgGradientTo: string | null;
+    bgAnimated: string | null;
+    bgAnimatedConfig: any;
     bgWallpaper: string | null;
     bgImage: string | null;
     bgEffects: any;
@@ -27,6 +28,12 @@ export function PreviewBackground({ profile }: PreviewBackgroundProps) {
 
   const noiseOpacity = (bgEffects?.noise ?? 0) / 100;
 
+  const AnimatedComponent =
+    profile.bgType === "animated" && profile.bgAnimated
+      ? getAnimatedBackgroundComponent(profile.bgAnimated)
+      : null;
+  const animatedConfig = (profile.bgAnimatedConfig as Record<string, unknown>) || {};
+
   return (
     <>
       {/* Background Layer - Only transition background properties, NOT filters */}
@@ -37,6 +44,11 @@ export function PreviewBackground({ profile }: PreviewBackgroundProps) {
           transition: "background-color 0.5s ease, background-image 0.5s ease",
         }}
       />
+
+      {/* Animated Background Layer */}
+      {AnimatedComponent && (
+        <AnimatedComponent className="absolute inset-0" {...animatedConfig} />
+      )}
 
       {/* Effects Layer - Separated to avoid repainting background on filter changes */}
       {filterStyle !== "none" && (

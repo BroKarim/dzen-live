@@ -2,14 +2,14 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Upload, Image as ImageIcon, Palette, Rainbow } from "lucide-react";
+import { Upload, Image as ImageIcon, Palette, Sparkles } from "lucide-react";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 import { BACKGROUND_COLORS } from "@/lib/background-colors";
-import { BACKGROUND_GRADIENTS } from "@/lib/background-gradients";
 import { getBackgroundPresets } from "@/server/website/background-presets/actions";
 import type { BackgroundPreset } from "@/server/website/background-presets/schema";
 import { useEffect, useState } from "react";
 import WallpaperCategorySection from "./wallpaper-category-section";
+import { ANIMATED_BACKGROUNDS, type AnimatedBackgroundMeta } from "@/lib/animated-backgrounds";
 
 interface BackgroundOptionsProps {
   profile: ProfileEditorData;
@@ -74,10 +74,10 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
             <span className="text-[10px] font-medium text-muted-foreground">Color</span>
           </div>
         </TabsTrigger>
-        <TabsTrigger value="gradient" className="p-0 h-full w-full">
+        <TabsTrigger value="animated" className="p-0 h-full w-full">
           <div className="size-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
-            <Rainbow className="size-6 text-muted-foreground" />
-            <span className="text-[10px] font-medium text-muted-foreground">Gradient</span>
+            <Sparkles className="size-6 text-muted-foreground" />
+            <span className="text-[10px] font-medium text-muted-foreground">Animated</span>
           </div>
         </TabsTrigger>
         <TabsTrigger value="wallpaper" className="p-0 h-full w-full">
@@ -119,23 +119,49 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
         </div>
       </TabsContent>
 
-      <TabsContent value="gradient" className="space-y-4 pt-4">
+      <TabsContent value="animated" className="space-y-4 pt-4">
         <div className="flex flex-wrap gap-1 justify-between">
-          {BACKGROUND_GRADIENTS.map((gradient) => (
-            <button
-              key={`${gradient.from}-${gradient.to}`}
-              type="button"
-              onClick={() => handleBackgroundChange({ bgType: "gradient", bgGradientFrom: gradient.from, bgGradientTo: gradient.to })}
-              className={`relative aspect-square size-10 rounded-md transition-all duration-200 ${
-                profile.bgGradientFrom === gradient.from && profile.bgGradientTo === gradient.to ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 z-10" : "hover:scale-110 active:scale-95 border border-black/5"
-              }`}
-              style={{ background: `linear-gradient(135deg, ${gradient.from}, ${gradient.to})` }}
-              title={gradient.name}
-            >
-              {profile.bgGradientFrom === gradient.from && profile.bgGradientTo === gradient.to && <div className="absolute inset-0 rounded-md border-2 border-primary/20 animate-pulse" />}
-            </button>
-          ))}
+          {Object.values(ANIMATED_BACKGROUNDS).map((meta: AnimatedBackgroundMeta) => {
+            const isSelected = profile.bgAnimated === meta.id;
+            return (
+              <button
+                key={meta.id}
+                type="button"
+                onClick={() =>
+                  handleBackgroundChange({
+                    bgType: "animated",
+                    bgAnimated: meta.id,
+                    bgAnimatedConfig: meta.defaultConfig,
+                  })
+                }
+                className={`relative aspect-square size-10 rounded-md transition-all duration-200 ${
+                  isSelected
+                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 z-10"
+                    : "hover:scale-110 active:scale-95 border border-black/5"
+                }`}
+                style={{ background: meta.preview }}
+                title={meta.label}
+              >
+                {isSelected && (
+                  <div className="absolute inset-0 rounded-md border-2 border-primary/20 animate-pulse" />
+                )}
+                <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[8px] text-muted-foreground whitespace-nowrap">
+                  {meta.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
+
+        {profile.bgAnimated && profile.bgAnimatedConfig && (
+          <AnimatedConfigControls
+            meta={ANIMATED_BACKGROUNDS[profile.bgAnimated]}
+            config={profile.bgAnimatedConfig as Record<string, unknown>}
+            onConfigChange={(nextConfig) =>
+              handleBackgroundChange({ bgAnimatedConfig: nextConfig })
+            }
+          />
+        )}
       </TabsContent>
 
       <TabsContent value="wallpaper" className="space-y-4 pt-4">
@@ -189,5 +215,73 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
         */}
       </TabsContent>
     </Tabs>
+  );
+}
+
+function AnimatedConfigControls({
+  meta,
+  config,
+  onConfigChange,
+}: {
+  meta: AnimatedBackgroundMeta;
+  config: Record<string, unknown>;
+  onConfigChange: (config: Record<string, unknown>) => void;
+}) {
+  const handleChange = (key: string, value: unknown) => {
+    onConfigChange({ ...config, [key]: value });
+  };
+
+  return (
+    <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+        {meta.label} Settings
+      </p>
+      {meta.configFields.map((field) => (
+        <div key={field.key} className="flex items-center justify-between gap-3">
+          <label className="text-xs font-medium text-muted-foreground capitalize">
+            {field.label}
+          </label>
+          {field.type === "range" ? (
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min={field.min}
+                max={field.max}
+                step={field.step ?? 0.05}
+                value={String(config[field.key] ?? field.default)}
+                onChange={(e) => handleChange(field.key, parseFloat(e.target.value))}
+                className="h-1 w-24 accent-primary"
+              />
+              <span className="text-[10px] text-muted-foreground w-8 text-right tabular-nums">
+                {String(config[field.key] ?? field.default)}
+              </span>
+            </div>
+          ) : field.type === "number" ? (
+            <input
+              type="number"
+              min={field.min}
+              max={field.max}
+              step={field.step ?? 10}
+              value={String(config[field.key] ?? field.default)}
+              onChange={(e) => handleChange(field.key, parseFloat(e.target.value))}
+              className="h-7 w-20 rounded-md border bg-background px-2 text-xs"
+            />
+          ) : (
+            <div className="flex items-center gap-2">
+              <div
+                className="size-5 rounded-full border"
+                style={{ backgroundColor: String(config[field.key] ?? field.default) }}
+              />
+              <input
+                type="text"
+                value={String(config[field.key] ?? field.default)}
+                onChange={(e) => handleChange(field.key, e.target.value)}
+                className="h-7 w-20 rounded-md border bg-background px-2 text-xs"
+              />
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }

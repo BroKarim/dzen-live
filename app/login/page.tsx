@@ -3,13 +3,11 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getOnboardingStatus } from "@/server/user/settings/actions";
-import { LoginClient } from "./login-client";
+import { SignInClient } from "./sign-in-client";
 import type { Metadata } from "next";
 
-const BG_IMAGE_URL = "https://res.cloudinary.com/dctl5pihh/image/upload/f_auto,q_auto,w_1920/v1768287477/background_valoru.jpg";
-
 export const metadata: Metadata = {
-  title: "Login · Dzenn",
+  title: "Sign In · Dzenn",
   description: "Sign in to your Dzenn account to manage your profile and analytics.",
 };
 
@@ -18,7 +16,6 @@ export default async function LoginPage() {
     headers: await headers(),
   });
 
-  // Server-side redirect if authenticated
   if (session?.user) {
     let onboardingInfo;
     try {
@@ -30,7 +27,7 @@ export default async function LoginPage() {
       redirect("/new");
     }
 
-    const { isOnboarded, username } = onboardingInfo!;
+    const { isOnboarded, username } = onboardingInfo;
     if (!isOnboarded || !username) {
       redirect("/new");
     } else {
@@ -38,13 +35,9 @@ export default async function LoginPage() {
     }
   }
 
-  // If no session, show the login UI
   return (
-    <>
-      <link rel="preload" href={BG_IMAGE_URL} as="image" fetchPriority="high" />
-      <Suspense fallback={null}>
-        <LoginClient />
-      </Suspense>
-    </>
+    <Suspense fallback={null}>
+      <SignInClient />
+    </Suspense>
   );
 }
