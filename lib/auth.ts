@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { lastLoginMethod } from "better-auth/plugins";
 import { db } from "./db";
 
 const baseURL = process.env.BETTER_AUTH_URL;
@@ -36,6 +37,9 @@ export const auth = betterAuth({
       clientSecret: process.env.DISCORD_CLIENT_SECRET as string,
     },
   },
+  plugins: [
+    lastLoginMethod(),
+  ],
   user: {
     additionalFields: {
       role: {
