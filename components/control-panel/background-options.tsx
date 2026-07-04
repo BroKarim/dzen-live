@@ -69,30 +69,30 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
   };
 
   return (
-    <Tabs value={activeTab} defaultValue="wallpaper" onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-3 h-auto bg-transparent  p-1 gap-1">
-        <TabsTrigger value="color" className="p-0 h-full w-full">
-          <div className="size-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
-            <Palette className="size-6 text-muted-foreground" />
+    <Tabs value={activeTab} onValueChange={(v) => handleBackgroundChange({ bgType: v as any })}>
+      <TabsList className="h-10 rounded-[99px] bg-[#222] gap-1 w-full justify-center items-center shadow-dzenn inline-flex overflow-hidden ">
+        <TabsTrigger value="color" asChild className="rounded-full w-full  data-[state=active]:shadow-[inset_0_1px_rgb(255_255_255/0.15)] transition-all">
+          <div className="flex items-center justify-center gap-2">
+            <Palette className="size-5 text-muted-foreground" />
             <span className="text-[10px] font-medium text-muted-foreground">Color</span>
           </div>
         </TabsTrigger>
-        <TabsTrigger value="wallpaper" className="p-0 h-full w-full">
-          <div className="size-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
-            <ImageIcon className="size-6 text-muted-foreground" />
+        <TabsTrigger value="wallpaper" asChild className="rounded-full w-full  data-[state=active]:shadow-[inset_0_1px_rgb(255_255_255/0.15)] transition-all">
+          <div className="flex items-center justify-center gap-2">
+            <ImageIcon className="size-5 text-muted-foreground" />
             <span className="text-[10px] font-medium text-muted-foreground">Wallpaper</span>
           </div>
         </TabsTrigger>
-        <TabsTrigger value="image" className="p-0 h-full w-full">
-          <div className="size-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
-            <Upload className="size-6 text-muted-foreground" />
+        <TabsTrigger value="image" asChild className="rounded-full w-full  data-[state=active]:shadow-[inset_0_1px_rgb(255_255_255/0.15)] transition-all">
+          <div className="flex items-center justify-center gap-2">
+            <Upload className="size-5 text-muted-foreground" />
             <span className="text-[10px] font-medium text-muted-foreground">Image</span>
           </div>
         </TabsTrigger>
       </TabsList>
 
       <TabsContent value="color" className="space-y-4 pt-4">
-        <div className="flex flex-wrap gap-1 justify-between">
+        <div className="flex flex-wrap gap-2">
           {BACKGROUND_COLORS.map((color) => (
             <button
               key={color}
@@ -108,10 +108,9 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
           ))}
         </div>
 
-        <div className="flex items-center gap-3 rounded-xl border bg-muted/30 p-3">
-          <div className="relative h-8 w-12 overflow-hidden rounded-md border shadow-sm">
-            <Input type="color" value={profile.bgColor || "#000000"} onChange={(e) => handleBackgroundChange({ bgType: "color", bgColor: e.target.value })} className="absolute -inset-2 h-12 w-16 cursor-pointer" />
-          </div>
+        <div className="flex items-center gap-3 ">
+          <Input type="color" value={profile.bgColor || "#000000"} onChange={(e) => handleBackgroundChange({ bgType: "color", bgColor: e.target.value })} className="absolute -inset-2 h-12 w-16 cursor-pointer border border-white" />
+          <div className="relative h-8 w-12 overflow-hidden rounded-md border shadow-sm"></div>
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Custom Color</span>
         </div>
       </TabsContent>
@@ -129,7 +128,6 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
             <p className="text-sm font-medium text-muted-foreground">No wallpapers available</p>
             <p className="text-xs text-muted-foreground/70">Wallpapers will appear here once added</p>
           </div>
-          
         ) : (
           <div className="space-y-6">
             {wallpapersByCategory.map(({ category, wallpapers }) => (

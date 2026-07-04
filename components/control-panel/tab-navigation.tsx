@@ -25,7 +25,7 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
               key={tab.id}
               type="button"
               onClick={() => onTabChange(tab.id)}
-              className={` flex items-center justify-center gap-2 px-4 py-3 rounded-md transition-all ${activeTab === tab.id ? "bg-card-foreground/70 text-card shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+              className={` flex items-center justify-center gap-2 px-4 py-3 rounded-md transition-all ${activeTab === tab.id ? "bg-black" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
               title={tab.label}
             >
               <Icon className="size-5" />
