@@ -1,4 +1,3 @@
-import { PatternRenderer } from "./pattern-renderer";
 import { getBackgroundStyle, getFilterStyle, shouldScaleForBlur } from "@/lib/utils/preview-background";
 import { getAnimatedBackgroundComponent } from "@/lib/animated-backgrounds";
 import type { BackgroundEffects } from "@/lib/utils/preview-background";
@@ -16,26 +15,19 @@ interface PreviewBackgroundProps {
 
 export function PreviewBackground({ profile }: PreviewBackgroundProps) {
   const bgEffects = profile.bgEffects as BackgroundEffects | null;
-  const bgPattern = (profile.bgPattern as any) || { type: "none", color: "#ffffff", opacity: 10, thickness: 1, scale: 20 };
+  const bgPattern = profile.bgPattern as Record<string, unknown> | null;
 
   const backgroundStyle = getBackgroundStyle(profile);
-
   const filterStyle = getFilterStyle(bgEffects);
-
   const shouldScale = shouldScaleForBlur(bgEffects?.blur);
-
   const noiseOpacity = (bgEffects?.noise ?? 0) / 100;
 
-  const animatedPattern = bgPattern?.type === "animated" ? bgPattern : null;
-  const AnimatedComponent =
-    animatedPattern?.animatedId
-      ? getAnimatedBackgroundComponent(animatedPattern.animatedId)
-      : null;
-  const animatedConfig = (animatedPattern?.animatedConfig as Record<string, unknown>) || {};
+  const animatedId = bgPattern?.animatedId as string | undefined;
+  const AnimatedComponent = animatedId ? getAnimatedBackgroundComponent(animatedId) : null;
+  const animatedConfig = (bgPattern?.animatedConfig as Record<string, unknown>) || {};
 
   return (
     <>
-      {/* Background Layer - Only transition background properties, NOT filters */}
       <div
         className="absolute inset-0"
         style={{
@@ -44,12 +36,10 @@ export function PreviewBackground({ profile }: PreviewBackgroundProps) {
         }}
       />
 
-      {/* Animated Background Layer */}
       {AnimatedComponent && (
         <AnimatedComponent className="absolute inset-0" {...animatedConfig} />
       )}
 
-      {/* Effects Layer - Separated to avoid repainting background on filter changes */}
       {filterStyle !== "none" && (
         <div
           className="absolute inset-0 pointer-events-none"
@@ -62,10 +52,6 @@ export function PreviewBackground({ profile }: PreviewBackgroundProps) {
         />
       )}
 
-      {/* Pattern Layer */}
-      <PatternRenderer type={bgPattern.type} color={bgPattern.color} opacity={bgPattern.opacity} thickness={bgPattern.thickness} scale={bgPattern.scale} />
-
-      {/* Noise Overlay */}
       {noiseOpacity > 0 && (
         <div
           className="absolute inset-0 pointer-events-none mix-blend-overlay"
