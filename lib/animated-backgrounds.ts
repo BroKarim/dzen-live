@@ -30,7 +30,7 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
     label: "Retro Grid",
     component: RetroGrid,
     preview:
-      "linear-gradient(135deg, rgba(128,128,128,0.3) 0%, rgba(128,128,128,0.1) 50%, rgba(128,128,128,0.3) 100%)",
+      "linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.3) 100%)",
     defaultConfig: {
       angle: 65,
       cellSize: 60,
@@ -51,7 +51,7 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
     label: "Dot Pattern",
     component: DotPattern,
     preview:
-      "radial-gradient(circle, rgba(128,128,128,0.4) 1px, transparent 1px)",
+      "radial-gradient(circle, rgba(0,0,0,0.4) 1px, transparent 1px)",
     defaultConfig: {
       width: 16,
       height: 16,
@@ -68,7 +68,7 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
     label: "Flickering Grid",
     component: FlickeringGrid,
     preview:
-      "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(128,128,128,0.2) 2px, rgba(128,128,128,0.2) 4px)",
+      "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.2) 2px, rgba(0,0,0,0.2) 4px)",
     defaultConfig: {
       squareSize: 4,
       gridGap: 6,
@@ -87,7 +87,7 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
     label: "Stripes",
     component: StripedPattern,
     preview:
-      "repeating-linear-gradient(45deg, rgba(128,128,128,0.3) 0px, rgba(128,128,128,0.3) 1px, transparent 1px, transparent 8px)",
+      "repeating-linear-gradient(45deg, rgba(0,0,0,0.3) 0px, rgba(0,0,0,0.3) 1px, transparent 1px, transparent 8px)",
     defaultConfig: {
       direction: "left",
       width: 10,
@@ -104,7 +104,7 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
     label: "Interactive Grid",
     component: InteractiveGridPattern,
     preview:
-      "repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(128,128,128,0.2) 8px, rgba(128,128,128,0.2) 9px), repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(128,128,128,0.2) 8px, rgba(128,128,128,0.2) 9px)",
+      "repeating-linear-gradient(0deg, transparent, transparent 8px, rgba(0,0,0,0.2) 8px, rgba(0,0,0,0.2) 9px), repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(0,0,0,0.2) 8px, rgba(0,0,0,0.2) 9px)",
     defaultConfig: {
       width: 40,
       height: 40,
@@ -119,7 +119,7 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
     label: "Hexagons",
     component: HexagonPattern,
     preview:
-      "linear-gradient(120deg, rgba(128,128,128,0.2) 0%, rgba(128,128,128,0.05) 50%, rgba(128,128,128,0.2) 100%)",
+      "linear-gradient(120deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.05) 50%, rgba(0,0,0,0.2) 100%)",
     defaultConfig: {
       radius: 40,
       gap: 0,
@@ -136,7 +136,7 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
     label: "Ripple",
     component: Ripple,
     preview:
-      "radial-gradient(circle at 50% 50%, rgba(128,128,128,0.3) 0%, transparent 70%)",
+      "radial-gradient(circle at 50% 50%, rgba(0,0,0,0.3) 0%, transparent 70%)",
     defaultConfig: {
       mainCircleSize: 210,
       mainCircleOpacity: 0.24,

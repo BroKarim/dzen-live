@@ -48,7 +48,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
           Animated
         </Button2>
       </PopoverTrigger>
-      <PopoverContent className="w-80" align="start">
+      <PopoverContent className="w-80" side="left" align="start">
         <div className="space-y-4">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
@@ -66,7 +66,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
             </Button2>
           </div>
 
-          <div className="grid grid-cols-4 gap-2 space-y-4">
+          <div className="grid grid-cols-4 gap-2 space-y-4 ">
             {Object.values(ANIMATED_BACKGROUNDS).map((meta: AnimatedBackgroundMeta) => {
               const isSelected = animatedId === meta.id;
               return (
@@ -74,20 +74,14 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                   key={meta.id}
                   type="button"
                   onClick={() => handleSelectAnimated(meta)}
-                  className={`relative aspect-square size-12 rounded-md transition-all duration-200 ${
-                    isSelected
-                      ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 z-10"
-                      : "hover:scale-110 active:scale-95 border border-black/5"
+                  className={`relative aspect-square size-12 rounded-md bg-white p-1 transition-all duration-200 ${
+                    isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 z-10" : "hover:scale-110 active:scale-95 border border-black/5"
                   }`}
                   style={{ background: meta.preview }}
                   title={meta.label}
                 >
-                  {isSelected && (
-                    <div className="absolute inset-0 rounded-md border-2 border-primary/20 animate-pulse" />
-                  )}
-                  <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] text-muted-foreground whitespace-nowrap">
-                    {meta.label}
-                  </span>
+                  {isSelected && <div className="absolute inset-0 rounded-md border-2 border-primary/20 animate-pulse" />}
+                  <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] text-muted-foreground whitespace-nowrap">{meta.label}</span>
                 </button>
               );
             })}
