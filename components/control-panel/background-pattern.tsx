@@ -77,7 +77,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                   className={`relative aspect-square size-12 rounded-md bg-white p-1 transition-all duration-200 ${
                     isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 z-10" : "hover:scale-110 active:scale-95 border border-black/5"
                   }`}
-                  style={{ background: meta.preview }}
+                  style={{ backgroundImage: meta.preview }}
                   title={meta.label}
                 >
                   {isSelected && <div className="absolute inset-0 rounded-md border-2 border-primary/20 animate-pulse" />}
