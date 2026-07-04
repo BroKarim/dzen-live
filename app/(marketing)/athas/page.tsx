@@ -18,7 +18,7 @@ export default function DzennHome() {
       </main>
       <footer className="w-full px-4 pt-24 pb-4 font-sans sm:px-6 sm:pb-6 lg:pt-28">
         <FooterCTA />
-        <Footer />
+        {/* <Footer /> */}
       </footer>
     </div>
   );

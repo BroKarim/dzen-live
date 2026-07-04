@@ -72,7 +72,7 @@ const socialLinks = [
   },
 ];
 
-export function Footer() {
+export function   Footer() {
   return (
     <div className="w-full rounded-xl bg-muted dark:bg-surface">
       <div className="mx-auto max-w-screen-2xl px-6 py-10 sm:px-8 sm:py-12 lg:px-10">
@@ -116,7 +116,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm">
-            <p className="text-muted-foreground">&copy; 2026 Athas Industries</p>
+            <p className="text-muted-foreground"> </p>
             <button type="button" className="text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline">
               Manage cookies
             </button>

@@ -1,14 +1,9 @@
 "use client";
 
-import React, { useEffect, useId, useMemo, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
-
-function seededRandom(seed: number): number {
-  const x = Math.sin(seed * 12345.6789) * 10000;
-  return x - Math.floor(x);
-}
 
 /**
  *  DotPattern Component Props
@@ -84,24 +79,20 @@ export function DotPattern({ width = 16, height = 16, x = 0, y = 0, cx = 1, cy =
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
 
-  const dots = useMemo(
-    () =>
-      Array.from(
-        {
-          length: Math.ceil(dimensions.width / width) * Math.ceil(dimensions.height / height),
-        },
-        (_, i) => {
-          const col = i % Math.ceil(dimensions.width / width);
-          const row = Math.floor(i / Math.ceil(dimensions.width / width));
-          return {
-            x: col * width + cx + x,
-            y: row * height + cy + y,
-            delay: seededRandom(i * 2) * 5,
-            duration: seededRandom(i * 2 + 1) * 3 + 2,
-          };
-        },
-      ),
-    [dimensions.width, dimensions.height, width, height, cx, cy, x],
+  const dots = Array.from(
+    {
+      length: Math.ceil(dimensions.width / width) * Math.ceil(dimensions.height / height),
+    },
+    (_, i) => {
+      const col = i % Math.ceil(dimensions.width / width);
+      const row = Math.floor(i / Math.ceil(dimensions.width / width));
+      return {
+        x: col * width + cx + x,
+        y: row * height + cy + y,
+        delay: Math.random() * 5,
+        duration: Math.random() * 3 + 2,
+      };
+    },
   );
 
   return (

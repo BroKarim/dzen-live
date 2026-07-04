@@ -1,8 +1,12 @@
+"use client";
+
 import Image from "next/image";
+import { useSession } from "@/lib/auth-client";
 import Link from "next/link";
-import { AppleIcon, WindowsIcon, LinuxIcon } from "./icons";
+import { Button } from "@/components/ui/button";
 
 export function HeroSection() {
+  const { data: session } = useSession();
   return (
     <section className="-mt-16">
       <div className="mx-auto max-w-none px-0">
@@ -13,28 +17,18 @@ export function HeroSection() {
           <div className="mx-auto max-w-3xl text-center">
             <div className="flex justify-center">
               <Link href="/athas/changelog" className="inline-flex items-center rounded-md px-3 py-1.5 font-mono text-sm text-white/75 transition-colors hover:bg-white/15 hover:text-white">
-                v0.8.1 — now available
+                currently in beta
               </Link>
             </div>
 
             <h1 className="mx-auto mt-5 max-w-[34rem] text-4xl font-medium leading-none tracking-tight text-white sm:text-5xl lg:text-6xl [text-shadow:0_2px_22px_rgb(0_0_0_/_0.3)]">Lightweight, open-source code editor.</h1>
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              <Link
-                href="/athas/download"
-                className="inline-flex h-10 min-w-44 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full border-0 bg-white px-6 font-sans text-sm font-semibold text-neutral-950 transition-all hover:bg-white/90"
-              >
-                Download
+              <Link href={session ? "/editor" : "/login"}>
+                <Button className={`shadow-dzenn bg-[#222] min-w-44  text-sm  text-white px-6 py-2.5 gap-2 transition-all hover:scale-105 active:scale-95 shrink-0 hover:bg-[#222] shadow-none`}>
+                  {session ? "Lets start" : "Try for free"}
+                </Button>
               </Link>
-            </div>
-
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-3 text-sm text-white/80">
-              <div className="flex items-center gap-4">
-                <AppleIcon className="size-4" />
-                <WindowsIcon className="size-4" />
-                <LinuxIcon className="size-4" />
-              </div>
-              <span className="tracking-tight">Available on all platforms.</span>
             </div>
           </div>
 
