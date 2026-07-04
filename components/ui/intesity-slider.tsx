@@ -68,8 +68,8 @@ const IntensitySlider = React.forwardRef<React.ElementRef<typeof SliderPrimitive
         className={cn("relative flex items-center w-full h-[28px] touch-none", disabled && "opacity-50 cursor-not-allowed")}
         aria-label="Intensity"
       >
-        <SliderPrimitive.Track className="relative w-full h-[16px] rounded-full bg-[#161616] overflow-hidden">
-          <SliderPrimitive.Range className="absolute h-full rounded-full bg-[#7c5aff] shadow-[inset_0_1px_rgb(255_255_255/0.15)] transition-all" />
+        <SliderPrimitive.Track className="relative w-full h-[16px] rounded-full bg-black overflow-hidden">
+          <SliderPrimitive.Range className="absolute h-full rounded-full bg-white shadow-[inset_0_1px_rgb(255_255_255/0.15)] transition-all" />
         </SliderPrimitive.Track>
         {/* <SliderPrimitive.Thumb className="block size-5 rounded-full border-2 border-white bg-[#7c5aff] ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" /> */}
       </SliderPrimitive.Root>

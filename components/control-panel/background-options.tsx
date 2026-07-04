@@ -129,6 +129,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
             <p className="text-sm font-medium text-muted-foreground">No wallpapers available</p>
             <p className="text-xs text-muted-foreground/70">Wallpapers will appear here once added</p>
           </div>
+          
         ) : (
           <div className="space-y-6">
             {wallpapersByCategory.map(({ category, wallpapers }) => (

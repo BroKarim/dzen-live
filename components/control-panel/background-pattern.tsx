@@ -1,6 +1,7 @@
 "use client";
 
 import { Button2 } from "@/components/ui/button-2";
+import { Button } from "@/components/ui/button";
 import { Sparkles, RotateCcw } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { IntensitySlider } from "@/components/ui/intesity-slider";
@@ -44,25 +45,19 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button2 variant="blue" className="flex-1 rounded-full">
+        <Button className="flex-1 bg-[#222] rounded-full shadow-dzenn text-white  hover:bg-zinc-700 transition-all duration-200">
           <Sparkles className="size-4 mr-2" />
           Animated
-        </Button2>
+        </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80" side="left" align="start">
+      <PopoverContent className="w-80 bg-[#222]" side="left" align="start">
         <div className="space-y-4">
           <div className="flex items-start justify-between">
             <div className="space-y-1">
               <h4 className="font-medium text-sm leading-none">Animated Background</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">Pick an animated pattern to overlay on your background</p>
             </div>
-            <Button2
-              variant="ghost"
-              size="icon"
-              className="size-8 text-muted-foreground hover:text-foreground"
-              onClick={handleReset}
-              title="Remove animated background"
-            >
+            <Button2 variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-foreground" onClick={handleReset} title="Remove animated background">
               <RotateCcw className="size-4" />
             </Button2>
           </div>
@@ -89,35 +84,32 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
           </div>
 
           {selectedMeta && animatedConfig && (
-            <div className="space-y-3 rounded-xl border bg-muted/30 p-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                {selectedMeta.label} Settings
-              </p>
-              {selectedMeta.configFields.map((field: any) => (
-                <div key={field.key} className="flex items-center justify-between gap-3">
-                  <label className="text-xs font-medium text-muted-foreground capitalize">
-                    {field.label}
-                  </label>
-                  {field.type === "range" ? (
-                    <div className="flex items-center gap-2">
-                      <IntensitySlider
-                        value={Number(animatedConfig[field.key] ?? field.default)}
-                        min={field.min}
-                        max={field.max}
-                        step={field.step ?? 0.05}
-                        onValueChange={(v) =>
-                          handleAnimatedConfigChange({
-                            ...animatedConfig,
-                            [field.key]: v,
-                          })
-                        }
-                        className="w-32"
-                      />
-                      <span className="text-[10px] text-muted-foreground w-8 text-right tabular-nums">
-                        {String(animatedConfig[field.key] ?? field.default)}
-                      </span>
+            <div className="space-y-3 ">
+              {/* <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{selectedMeta.label} Settings</p> */}
+              {selectedMeta.configFields.map((field: any) =>
+                field.type === "range" ? (
+                  <div key={field.key} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-muted-foreground">{field.label}</label>
+                      <span className="text-xs font-mono text-muted-foreground">{String(animatedConfig[field.key] ?? field.default)}{field.unit ?? ""}</span>
                     </div>
-                  ) : field.type === "boolean" ? (
+                    <IntensitySlider
+                      value={Number(animatedConfig[field.key] ?? field.default)}
+                      min={field.min}
+                      max={field.max}
+                      step={field.step ?? 0.05}
+                      onValueChange={(v) =>
+                        handleAnimatedConfigChange({
+                          ...animatedConfig,
+                          [field.key]: v,
+                        })
+                      }
+                    />
+                  </div>
+                ) : (
+                  <div key={field.key} className="flex items-center justify-between gap-3">
+                    <label className="text-xs font-medium text-muted-foreground capitalize">{field.label}</label>
+                    {field.type === "boolean" ? (
                     <button
                       type="button"
                       onClick={() =>
@@ -126,19 +118,9 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                           [field.key]: !(animatedConfig[field.key] ?? field.default),
                         })
                       }
-                      className={`relative h-6 w-11 rounded-full transition-colors ${
-                        animatedConfig[field.key] ?? field.default
-                          ? "bg-primary"
-                          : "bg-muted-foreground/30"
-                      }`}
+                      className={`relative h-6 w-11 rounded-full transition-colors ${(animatedConfig[field.key] ?? field.default) ? "bg-primary" : "bg-muted-foreground/30"}`}
                     >
-                      <span
-                        className={`absolute left-0.5 top-0.5 size-5 rounded-full bg-white transition-transform ${
-                          animatedConfig[field.key] ?? field.default
-                            ? "translate-x-5"
-                            : "translate-x-0"
-                        }`}
-                      />
+                      <span className={`absolute left-0.5 top-0.5 size-5 rounded-full bg-white transition-transform ${(animatedConfig[field.key] ?? field.default) ? "translate-x-5" : "translate-x-0"}`} />
                     </button>
                   ) : field.type === "select" ? (
                     <Select

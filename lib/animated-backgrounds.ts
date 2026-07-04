@@ -21,6 +21,7 @@ export interface AnimatedBackgroundMeta {
     max?: number;
     step?: number;
     options?: { value: string; label: string }[];
+    unit?: string;
     default: unknown;
   }[];
 }
@@ -40,8 +41,8 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       darkLineColor: "gray",
     },
     configFields: [
-      { key: "angle", label: "Angle", type: "range", min: 1, max: 89, default: 65 },
-      { key: "cellSize", label: "Cell Size", type: "range", min: 20, max: 200, step: 5, default: 60 },
+      { key: "angle", label: "Angle", type: "range", min: 1, max: 89, default: 65, unit: "°" },
+      { key: "cellSize", label: "Cell Size", type: "range", min: 20, max: 200, step: 5, default: 60, unit: "px" },
       { key: "opacity", label: "Opacity", type: "range", min: 0.05, max: 1, step: 0.05, default: 0.5 },
       { key: "lightLineColor", label: "Line Color (Light)", type: "color", default: "gray" },
       { key: "darkLineColor", label: "Line Color (Dark)", type: "color", default: "gray" },
@@ -59,8 +60,8 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       glow: false,
     },
     configFields: [
-      { key: "width", label: "Spacing X", type: "range", min: 8, max: 64, step: 2, default: 16 },
-      { key: "height", label: "Spacing Y", type: "range", min: 8, max: 64, step: 2, default: 16 },
+      { key: "width", label: "Spacing X", type: "range", min: 8, max: 64, step: 2, default: 16, unit: "px" },
+      { key: "height", label: "Spacing Y", type: "range", min: 8, max: 64, step: 2, default: 16, unit: "px" },
       { key: "glow", label: "Glow", type: "boolean", default: false },
     ],
   },
@@ -77,8 +78,8 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       maxOpacity: 0.3,
     },
     configFields: [
-      { key: "squareSize", label: "Square Size", type: "range", min: 2, max: 20, step: 1, default: 4 },
-      { key: "gridGap", label: "Gap", type: "range", min: 2, max: 30, step: 1, default: 6 },
+      { key: "squareSize", label: "Square Size", type: "range", min: 2, max: 20, step: 1, default: 4, unit: "px" },
+      { key: "gridGap", label: "Gap", type: "range", min: 2, max: 30, step: 1, default: 6, unit: "px" },
       { key: "flickerChance", label: "Flicker Rate", type: "range", min: 0.05, max: 1, step: 0.05, default: 0.3 },
       { key: "maxOpacity", label: "Max Opacity", type: "range", min: 0.05, max: 1, step: 0.05, default: 0.3 },
     ],
@@ -96,8 +97,8 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
     },
     configFields: [
       { key: "direction", label: "Direction", type: "select", options: [{ value: "left", label: "Left" }, { value: "right", label: "Right" }], default: "left" },
-      { key: "width", label: "Width", type: "range", min: 4, max: 40, step: 2, default: 10 },
-      { key: "height", label: "Height", type: "range", min: 4, max: 40, step: 2, default: 10 },
+      { key: "width", label: "Width", type: "range", min: 4, max: 40, step: 2, default: 10, unit: "px" },
+      { key: "height", label: "Height", type: "range", min: 4, max: 40, step: 2, default: 10, unit: "px" },
     ],
   },
   "grid-pattern": {
@@ -111,8 +112,8 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       height: 40,
     },
     configFields: [
-      { key: "width", label: "Cell Width", type: "range", min: 20, max: 100, step: 5, default: 40 },
-      { key: "height", label: "Cell Height", type: "range", min: 20, max: 100, step: 5, default: 40 },
+      { key: "width", label: "Cell Width", type: "range", min: 20, max: 100, step: 5, default: 40, unit: "px" },
+      { key: "height", label: "Cell Height", type: "range", min: 20, max: 100, step: 5, default: 40, unit: "px" },
     ],
   },
   "hexagon": {
@@ -127,8 +128,8 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       direction: "horizontal",
     },
     configFields: [
-      { key: "radius", label: "Radius", type: "range", min: 20, max: 80, step: 5, default: 40 },
-      { key: "gap", label: "Gap", type: "range", min: 0, max: 20, step: 1, default: 0 },
+      { key: "radius", label: "Radius", type: "range", min: 20, max: 80, step: 5, default: 40, unit: "px" },
+      { key: "gap", label: "Gap", type: "range", min: 0, max: 20, step: 1, default: 0, unit: "px" },
       { key: "direction", label: "Direction", type: "select", options: [{ value: "horizontal", label: "Horizontal" }, { value: "vertical", label: "Vertical" }], default: "horizontal" },
     ],
   },
@@ -144,7 +145,7 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       numCircles: 8,
     },
     configFields: [
-      { key: "mainCircleSize", label: "Base Size", type: "range", min: 50, max: 400, step: 10, default: 210 },
+      { key: "mainCircleSize", label: "Base Size", type: "range", min: 50, max: 400, step: 10, default: 210, unit: "px" },
       { key: "mainCircleOpacity", label: "Opacity", type: "range", min: 0.05, max: 1, step: 0.05, default: 0.24 },
       { key: "numCircles", label: "Count", type: "range", min: 3, max: 20, step: 1, default: 8 },
     ],

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button2 } from "@/components/ui/button-2";
-import { Slider } from "@/components/ui/slider";
+import { IntensitySlider } from "@/components/ui/intesity-slider";
 import { Label } from "@/components/ui/label";
 import { Sparkles, Sun, Droplets, Contrast, EyeOff, Settings2, RotateCcw } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -24,11 +24,11 @@ export default function BackgroundEffects({ profile, onUpdate }: BackgroundEffec
   const bgEffects = (profile.bgEffects as any) || defaultEffects;
 
   const settings = [
-    { id: "blur", label: "Blur", icon: EyeOff, min: 0, max: 20, step: 1, unit: "px" },
-    { id: "noise", label: "Grain / Noise", icon: Sparkles, min: 0, max: 100, step: 1, unit: "%" },
-    { id: "brightness", label: "Brightness", icon: Sun, min: 50, max: 150, step: 1, unit: "%" },
-    { id: "saturation", label: "Saturation", icon: Droplets, min: 0, max: 200, step: 1, unit: "%" },
-    { id: "contrast", label: "Contrast", icon: Contrast, min: 50, max: 150, step: 1, unit: "%" },
+    { id: "blur", label: "Blur", min: 0, max: 20, step: 1, unit: "px" },
+    { id: "noise", label: "Grain / Noise", min: 0, max: 100, step: 1, unit: "%" },
+    { id: "brightness", label: "Brightness", min: 50, max: 150, step: 1, unit: "%" },
+    { id: "saturation", label: "Saturation", min: 0, max: 200, step: 1, unit: "%" },
+    { id: "contrast", label: "Contrast", min: 50, max: 150, step: 1, unit: "%" },
   ];
 
   const handleUpdateEffect = (id: string, value: number) => {
@@ -53,7 +53,7 @@ export default function BackgroundEffects({ profile, onUpdate }: BackgroundEffec
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button2 variant="blue" className="flex-1 rounded-full">
+        <Button2 className="flex-1 bg-[#222] rounded-full shadow-dzenn text-white  hover:bg-zinc-700 transition-all duration-200">
           <Settings2 className="size-4 mr-2" />
           Effects
         </Button2>
@@ -72,14 +72,12 @@ export default function BackgroundEffects({ profile, onUpdate }: BackgroundEffec
 
           <div className="space-y-4">
             {settings.map((item) => {
-              const Icon = item.icon;
               const value = bgEffects[item.id] ?? (item.id === "blur" || item.id === "noise" ? 0 : 100);
 
               return (
                 <div key={item.id} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm font-medium">
-                      <Icon className="size-4 text-muted-foreground" />
                       <Label className="text-xs">{item.label}</Label>
                     </div>
                     <span className="text-xs font-mono text-muted-foreground">
@@ -87,7 +85,7 @@ export default function BackgroundEffects({ profile, onUpdate }: BackgroundEffec
                       {item.unit}
                     </span>
                   </div>
-                  <Slider value={[value]} min={item.min} max={item.max} step={item.step} onValueChange={(val: any) => handleUpdateEffect(item.id, val[0])} />
+                  <IntensitySlider value={value} min={item.min} max={item.max} step={item.step} onValueChange={(val) => handleUpdateEffect(item.id, val)} />
                 </div>
               );
             })}

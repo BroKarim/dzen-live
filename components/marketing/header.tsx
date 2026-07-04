@@ -47,14 +47,14 @@ export function Header() {
             ) : session ? (
               <Link
                 href="/editor"
-                className="shadow-dzenn  bg-[#222] inline-flex text-center group px-6 py-1.5 rounded-full text-[13px] font-medium text-white bg-zinc-800 hover:bg-zinc-700 transition-all duration-200 justify-center items-center gap-1.5"
+                className="shadow-dzenn  bg-[#222] inline-flex text-center group px-6 py-1.5 rounded-full text-[13px] font-medium text-white  hover:bg-zinc-700 transition-all duration-200 justify-center items-center gap-1.5"
               >
                 Editor
               </Link>
             ) : (
               <Link
                 href="/login"
-                className="shadow-dzenn  bg-[#222] inline-flex text-center group px-6 py-1.5 rounded-full text-[13px] font-medium text-white bg-zinc-800 hover:bg-zinc-700 transition-all duration-200 justify-center items-center gap-1.5"
+                className="shadow-dzenn  bg-[#222] inline-flex text-center group px-6 py-1.5 rounded-full text-[13px] font-medium text-white  hover:bg-zinc-700 transition-all duration-200 justify-center items-center gap-1.5"
               >
                 Login
               </Link>
