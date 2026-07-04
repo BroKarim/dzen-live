@@ -12,7 +12,7 @@ export function StripedPattern({ direction = "left", className, width = 10, heig
   const h = Number(height);
 
   return (
-    <svg aria-hidden="true" className={cn("pointer-events-none absolute inset-0 z-10 h-full w-full stroke-[0.5]", className)} xmlns="http://www.w3.org/2000/svg" {...props}>
+    <svg aria-hidden="true" className={cn("pointer-events-none absolute inset-0 h-full w-full stroke-[0.5]", className)} xmlns="http://www.w3.org/2000/svg" {...props}>
       <defs>
         <pattern id={id} width={w} height={h} patternUnits="userSpaceOnUse">
           {direction === "left" ? (

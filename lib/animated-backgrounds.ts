@@ -16,10 +16,11 @@ export interface AnimatedBackgroundMeta {
   configFields: {
     key: string;
     label: string;
-    type: "number" | "string" | "range" | "boolean";
+    type: "number" | "string" | "range" | "boolean" | "select" | "color";
     min?: number;
     max?: number;
     step?: number;
+    options?: { value: string; label: string }[];
     default: unknown;
   }[];
 }
@@ -40,10 +41,10 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
     },
     configFields: [
       { key: "angle", label: "Angle", type: "range", min: 1, max: 89, default: 65 },
-      { key: "cellSize", label: "Cell Size", type: "number", min: 20, max: 200, step: 10, default: 60 },
+      { key: "cellSize", label: "Cell Size", type: "range", min: 20, max: 200, step: 5, default: 60 },
       { key: "opacity", label: "Opacity", type: "range", min: 0.05, max: 1, step: 0.05, default: 0.5 },
-      { key: "lightLineColor", label: "Line (Light)", type: "string", default: "gray" },
-      { key: "darkLineColor", label: "Line (Dark)", type: "string", default: "gray" },
+      { key: "lightLineColor", label: "Line Color (Light)", type: "color", default: "gray" },
+      { key: "darkLineColor", label: "Line Color (Dark)", type: "color", default: "gray" },
     ],
   },
   "dot-pattern": {
@@ -58,8 +59,8 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       glow: false,
     },
     configFields: [
-      { key: "width", label: "Spacing X", type: "number", min: 8, max: 64, step: 2, default: 16 },
-      { key: "height", label: "Spacing Y", type: "number", min: 8, max: 64, step: 2, default: 16 },
+      { key: "width", label: "Spacing X", type: "range", min: 8, max: 64, step: 2, default: 16 },
+      { key: "height", label: "Spacing Y", type: "range", min: 8, max: 64, step: 2, default: 16 },
       { key: "glow", label: "Glow", type: "boolean", default: false },
     ],
   },
@@ -94,9 +95,9 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       height: 10,
     },
     configFields: [
-      { key: "direction", label: "Direction", type: "string", default: "left" },
-      { key: "width", label: "Width", type: "number", min: 4, max: 40, step: 2, default: 10 },
-      { key: "height", label: "Height", type: "number", min: 4, max: 40, step: 2, default: 10 },
+      { key: "direction", label: "Direction", type: "select", options: [{ value: "left", label: "Left" }, { value: "right", label: "Right" }], default: "left" },
+      { key: "width", label: "Width", type: "range", min: 4, max: 40, step: 2, default: 10 },
+      { key: "height", label: "Height", type: "range", min: 4, max: 40, step: 2, default: 10 },
     ],
   },
   "grid-pattern": {
@@ -110,8 +111,8 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       height: 40,
     },
     configFields: [
-      { key: "width", label: "Cell Width", type: "number", min: 20, max: 100, step: 10, default: 40 },
-      { key: "height", label: "Cell Height", type: "number", min: 20, max: 100, step: 10, default: 40 },
+      { key: "width", label: "Cell Width", type: "range", min: 20, max: 100, step: 5, default: 40 },
+      { key: "height", label: "Cell Height", type: "range", min: 20, max: 100, step: 5, default: 40 },
     ],
   },
   "hexagon": {
@@ -128,7 +129,7 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
     configFields: [
       { key: "radius", label: "Radius", type: "range", min: 20, max: 80, step: 5, default: 40 },
       { key: "gap", label: "Gap", type: "range", min: 0, max: 20, step: 1, default: 0 },
-      { key: "direction", label: "Direction", type: "string", default: "horizontal" },
+      { key: "direction", label: "Direction", type: "select", options: [{ value: "horizontal", label: "Horizontal" }, { value: "vertical", label: "Vertical" }], default: "horizontal" },
     ],
   },
   "ripple": {

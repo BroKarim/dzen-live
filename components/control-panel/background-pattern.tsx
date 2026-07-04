@@ -4,6 +4,7 @@ import { Button2 } from "@/components/ui/button-2";
 import { Sparkles, RotateCcw } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { IntensitySlider } from "@/components/ui/intesity-slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 import { ANIMATED_BACKGROUNDS, type AnimatedBackgroundMeta } from "@/lib/animated-backgrounds";
 
@@ -139,6 +140,44 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                         }`}
                       />
                     </button>
+                  ) : field.type === "select" ? (
+                    <Select
+                      value={String(animatedConfig[field.key] ?? field.default)}
+                      onValueChange={(v) =>
+                        handleAnimatedConfigChange({
+                          ...animatedConfig,
+                          [field.key]: v,
+                        })
+                      }
+                    >
+                      <SelectTrigger className="h-7 w-32 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {field.options?.map((opt: { value: string; label: string }) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : field.type === "color" ? (
+                    <div className="flex items-center gap-2">
+                      <div className="relative h-7 w-7 overflow-hidden rounded-md border shadow-sm">
+                        <input
+                          type="color"
+                          value={String(animatedConfig[field.key] ?? field.default)}
+                          onChange={(e) =>
+                            handleAnimatedConfigChange({
+                              ...animatedConfig,
+                              [field.key]: e.target.value,
+                            })
+                          }
+                          className="absolute -inset-1 h-9 w-9 cursor-pointer"
+                        />
+                      </div>
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Custom Color</span>
+                    </div>
                   ) : field.type === "number" ? (
                     <input
                       type="number"
