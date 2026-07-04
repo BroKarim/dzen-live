@@ -3,6 +3,7 @@
 import { Button2 } from "@/components/ui/button-2";
 import { Sparkles, RotateCcw } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { IntensitySlider } from "@/components/ui/intesity-slider";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 import { ANIMATED_BACKGROUNDS, type AnimatedBackgroundMeta } from "@/lib/animated-backgrounds";
 
@@ -65,7 +66,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
             </Button2>
           </div>
 
-          <div className="flex flex-wrap gap-2 justify-between">
+          <div className="grid grid-cols-4 gap-2 space-y-4">
             {Object.values(ANIMATED_BACKGROUNDS).map((meta: AnimatedBackgroundMeta) => {
               const isSelected = animatedId === meta.id;
               return (
@@ -104,19 +105,18 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                   </label>
                   {field.type === "range" ? (
                     <div className="flex items-center gap-2">
-                      <input
-                        type="range"
+                      <IntensitySlider
+                        value={Number(animatedConfig[field.key] ?? field.default)}
                         min={field.min}
                         max={field.max}
                         step={field.step ?? 0.05}
-                        value={String(animatedConfig[field.key] ?? field.default)}
-                        onChange={(e) =>
+                        onValueChange={(v) =>
                           handleAnimatedConfigChange({
                             ...animatedConfig,
-                            [field.key]: parseFloat(e.target.value),
+                            [field.key]: v,
                           })
                         }
-                        className="h-1 w-24 accent-primary"
+                        className="w-32"
                       />
                       <span className="text-[10px] text-muted-foreground w-8 text-right tabular-nums">
                         {String(animatedConfig[field.key] ?? field.default)}
