@@ -18,6 +18,7 @@ interface BackgroundOptionsProps {
 export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptionsProps) {
   const [wallpaperPresets, setWallpaperPresets] = useState<BackgroundPreset[]>([]);
   const [isLoadingWallpapers, setIsLoadingWallpapers] = useState(true);
+  const [activeTab, setActiveTab] = useState(profile.bgType || "wallpaper");
 
   useEffect(() => {
     async function loadWallpapers() {
@@ -31,6 +32,9 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
 
   const handleBackgroundChange = (updates: Partial<ProfileEditorData>) => {
     onUpdate({ ...profile, ...updates });
+    if (updates.bgType) {
+      setActiveTab(updates.bgType);
+    }
   };
 
   const wallpapersByCategory = (() => {
@@ -65,7 +69,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
   };
 
   return (
-    <Tabs value={profile.bgType} defaultValue="wallpaper" onValueChange={(v) => handleBackgroundChange({ bgType: v as any })}>
+    <Tabs value={activeTab} defaultValue="wallpaper" onValueChange={setActiveTab}>
       <TabsList className="grid w-full grid-cols-3 h-auto bg-transparent  p-1 gap-1">
         <TabsTrigger value="color" className="p-0 h-full w-full">
           <div className="size-full rounded-md border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 bg-muted/20">
