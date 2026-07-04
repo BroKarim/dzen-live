@@ -7,8 +7,6 @@ interface PreviewBackgroundProps {
   profile: {
     bgType: string;
     bgColor: string;
-    bgAnimated: string | null;
-    bgAnimatedConfig: any;
     bgWallpaper: string | null;
     bgImage: string | null;
     bgEffects: any;
@@ -28,11 +26,12 @@ export function PreviewBackground({ profile }: PreviewBackgroundProps) {
 
   const noiseOpacity = (bgEffects?.noise ?? 0) / 100;
 
+  const animatedPattern = bgPattern?.type === "animated" ? bgPattern : null;
   const AnimatedComponent =
-    profile.bgType === "animated" && profile.bgAnimated
-      ? getAnimatedBackgroundComponent(profile.bgAnimated)
+    animatedPattern?.animatedId
+      ? getAnimatedBackgroundComponent(animatedPattern.animatedId)
       : null;
-  const animatedConfig = (profile.bgAnimatedConfig as Record<string, unknown>) || {};
+  const animatedConfig = (animatedPattern?.animatedConfig as Record<string, unknown>) || {};
 
   return (
     <>

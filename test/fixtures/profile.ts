@@ -9,8 +9,6 @@ export const mockProfile = {
   theme: "default",
   bgType: "color" as const,
   bgColor: "#1a1a1a",
-  bgAnimated: null,
-  bgAnimatedConfig: null,
   bgWallpaper: null,
   bgImage: null,
   blurAmount: 0,

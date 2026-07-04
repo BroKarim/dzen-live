@@ -65,7 +65,7 @@ const hexToRgb = (hex: string) => {
 };
 
 export function PatternRenderer({ type, color, opacity, thickness, scale }: PatternRendererProps) {
-  if (type === "none") return null;
+  if (type === "none" || type === "animated") return null;
 
   const patternId = `pattern-${type}`;
   const maskId = `mask-${type}`;

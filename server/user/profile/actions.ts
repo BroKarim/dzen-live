@@ -18,8 +18,6 @@ interface SaveAllProfileChangesInput {
   bioStyle?: TextStyle | null;
   bgType?: string | null;
   bgColor?: string | null;
-  bgAnimated?: string | null;
-  bgAnimatedConfig?: Record<string, unknown> | null;
   bgWallpaper?: string | null;
   bgImage?: string | null;
   bgEffects?: { blur: number; noise: number; brightness: number; saturation: number; contrast: number } | null;
@@ -53,8 +51,6 @@ export const saveAllProfileChanges = withAuth("profile/actions", async (user, da
   if (data.bioStyle !== undefined) updateData.bioStyle = toJsonInput(data.bioStyle);
   if (data.bgType !== undefined) updateData.bgType = data.bgType;
   if (data.bgColor !== undefined) updateData.bgColor = data.bgColor;
-  if (data.bgAnimated !== undefined) updateData.bgAnimated = data.bgAnimated;
-  if (data.bgAnimatedConfig != null) updateData.bgAnimatedConfig = toJsonInput(data.bgAnimatedConfig);
   if (data.bgWallpaper !== undefined) updateData.bgWallpaper = data.bgWallpaper;
   if (data.bgImage !== undefined) updateData.bgImage = data.bgImage;
   if (data.bgEffects != null) updateData.bgEffects = data.bgEffects;

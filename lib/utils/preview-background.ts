@@ -21,8 +21,6 @@ export interface BackgroundEffects {
  */
 export function getBackgroundStyle(config: BackgroundStyleConfig): CSSProperties {
   switch (config.bgType) {
-    case "animated":
-      return { backgroundColor: config.bgColor };
     case "wallpaper": {
       const url = config.bgWallpaper;
       const finalUrl = url?.includes("cloudfront-base") ? url : url?.startsWith("http") ? url : `https://d1uuiykksp6inc.cloudfront.net/wallappers/${url}`;
