@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { usePathname } from "next/navigation";
 import EditorHeader from "./editor-header";
 import Preview from "./editor-preview";
 import ControlPanel from "./control-panel";
 import { EditorDock } from "./editor-dock";
 import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
-import { NavigationGuard } from "./navigation-guard";
 import { useEditorStore } from "@/lib/stores/editor-store";
+import { useAutosave } from "@/hooks/use-autosave";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 import { TextStylePopover } from "@/components/editor/text-style-popover";
 import { styleTargetId, type StyleTarget } from "@/lib/text-style";
@@ -16,12 +17,42 @@ interface EditorClientProps {
   initialProfile: ProfileEditorData;
 }
 
+function usePrev<T>(value: T) {
+  const ref = useRef<T | undefined>(undefined);
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref;
+}
+
 export default function EditorClient({ initialProfile }: EditorClientProps) {
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
   const { draftProfile, isDirty, initializeEditor, updateDraft, discardChanges, _hasHydrated, openStylePopover } = useEditorStore();
+  const { status, retry, flushSave } = useAutosave();
+  const pathname = usePathname();
+
+  // beforeunload guard (consolidated from NavigationGuard)
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty || status === "saving") {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty, status]);
+
+  // Flush save on in-app navigation (best-effort, non-blocking)
+  const prevPathnameRef = usePrev(pathname);
+  useEffect(() => {
+    if (prevPathnameRef.current && prevPathnameRef.current !== pathname) {
+      flushSave();
+    }
+  }, [pathname, flushSave]);
 
   // Check for draft conflict inline during render (not in an effect)
   // React 18+ batches state updates during render, so this is safe.
@@ -48,7 +79,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
     setShowUnsavedDialog(false);
   };
 
-  const handlePreviewStyleClick = (target: StyleTarget) => {
+  const handlePreviewStyleClick = useCallback((target: StyleTarget) => {
     const id = styleTargetId(target);
     const el = document.querySelector(`[data-style-target="${id}"]`) as HTMLElement | null;
     if (!el) return;
@@ -58,7 +89,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
       x: rect.left + rect.width / 2,
       y: rect.bottom,
     });
-  };
+  }, [openStylePopover]);
 
   if (!_hasHydrated) {
     return (
@@ -73,11 +104,9 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
 
   return (
     <main className="min-h-screen flex h-screen flex-col bg-background">
-      <NavigationGuard />
-
       {/* Mobile: show header + "go to desktop" message, hide everything else */}
       <div className="flex md:hidden flex-col h-screen">
-        <EditorHeader profile={currentProfile} />
+        <EditorHeader profile={currentProfile} saveStatus={status} onRetry={retry} />
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
           <p className="font-bold text-base leading-snug">Go to desktop.</p>
           <p className="text-sm text-muted-foreground leading-relaxed">I didn&apos;t have time for mobile responsiveness, I have a life.</p>
@@ -86,7 +115,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
 
       {/* Desktop: full editor layout */}
       <div className="hidden md:flex flex-col flex-1 h-screen">
-        <EditorHeader profile={currentProfile} />
+        <EditorHeader profile={currentProfile} saveStatus={status} onRetry={retry} />
 
         <div className="flex flex-1 gap-6 overflow-hidden p-6" style={{ zoom: 0.9 }}>
           <Preview profile={currentProfile} viewMode={viewMode} onStyleTargetClick={handlePreviewStyleClick} />

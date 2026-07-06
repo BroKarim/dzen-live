@@ -14,6 +14,8 @@ export const LinkSchema = z.object({
   mediaUrl: z.string().url("Invalid media URL").optional().nullable(),
   position: z.number().int().min(0).optional(),
   isActive: z.boolean().default(true),
+  buttonColor: z.string().optional().nullable(),
+  buttonTextColor: z.string().optional().nullable(),
   titleStyle: TextStyleInputSchema.optional().nullable(),
 });
 

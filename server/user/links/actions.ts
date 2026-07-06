@@ -26,6 +26,7 @@ function toJsonInput(v: unknown): Prisma.InputJsonValue | typeof Prisma.JsonNull
 
 // ─── Social Links ─────────────────────────────────────────────────────────────
 
+/** @deprecated Use {@link saveProfile} from `server/user/profile/save-profile-action` instead. Kept as rollback path during auto-save migration. */
 export const createSocialLink = withAuth("links/actions", async (user, data: SocialLinkInput) => {
   const profileId = await getProfileId(user.id);
   const validated = SocialLinkSchema.parse(data);
@@ -38,6 +39,7 @@ export const createSocialLink = withAuth("links/actions", async (user, data: Soc
   return { success: true as const, data: socialLink };
 });
 
+/** @deprecated Use {@link saveProfile} from `server/user/profile/save-profile-action` instead. Kept as rollback path during auto-save migration. */
 export const updateSocialLink = withAuth("links/actions", async (user, id: string, data: SocialLinkInput) => {
   const validated = SocialLinkSchema.parse(data);
 
@@ -47,6 +49,7 @@ export const updateSocialLink = withAuth("links/actions", async (user, id: strin
   return { success: true as const };
 });
 
+/** @deprecated Use {@link saveProfile} from `server/user/profile/save-profile-action` instead. Kept as rollback path during auto-save migration. */
 export const deleteSocialLink = withAuth("links/actions", async (user, id: string) => {
   // deleteMany avoids P2025 if record was already deleted
   await db.socialLink.deleteMany({ where: { id } });
@@ -57,6 +60,7 @@ export const deleteSocialLink = withAuth("links/actions", async (user, id: strin
 
 // ─── Links ────────────────────────────────────────────────────────────────────
 
+/** @deprecated Use {@link saveProfile} from `server/user/profile/save-profile-action` instead. Kept as rollback path during auto-save migration. */
 export const createLink = withAuth("links/actions", async (user, data: LinkInput) => {
   const profileId = await getProfileId(user.id);
   const validated = LinkSchema.parse(data);
@@ -71,6 +75,7 @@ export const createLink = withAuth("links/actions", async (user, data: LinkInput
   return { success: true as const, data: link };
 });
 
+/** @deprecated Use {@link saveProfile} from `server/user/profile/save-profile-action` instead. Kept as rollback path during auto-save migration. */
 export const updateLink = withAuth("links/actions", async (user, id: string, data: Partial<LinkInput>) => {
   const existing = await db.link.findUnique({
     where: { id },
@@ -98,6 +103,7 @@ export const updateLink = withAuth("links/actions", async (user, id: string, dat
   return { success: true as const };
 });
 
+/** @deprecated Use {@link saveProfile} from `server/user/profile/save-profile-action` instead. Kept as rollback path during auto-save migration. */
 export const deleteLink = withAuth("links/actions", async (user, id: string) => {
   const link = await db.link.findUnique({
     where: { id },
@@ -117,6 +123,7 @@ export const deleteLink = withAuth("links/actions", async (user, id: string) => 
   return { success: true as const };
 });
 
+/** @deprecated Use {@link saveProfile} from `server/user/profile/save-profile-action` instead. Kept as rollback path during auto-save migration. */
 export const reorderLinks = withAuth("links/actions", async (user, linkIds: string[]) => {
   // updateMany silently skips missing IDs instead of throwing P2025
   await db.$transaction(linkIds.map((id, index) => db.link.updateMany({ where: { id }, data: { position: index } })));

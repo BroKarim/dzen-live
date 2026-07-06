@@ -14,6 +14,7 @@ interface EditorState {
   draftProfile: ProfileEditorData | null;
   isDirty: boolean;
   _hasHydrated: boolean;
+  _draftVersion: number;
   stylePopover: PopoverAnchor | null;
 
   setHasHydrated: (state: boolean) => void;
@@ -34,6 +35,7 @@ export const useEditorStore = create<EditorState>()(
       draftProfile: null,
       isDirty: false,
       _hasHydrated: false,
+      _draftVersion: 0,
       stylePopover: null,
 
       setHasHydrated: (state) => set({ _hasHydrated: state }),
@@ -46,13 +48,13 @@ export const useEditorStore = create<EditorState>()(
 
         // Case 1: No existing draft — initialize fresh from server
         if (!draftProfile) {
-          set({ originalProfile: serverProfile, draftProfile: serverProfile, isDirty: false });
+          set({ originalProfile: serverProfile, draftProfile: serverProfile, isDirty: false, _draftVersion: 0 });
           return;
         }
 
         // Case 2: Draft belongs to a different profile (e.g. user switched account)
         if (draftProfile.id !== serverProfile.id) {
-          set({ originalProfile: serverProfile, draftProfile: serverProfile, isDirty: false });
+          set({ originalProfile: serverProfile, draftProfile: serverProfile, isDirty: false, _draftVersion: 0 });
           return;
         }
 
@@ -63,7 +65,7 @@ export const useEditorStore = create<EditorState>()(
         const hasStaleLinks = (draftProfile.links ?? []).some((l) => !String(l.id).startsWith("temp-") && !serverLinkIds.has(l.id));
 
         if (hasStaleLinks) {
-          set({ originalProfile: serverProfile, draftProfile: serverProfile, isDirty: false });
+          set({ originalProfile: serverProfile, draftProfile: serverProfile, isDirty: false, _draftVersion: 0 });
           return;
         }
 
@@ -79,10 +81,11 @@ export const useEditorStore = create<EditorState>()(
       },
 
       updateDraft: (profile) => {
-        const { originalProfile } = get();
+        const { originalProfile, _draftVersion } = get();
         set({
           draftProfile: profile,
           isDirty: JSON.stringify(profile) !== JSON.stringify(originalProfile),
+          _draftVersion: _draftVersion + 1,
         });
       },
 
@@ -104,12 +107,13 @@ export const useEditorStore = create<EditorState>()(
       closeStylePopover: () => set({ stylePopover: null }),
 
       setElementStyle: (target, style) => {
-        const { draftProfile, originalProfile } = get();
+        const { draftProfile, originalProfile, _draftVersion } = get();
         if (!draftProfile) return;
         const next = applyStyleToProfile(draftProfile, target, style) as typeof draftProfile;
         set({
           draftProfile: next,
           isDirty: JSON.stringify(next) !== JSON.stringify(originalProfile),
+          _draftVersion: _draftVersion + 1,
         });
       },
     }),

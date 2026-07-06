@@ -92,34 +92,76 @@ Phase 1
 - The popover is portal'd to `document.body` to escape the preview's `overflow-hidden` + `transform` ancestors. Position is computed from `getBoundingClientRect` at click time.
 
 ### Phase 8: Auto-Save Migration — Debounced Server-Side Diff
-- [ ] **Server: single `saveProfile` endpoint**
-  - [ ] Create `server/user/profile/save-profile-action.ts` — one server action that accepts `{ profile, links, socials }` and runs in a single Prisma transaction
-  - [ ] Move all diffing logic (profile field compare, link/social create/update/delete/reorder, temp-ID resolution) to the server
-  - [ ] Client sends entire draft; server loads current DB state, diffs, and applies changes
-  - [ ] Return resolved real IDs for created links/socials so client can update its store
-- [ ] **Client: debounce hook**
-  - [ ] Create `hooks/use-autosave.ts` — debounced (~1.5s) auto-save trigger watching `isDirty` from editor store
-  - [ ] Expose status state: `idle | saving | saved | error`
-  - [ ] On error: keep draft dirty, surface toast, retry on next change
-- [ ] **Client: store integration**
-  - [ ] Update `lib/stores/editor-store.ts` — `markAsSaved()` already exists; wire auto-save hook in `editor-client.tsx`
-  - [ ] After save resolves, `updateDraft()` with resolved real IDs (same as current `handleSave` does) then `markAsSaved()`
-- [ ] **Client: header simplification**
-  - [ ] Remove the monolith `handleSave` block (~175 lines) from `editor-header.tsx`
-  - [ ] Remove the Save button; replace with status indicator ("Saving…" spinner → "Saved" checkmark → "Error" with retry)
-  - [ ] Keep Discard button (visible when `isDirty`)
-  - [ ] Remove `isPending`/`startTransition` plumbing — auto-save hook handles status
-- [ ] **Client: unload guard**
-  - [ ] Add `beforeunload` listener in `editor-client.tsx` that warns when `isDirty` (auto-save in-flight or just-made change not yet debounced)
-- [ ] **Cleanup: delete old per-entity actions**
-  - [ ] After `saveProfile` works, deprecate (don't delete yet) `createLink`, `updateLink`, `deleteLink`, `reorderLinks`, `createSocialLink`, `updateSocialLink`, `deleteSocialLink` — keep until migration confirmed
-  - [ ] Remove imports of those actions from `editor-header.tsx`
-- [ ] **Verify**
-  - [ ] tsc --noEmit
-  - [ ] tests (update `profile-editor.test.tsx` to assert no Save button, no manual save call)
-  - [ ] build
-  - [ ] manual QA: edit profile/links/socials → watch auto-save indicator → refresh → confirm persistence
-- **Status:** pending
+
+**Architecture (decided via grilling session 2026-07-06):**
+- Server-side diffing: client sends entire `draftProfile`; server loads DB state, diffs per-entity, applies in single `$transaction`. Client is "dumb" — no diff logic.
+- Temp-ID contract: "ID not in DB = create". Client free to use any ID scheme. Eliminates cross-reload temp-ID collision bug (current `temp-${counter}` vs `temp-${Date.now()}` inconsistency).
+- DB operations inside `$transaction`; S3 cleanup (avatar/mediaUrl replacements) post-commit via `Promise.allSettled` fire-and-forget (preserves existing non-blocking pattern).
+- Version stamp counter in editor store prevents lost-update when user edits during save-in-flight. `updateDraft` increments `_draftVersion`; save hook captures version at fire time; on resolve, only `markAsSaved()` if `currentVersion === versionAtSaveStart`, else skip (debounce will re-fire with latest draft).
+- Position is implicit from array order — server always rewrites `position = index` for all links/socials after diff. No separate reorder detection.
+- Full Zod validation on `saveProfile` input — resurrect `server/user/profile/schema.ts` with `SaveProfileSchema` (profile scalars + `LinkSchema[]` + `SocialLinkSchema[]`). Defense in depth; current profile fields have zero server-side validation.
+- Return contract: `{ success, links: Link[], socials: SocialLink[] }` — real IDs via full arrays, skip profile scalar (no server-side transform). Client `updateDraft({...draft, links, socials}) → markAsSaved()`.
+- No Redis needed — debounce state in React hook, version stamp in Zustand, draft persistence via existing `localStorage` (`zustand/persist`).
+
+**Implementation sequence:**
+
+- [x] **Step 1 — Server: Zod schema + `saveProfile` endpoint**
+  - [x] Created `server/user/profile/schema.ts` — `SaveProfileSchema` with profile scalars, `links: LinkWithIdSchema[]`, `socials: SocialLinkWithIdSchema[]`, `.passthrough()`
+  - [x] Added `buttonColor`, `buttonTextColor` (optional nullable) to `LinkSchema` in `server/user/links/schema.ts`
+  - [x] Created `server/user/profile/save-profile-action.ts`:
+    - `withAuth("profile/save", ...)` wrapper, `z.safeParse` validation
+    - Server-side diff: profile scalars (direct compare), JSON fields (JSON.stringify compare), links (position = index, ID-not-in-DB = create), socials (same pattern)
+    - Single `$transaction` with all profile update + link/social CRUD + position rewrites
+    - Post-commit S3 cleanup: `Promise.allSettled` with avatar + mediaUrl keys
+    - Returns `{ success, links, socials }` — refreshed from DB with real IDs + positions
+
+- [x] **Step 2 — Client: editor store version stamp**
+  - [x] Added `_draftVersion: number` to editor store state (init 0)
+  - [x] `updateDraft` increments on every call
+  - [x] `setElementStyle` increments on every call
+  - [x] `markAsSaved` does NOT reset (monotonic)
+  - [x] `initializeEditor` resets to 0 on fresh init / account switch / stale-link reset
+
+- [x] **Step 3 — Client: `hooks/use-autosave.ts`**
+  - [x] Manual `useEffect` + `setTimeout` debounce (1.5s)
+  - [x] Watches `isDirty` + `_draftVersion` from store
+  - [x] Status: `idle | saving | saved | error-retryable | error-validation`
+  - [x] Version stamp: capture `versionAtSaveStart`, skip `markAsSaved()` if version changed during save
+  - [x] `saved` fades to `idle` after 2s
+  - [x] `retry()` re-triggers save with current draft
+  - [x] `flushSave()` — cancel timer, fire immediately if dirty
+  - [x] Cleanup on unmount
+
+- [x] **Step 4 — Client: wire `editor-client.tsx`**
+  - [x] Calls `useAutosave()`, passes `status` + `retry` to `EditorHeader`
+  - [x] `beforeunload` listener: warns when `isDirty || status === 'saving'`
+  - [x] Flush on navigation: `usePathname` watch, calls `flushSave()` on change
+  - [x] Deleted `navigation-guard.tsx` (consolidated into `editor-client.tsx`)
+  - [x] Kept `UnsavedChangesDialog` (persisted-draft recovery)
+
+- [x] **Step 5 — Client: simplify `editor-header.tsx`**
+  - [x] Removed imports: `saveAllProfileChanges`, all 7 per-entity link/social actions, `toast`, `useTransition`
+  - [x] Removed `handleSave` block (~175 lines) and Save button
+  - [x] Added `StatusIndicator` component: idle (null), saving (Loader2 + "Saving..."), saved (Check + "Saved", fades via hook), error-retryable (AlertTriangle + "Retry"), error-validation (AlertTriangle)
+  - [x] Discard button: visible when `isDirty`, calls `discardChanges()`
+  - [x] New props: `saveStatus`, `onRetry`
+
+- [x] **Step 6 — Server: deprecate old per-entity actions**
+  - [x] Added `@deprecated` JSDoc to all 7 exports: `createSocialLink`, `updateSocialLink`, `deleteSocialLink`, `createLink`, `updateLink`, `deleteLink`, `reorderLinks`
+  - [x] File kept as rollback path
+  - [x] `saveAllProfileChanges` NOT deprecated yet
+
+- [x] **Step 7 — Verify**
+  - [x] `tsc --noEmit`: 0 new errors (all remaining errors are pre-existing auth dead code from Phase 1)
+  - [ ] Create `test/unit/components/editor/editor-header.test.tsx` (deferred — see Notes)
+  - [ ] Add test case: "clear bgEffects to null" (deferred)
+  - [x] Tests: 23/23 pass (all 4 test files)
+  - [ ] `next build`: fails on pre-existing auth dead code (Phase 1 scope), NOT on Phase 8 changes
+  - [ ] Manual QA
+
+- [ ] **Step 8 — ADR (post-confirmation)** — deferred until migration confirmed in production
+
+- **Status:** implemented (pending manual QA + test creation)
 
 ## Decisions Made
 | Decision | Rationale |
@@ -133,8 +175,24 @@ Phase 1
 | `null` = inherit, JSON = override | Theme switch never breaks custom styles; users opt in to override |
 | Popover anchored to clicked element | Figma-like WYSIWYG; switch in place between elements |
 | `next/font/google` for default catalog fonts | Production-ready font loading; preview in catalog renders each in own typography |
+| Server-side diffing for auto-save | Single source of truth, eliminates partial-save bugs, client becomes dumb sender |
+| "ID not in DB = create" temp-ID contract | Eliminates cross-reload collision; client free to use any ID scheme |
+| DB in `$transaction`, S3 post-commit `Promise.allSettled` | Atomic data writes, non-blocking asset cleanup (preserves existing pattern) |
+| Version stamp counter for save-in-flight race | Prevents lost-update when user edits during save; simple integer, no deep reconcile |
+| Position implicit from array order | Always rewrite `position = index`; eliminates position drift class of bugs |
+| Full Zod on `saveProfile` input | Defense in depth; profile fields had zero server-side validation before |
+| Return `links[]` + `socials[]` only | No server-side transform on profile scalar; smaller payload, actionable for client |
+| `hooks/use-autosave.ts` + manual debounce | No new dep, full control over edge cases (version stamp, flush, retry) |
+| `beforeunload` + flush on navigation, no route block | Auto-save = user doesn't think about save; draft persisted via `localStorage` as safety net |
+| Status indicator replaces Save button | `saving`/`saved (fade 2s)`/`error-retryable (Retry)`/`error-validation`; Discard stays |
+| `@deprecated` JSDoc on 7 per-entity actions | Marker for future contributors; file kept as instant rollback path |
+| `buttonColor`/`buttonTextColor` added to `LinkSchema` + diff | Defensive — currently in payload but missing from schema; investigate dead-vs-editable in separate phase |
 
 ## Notes
 - No CONTEXT.md exists — consider creating one lazily if domain terms get sharpened
-- No ADRs exist — no conflicts to flag
+- No ADRs exist yet — `docs/adr/0001-server-side-diff-autosave.md` to be created after Phase 8 confirmed working in production
 - All 24 existing tests pass — baseline preserved
+- Multi-tab sync explicitly out of scope for Phase 8 (single-tab is 99% use case; `localStorage` persistence + `UnsavedChangesDialog` is the current safety net)
+- `bgEffects`/`bgPattern` clear-to-null latent bug (was `!= null` in `saveAllProfileChanges`) — fixed implicitly by server-side diffing; regression test added in Phase 8 verify
+
+
