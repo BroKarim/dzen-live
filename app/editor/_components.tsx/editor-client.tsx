@@ -51,8 +51,10 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
     }
   }, [pathname, flushSave]);
 
+  const initRef = useRef(false);
   useEffect(() => {
-    if (_hasHydrated) {
+    if (_hasHydrated && !initRef.current) {
+      initRef.current = true;
       initializeEditor(initialProfile);
     }
   }, [_hasHydrated, initializeEditor, initialProfile]);

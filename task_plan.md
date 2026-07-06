@@ -158,6 +158,7 @@ Phase 1
   - [x] Tests: 23/23 pass (all 4 test files)
   - [ ] `next build`: fails on pre-existing auth dead code (Phase 1 scope), NOT on Phase 8 changes
   - [x] Bugfix: `BgPatternSchema` was wrong shape (`{ type, color, opacity... }` instead of `{ animatedId, animatedConfig }` matching actual client); `BgEffectsSchema` was too strict (closed 5-key object instead of `Record<string, number>` matching index signature). Fixed 2026-07-06 after QA validation error.
+  - [x] Bugfix: Infinite auto-save loop (2026-07-06). Root cause: `saveProfile` returned `finalSocials` with `position` field, but page payload `profileEditorPayload.socials` omitted `position`. After save → RSC refresh → `initializeEditor` re-fires → `JSON.stringify(draft) !== JSON.stringify(serverProfile)` (socials shape mismatch) → `isDirty = true` → debounce → save → loop. Two-part fix: (1) remove `position` from `finalSocials` select in save-profile-action.ts to match page payload shape; (2) add `useRef` guard in editor-client.tsx so `initializeEditor` only runs once on first hydrate, not on every RSC refresh. Prevents wasted save on page load too (localStorage draft with old `position`-bearing socials vs server profile without).
   - [ ] Manual QA
 
 - [ ] **Step 8 — ADR (post-confirmation)** — deferred until migration confirmed in production

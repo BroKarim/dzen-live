@@ -166,7 +166,7 @@ export const saveProfile = withAuth("profile/save", async (user, data: unknown) 
 
   const finalSocials = await db.socialLink.findMany({
     where: { profileId: profile.id },
-    select: { id: true, platform: true, url: true, position: true },
+    select: { id: true, platform: true, url: true },
     orderBy: { position: "asc" },
   });
 
