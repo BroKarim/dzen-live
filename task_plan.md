@@ -137,7 +137,7 @@ Phase 1
   - [x] `beforeunload` listener: warns when `isDirty || status === 'saving'`
   - [x] Flush on navigation: `usePathname` watch, calls `flushSave()` on change
   - [x] Deleted `navigation-guard.tsx` (consolidated into `editor-client.tsx`)
-  - [x] Kept `UnsavedChangesDialog` (persisted-draft recovery)
+  - [x] Deleted `UnsavedChangesDialog` + simplified init to single `useEffect` (dialog was obsolete — auto-save handles stale drafts; `initializeEditor` already guards dirty state)
 
 - [x] **Step 5 — Client: simplify `editor-header.tsx`**
   - [x] Removed imports: `saveAllProfileChanges`, all 7 per-entity link/social actions, `toast`, `useTransition`
@@ -151,12 +151,13 @@ Phase 1
   - [x] File kept as rollback path
   - [x] `saveAllProfileChanges` NOT deprecated yet
 
-- [x] **Step 7 — Verify**
+  - [x] **Step 7 — Verify**
   - [x] `tsc --noEmit`: 0 new errors (all remaining errors are pre-existing auth dead code from Phase 1)
-  - [ ] Create `test/unit/components/editor/editor-header.test.tsx` (deferred — see Notes)
+  - [ ] Create `test/unit/components/editor/editor-header.test.tsx` (deferred)
   - [ ] Add test case: "clear bgEffects to null" (deferred)
   - [x] Tests: 23/23 pass (all 4 test files)
   - [ ] `next build`: fails on pre-existing auth dead code (Phase 1 scope), NOT on Phase 8 changes
+  - [x] Bugfix: `BgPatternSchema` was wrong shape (`{ type, color, opacity... }` instead of `{ animatedId, animatedConfig }` matching actual client); `BgEffectsSchema` was too strict (closed 5-key object instead of `Record<string, number>` matching index signature). Fixed 2026-07-06 after QA validation error.
   - [ ] Manual QA
 
 - [ ] **Step 8 — ADR (post-confirmation)** — deferred until migration confirmed in production
@@ -192,7 +193,7 @@ Phase 1
 - No CONTEXT.md exists — consider creating one lazily if domain terms get sharpened
 - No ADRs exist yet — `docs/adr/0001-server-side-diff-autosave.md` to be created after Phase 8 confirmed working in production
 - All 24 existing tests pass — baseline preserved
-- Multi-tab sync explicitly out of scope for Phase 8 (single-tab is 99% use case; `localStorage` persistence + `UnsavedChangesDialog` is the current safety net)
-- `bgEffects`/`bgPattern` clear-to-null latent bug (was `!= null` in `saveAllProfileChanges`) — fixed implicitly by server-side diffing; regression test added in Phase 8 verify
+- Multi-tab sync explicitly out of scope for Phase 8 (single-tab is 99% use case; localStorage persistence is the safety net)
+- `bgEffects`/`bgPattern` clear-to-null latent bug (was `!= null` in `saveAllProfileChanges`) — fixed implicitly by server-side JSON.stringify diff; also fixed Zod shape mismatch (2026-07-06: `BgPatternSchema` → `{ animatedId, animatedConfig }`, `BgEffectsSchema` → `Record<string, number>`)
 
 

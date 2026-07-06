@@ -2,20 +2,11 @@ import { z } from "zod";
 import { TextStyleInputSchema } from "@/lib/text-style";
 import { LinkSchema, SocialLinkSchema } from "@/server/user/links/schema";
 
-const BgEffectsSchema = z.object({
-  blur: z.number(),
-  noise: z.number(),
-  brightness: z.number(),
-  saturation: z.number(),
-  contrast: z.number(),
-});
+const BgEffectsSchema = z.record(z.string(), z.number());
 
 const BgPatternSchema = z.object({
-  type: z.string(),
-  color: z.string(),
-  opacity: z.number(),
-  thickness: z.number(),
-  scale: z.number(),
+  animatedId: z.string(),
+  animatedConfig: z.record(z.string(), z.unknown()),
 });
 
 const LinkWithIdSchema = LinkSchema.extend({ id: z.string().optional() });

@@ -6,7 +6,6 @@ import EditorHeader from "./editor-header";
 import Preview from "./editor-preview";
 import ControlPanel from "./control-panel";
 import { EditorDock } from "./editor-dock";
-import { UnsavedChangesDialog } from "./unsaved-changes-dialog";
 import { useEditorStore } from "@/lib/stores/editor-store";
 import { useAutosave } from "@/hooks/use-autosave";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
@@ -27,10 +26,8 @@ function usePrev<T>(value: T) {
 
 export default function EditorClient({ initialProfile }: EditorClientProps) {
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
-  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
-  const [hasInitialized, setHasInitialized] = useState(false);
 
-  const { draftProfile, isDirty, initializeEditor, updateDraft, discardChanges, _hasHydrated, openStylePopover } = useEditorStore();
+  const { draftProfile, isDirty, initializeEditor, updateDraft, _hasHydrated, openStylePopover } = useEditorStore();
   const { status, retry, flushSave } = useAutosave();
   const pathname = usePathname();
 
@@ -54,30 +51,11 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
     }
   }, [pathname, flushSave]);
 
-  // Check for draft conflict inline during render (not in an effect)
-  // React 18+ batches state updates during render, so this is safe.
-  if (_hasHydrated && !hasInitialized && isDirty && draftProfile) {
-    const hasDraft = JSON.stringify(draftProfile) !== JSON.stringify(initialProfile);
-    if (hasDraft) {
-      setShowUnsavedDialog(true);
-    }
-    setHasInitialized(true);
-  }
-
   useEffect(() => {
-    if (_hasHydrated && hasInitialized) {
+    if (_hasHydrated) {
       initializeEditor(initialProfile);
     }
-  }, [_hasHydrated, hasInitialized, initializeEditor, initialProfile]);
-
-  const handleRestoreDraft = () => {
-    setShowUnsavedDialog(false);
-  };
-
-  const handleDiscardDraft = () => {
-    discardChanges();
-    setShowUnsavedDialog(false);
-  };
+  }, [_hasHydrated, initializeEditor, initialProfile]);
 
   const handlePreviewStyleClick = useCallback((target: StyleTarget) => {
     const id = styleTargetId(target);
@@ -127,7 +105,6 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
       </div>
 
       <TextStylePopover />
-      <UnsavedChangesDialog open={showUnsavedDialog} onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
     </main>
   );
 }
