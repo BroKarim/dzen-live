@@ -4,9 +4,11 @@ const mockPrisma = {
   profile: {
     findUnique: vi.fn(),
     findMany: vi.fn(),
+    findFirst: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    deleteMany: vi.fn(),
   },
   link: {
     findUnique: vi.fn(),
@@ -14,12 +16,14 @@ const mockPrisma = {
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    deleteMany: vi.fn(),
   },
   socialLink: {
     findMany: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
+    deleteMany: vi.fn(),
   },
   user: {
     findUnique: vi.fn(),
@@ -37,7 +41,8 @@ vi.mock("@/lib/db", () => ({
 export const prisma = mockPrisma;
 export const resetDb = () => {
   for (const model of Object.values(mockPrisma)) {
-    for (const method of Object.values(model)) {
+    if (typeof model === "function") continue;
+    for (const method of Object.values(model as Record<string, unknown>)) {
       if (typeof method === "function" && "mockReset" in method) {
         (method as ReturnType<typeof vi.fn>).mockReset();
       }

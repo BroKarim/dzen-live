@@ -4,7 +4,7 @@
 Remove dead code clusters, consolidate fragmented auth patterns, extract a deep upload module, and fix caching API drift — improving locality, leverage, and AI-navigability.
 
 ## Current Phase
-Phase 1
+Phase 9 (P0+P1 complete, P2-P7 pending)
 
 ## Phases
 
@@ -91,7 +91,65 @@ Phase 1
 - `mode="editor"` makes link cards non-clickable (no expand, no navigate). This is intentional — the editor is for editing, not previewing navigation. Public page uses `mode="public"` and gets the original behavior.
 - The popover is portal'd to `document.body` to escape the preview's `overflow-hidden` + `transform` ancestors. Position is computed from `getBoundingClientRect` at click time.
 
-### Phase 8: Auto-Save Migration — Debounced Server-Side Diff
+### Phase 8: Enable Custom Image Upload for Background
+
+**Goal:** Aktifkan tab "Image" di BackgroundOptions untuk upload custom background image ke S3 via CloudFront, dengan cleanup gambar lama dan validasi ukuran file.
+
+**Constraints:**
+- Max file **sebelum kompresi**: avatar 3MB, background 5MB
+- Max file **setelah kompresi**: ~500KB untuk background (avatar sudah ~500KB)
+- Gambar lama dihapus dari S3 **hanya setelah user memilih background baru** (bukan saat pindah tab tanpa save). Jika user beralih ke color/wallpaper lalu save, image lama dihapus. Jika user ganti image baru, upload berhasil → hapus image lama → set bgImage ke URL baru.
+- CloudFront sudah aktif via `S3_PUBLIC_URL=https://d1uuiykksp6inc.cloudfront.net`
+
+**Implementation sequence:**
+
+- [ ] **Step 1 — Server: S3 cleanup safety net in save actions**
+  - [ ] `server/user/profile/save-profile-action.ts`: tambahkan tracking `bgImage` ke `s3KeysToClean` (sama pattern dengan `avatarUrl`) — jika `profile.bgImage` berubah/dihapus saat save, hapus dari S3 post-commit
+  - [ ] `server/user/profile/actions.ts` (`saveAllProfileChanges`): tambahkan cleanup `bgImage` lama jika berubah (sementara action ini masih dipakai, meski `@deprecated`)
+  - [ ] Verify: tsc --noEmit, tests
+
+- [ ] **Step 2 — Server: `deleteImage` action**
+  - [ ] `server/upload/actions.ts`: tambahkan `deleteImage(url: string)` — cek auth, panggil `deleteFromS3(url)`, return `{ success } | { success: false, error }`
+  - [ ] `deleteFromS3` sudah ada guard `url.startsWith(S3_PUBLIC_URL)` — aman dari arbitrary URL deletion
+
+- [ ] **Step 3 — Client: aktifkan UI upload di `background-options.tsx`**
+  - [ ] Hapus banner "Coming Soon" dan uncomment original upload logic
+  - [ ] Implementasikan `handleImageUpload`:
+    1. Validasi file: `image/*`, max **5MB** sebelum kompresi
+    2. Kompresi via `compressImage(file, { maxSizeMB: 0.5, maxWidthOrHeight: 1920 })` — target ~500KB, preserve quality
+    3. Ambil presigned URL via `getUploadUrl(file.name, file.type)`
+    4. Upload ke S3 via `fetch PUT`
+    5. Jika `profile.bgImage` ada (gambar lama), panggil `deleteImage(profile.bgImage)` — **fire-and-forget**, log error tapi jangan block UI
+    6. `handleBackgroundChange({ bgType: "image", bgImage: publicUrl })`
+  - [ ] Tambahkan loading state (`isUploading`) — spinner di area upload
+  - [ ] Aktifkan tombol "Remove Image": set `bgImage: null` (cleanup-nya dihandle saat save via Step 1, atau bisa juga langsung `deleteImage` tergantung UX preference — rekomendasi: hapus dari state saja, S3 cleanup nunggu save)
+  - [ ] Preview uploaded image di area upload (sudah ada di commented code — pakai `<Image src={profile.bgImage} ... />`, tambahkan `unoptimized` jika perlu untuk CloudFront)
+  - [ ] Import yang dibutuhkan: `Image` dari next/image, `Button`, `getUploadUrl`, `deleteImage`, `compressImage`, `toast`, `useState`
+
+- [ ] **Step 4 — Client: update `profile-editor.tsx` avatar constraints**
+  - [ ] Ubah max file size avatar dari 10MB → **3MB**
+  - [ ] Pastikan kompresi avatar tetap `maxSizeMB: 0.5`
+
+- [ ] **Step 5 — Verify**
+  - [ ] `tsc --noEmit`: 0 errors
+  - [ ] Tests: 23/23 pass
+  - [ ] Manual QA: upload background image → preview muncul → save profile → image lama dihapus dari S3
+  - [ ] Manual QA: pindah ke tab color → save → bgImage dihapus dari DB + S3
+  - [ ] Manual QA: upload file >5MB → error toast
+  - [ ] Manual QA: upload non-image → error toast
+
+**Decisions Made:**
+| Decision | Rationale |
+|----------|-----------|
+| Background max 5MB pre-compression, 500KB post-compression | Balance kualitas vs storage/bandwidth; 1920px cukup untuk background mobile/desktop |
+| Avatar max 3MB pre-compression (was 10MB) | Align dengan real-world usage; 10MB terlalu longgar |
+| Delete old image immediately after new upload success | User sudah "commit" ke image baru; gambar lama tidak akan dipakai lagi. Lebih aman daripada cleanup hanya saat save (kalau user ganti image 3x tanpa save, S3 akan punya 3 orphan) |
+| Remove image button hanya clear state, tidak hapus S3 | User mungkin switch ke color lalu kembali ke image (belum save). S3 cleanup dihandle saat save — single source of truth |
+| `deleteImage` server action terpisah | Reusable; auth guard di server; frontend tidak perlu tau S3 key extraction logic |
+
+---
+
+### Phase 9: Auto-Save Migration — Debounced Server-Side Diff
 
 **Architecture (decided via grilling session 2026-07-06):**
 - Server-side diffing: client sends entire `draftProfile`; server loads DB state, diffs per-entity, applies in single `$transaction`. Client is "dumb" — no diff logic.
@@ -155,7 +213,7 @@ Phase 1
   - [x] `tsc --noEmit`: 0 new errors (all remaining errors are pre-existing auth dead code from Phase 1)
   - [ ] Create `test/unit/components/editor/editor-header.test.tsx` (deferred)
   - [ ] Add test case: "clear bgEffects to null" (deferred)
-  - [x] Tests: 23/23 pass (all 4 test files)
+  - [x] Tests: 89/89 pass (7 test files)
   - [ ] `next build`: fails on pre-existing auth dead code (Phase 1 scope), NOT on Phase 8 changes
   - [x] Bugfix: `BgPatternSchema` was wrong shape (`{ type, color, opacity... }` instead of `{ animatedId, animatedConfig }` matching actual client); `BgEffectsSchema` was too strict (closed 5-key object instead of `Record<string, number>` matching index signature). Fixed 2026-07-06 after QA validation error.
   - [x] Bugfix: Infinite auto-save loop (2026-07-06). Root cause: `saveProfile` returned `finalSocials` with `position` field, but page payload `profileEditorPayload.socials` omitted `position`. After save → RSC refresh → `initializeEditor` re-fires → `JSON.stringify(draft) !== JSON.stringify(serverProfile)` (socials shape mismatch) → `isDirty = true` → debounce → save → loop. Two-part fix: (1) remove `position` from `finalSocials` select in save-profile-action.ts to match page payload shape; (2) add `useRef` guard in editor-client.tsx so `initializeEditor` only runs once on first hydrate, not on every RSC refresh. Prevents wasted save on page load too (localStorage draft with old `position`-bearing socials vs server profile without).
@@ -164,6 +222,281 @@ Phase 1
 - [ ] **Step 8 — ADR (post-confirmation)** — deferred until migration confirmed in production
 
 - **Status:** implemented (pending manual QA + test creation)
+- [x] Bugfix: Infinite auto-save loop (2026-07-06). Two-part fix: (1) remove `position` from `finalSocials` select; (2) add `useRef` guard on `initializeEditor` useEffect.
+
+### Phase 9: Testing Infrastructure — Fix Gaps, Cover Phase 8, Integrate
+
+**Audit hasil (2026-07-06):** 27 test total (23 unit + 4 E2E) untuk app kompleks. 3 folder placeholder kosong (`integration/{analytics,auth,editor}/`, `ui/playwright/`, `e2e/visual/`). 4 mock files + 3 fixtures dibangun tapi tidak pernah dipakai. `Button.test.tsx` test element native, bukan komponen asli. `ProfileEditor.test.tsx` wire `onUpdate={vi.fn()}` tanpa assertion. E2E test kedua (`public-profile.spec.ts`) klik link tanpa assertion. Coverage target luas (`app/**`, `components/**`, `lib/**`, `server/**`) tapi cuma 4 unit test file — coverage <10%.
+
+**Goal:** Fix broken tests, cover Phase 8 surface (most recent, most risk, 0 test), integrate mocks + fixtures, fill empty integration folders.
+
+---
+
+#### P0: Fix Broken/Dead Tests
+
+- [x] **Fix `button.test.tsx`** — import `Button` asli dari `@/components/ui/button` ✅
+  - [x] 16 tests: render children, disabled, 6 variants, 4 sizes, asChild, click, className merge, data attributes
+- **Status:** completed
+
+- [x] **Fix `profile-editor.test.tsx`** — tambah user interaction + assertion ✅
+  - [x] 7 tests: render display name, render bio, bio char count, type display name → onUpdate, type bio → onUpdate, clear display name → onUpdate, clear bio → onUpdate
+  - [x] Uses `StatefulWrapper` with `useState` to handle controlled component state
+- **Status:** completed
+
+---
+
+#### P1: Cover Phase 8 Surface (0 test → test suite)
+
+##### `test/unit/server/user/profile/save-profile.test.ts`
+
+- [x] **Unit test: `saveProfile` server-side diff logic** ✅ (17 tests)
+  - [x] Valid input returns success + links/socials
+  - [x] Profile scalar update (bio changed)
+  - [x] Profile scalar unchanged (bio same → no profile update in $transaction)
+  - [x] JSON field update (displayNameStyle changed)
+  - [x] JSON field clear to null (displayNameStyle: null)
+  - [x] Link create (ID not in DB)
+  - [x] Link update (ID in DB)
+  - [x] Link delete (DB link not in draft)
+  - [x] Position rewrite ($transaction called with correct ops)
+  - [x] Social link create / delete
+  - [x] Social link shape — returned socials have { id, platform, url } (no position)
+  - [x] S3 cleanup triggered when avatar replaced
+  - [x] S3 cleanup NOT triggered when avatar unchanged + no orphaned mediaUrl
+  - [x] Zod validation — invalid input → { success: false }
+  - [x] Zod validation — link with empty title → rejected
+  - [x] $transaction wraps all DB writes
+  - [x] Uses findFirst (not findUnique)
+  - [x] Mock strategy: inline vi.mock for db/auth/headers/s3/cache
+- **Status:** completed
+
+##### `test/unit/lib/stores/editor-store.test.ts`
+
+- [x] **Unit test: Zustand editor store state machine** ✅ (19 tests)
+  - [x] Initial state: auto-hydrated, null draft
+  - [x] initializeEditor case 1: no draft → fresh init
+  - [x] initializeEditor: skips when not hydrated
+  - [x] initializeEditor case 4: keeps draft, updates originalProfile
+  - [x] initializeEditor case 2: different profile → fresh init (account switch)
+  - [x] initializeEditor case 3: stale non-temp link IDs → fresh init
+  - [x] initializeEditor case 4: temp-ID links preserved
+  - [x] updateDraft: sets draft, marks dirty, increments _draftVersion
+  - [x] updateDraft: increments _draftVersion on every call
+  - [x] updateDraft: clears isDirty when draft matches original
+  - [x] markAsSaved: syncs originalProfile to draftProfile, clears isDirty
+  - [x] markAsSaved: does NOT reset _draftVersion (monotonic)
+  - [x] discardChanges: resets draft to originalProfile
+  - [x] stylePopover: open + close
+  - [x] setElementStyle: increments _draftVersion + marks isDirty
+  - [x] setElementStyle: noop when draftProfile is null
+  - [x] clearDraft: clears all state
+  - [x] Mock strategy: vi.mock("zustand/middleware") → persist = identity (bypass localStorage/happy-dom rehydrate)
+- **Status:** completed
+
+##### `test/unit/hooks/use-autosave.test.ts`
+
+- [x] **Hook test: auto-save behavior** ✅ (12 tests)
+  - [x] Returns idle status initially
+  - [x] Does not save when isDirty = false
+  - [x] Fires save after 1500ms debounce
+  - [x] Does not fire before debounce interval
+  - [x] Re-debounces when draft changes before save fires
+  - [x] Save called on debounce expiry
+  - [x] Handles network error (error-retryable path)
+  - [x] Handles validation error (error-validation path)
+  - [x] retry() re-triggers save immediately
+  - [x] flushSave() fires immediately when dirty
+  - [x] flushSave() noop when not dirty
+  - [x] Cleanup on unmount clears timer
+  - [x] Mock strategy: vi.mock saveProfile, useFakeTimers, renderHook with store ops in act()
+  - [x] Note: stderr "not wrapped in act(...)" warnings are benign — store updates via Zustand trigger React re-renders in the hook; tests still pass correctly
+- **Status:** completed
+
+---
+
+#### P2: Integration Tests (fill empty folders)
+
+##### `test/integration/editor/autosave-flow.test.ts`
+
+- [ ] **Integration: autosave end-to-end with mocked server action**
+  - Test: render editor → edit bio → wait 1.5s → server action called with draft
+  - Test: server returns updated links/socials → store updated with real IDs
+  - Test: save-in-flight → user edits more → version stamp skip → re-debounce → second save with latest
+  - Test: navigation away → `flushSave` called → server action called before unmount
+  - Test: `beforeunload` fires when dirty → dialog shown
+  - **Status:** pending
+
+##### `test/integration/auth/session-flow.test.ts`
+
+- [ ] **Integration: auth session lifecycle**
+  - Test: unauthenticated → `/editor` → redirect to `/login`
+  - Test: authenticated → `/editor` → renders editor with user data
+  - Test: session loaded → `initialProfile` prop passed to `editor-client`
+  - Test: token expiry → refresh → session persists
+  - **Status:** pending
+
+---
+
+#### P3: Fix E2E Tests (smoke → meaningful)
+
+##### `test/e2e/auth/login.spec.ts`
+
+- [ ] **Fix/add E2E auth tests**
+  - Test: [existing] unauthenticated `/dashboard` redirects to `/login`
+  - Test: [existing] `/login` shows "Sign in with Google"
+  - Test: [NEW] sign-in flow — click Google button, redirected to OAuth page (mock or real)
+  - Test: [NEW] callback — successful auth → redirect to `/dashboard`
+  - Test: [NEW] callback — auth failure → `/login?error=...`
+  - Test: [NEW] logout — click logout → session cleared → redirect
+  - **Status:** pending
+
+##### `test/e2e/profile/public-profile.spec.ts`
+
+- [ ] **Fix/add E2E profile tests**
+  - Test: [existing] `/test-user` shows `profile-name` + `profile-links`
+  - [ ] **FIX:** second test — after clicking link card, assert navigation/redirect to URL
+  - Test: [NEW] link `isActive=false` → not rendered on public page
+  - Test: [NEW] unpublished profile → 404 or landing page
+  - Test: [NEW] non-existent username → 404
+  - Test: [NEW] analytics event fired on link click (network intercept)
+  - Test: [NEW] social links rendered on public page
+  - Test: [NEW] avatar rendered when provided
+  - **Status:** pending
+
+---
+
+#### P4: Schema + Validation Tests
+
+##### `test/unit/server/user/profile/schema.test.ts`
+
+- [ ] **Unit test: `SaveProfileSchema` Zod validation**
+  - Test: valid full profile payload accepted
+  - Test: empty displayName → rejected
+  - Test: displayName > 100 chars → rejected
+  - Test: bio > 500 chars → rejected
+  - Test: links array with empty title → rejected
+  - Test: links array with invalid URL → rejected
+  - Test: links with `buttonColor` invalid hex → rejected
+  - Test: socials with empty platform → rejected
+  - Test: socials with invalid URL → rejected
+  - Test: `bgEffects` valid shape (`{ "snow": 0.5 }`) → accepted
+  - Test: `bgEffects` invalid (string value) → rejected
+  - Test: `bgPattern` valid shape (`{ animatedId: "dots", animatedConfig: {} }`) → accepted
+  - Test: `bgPattern` invalid (old shape) → rejected
+  - Test: `displayNameStyle` valid (`{ color: "#fff", fontFamily: "inter" }`) → accepted
+  - Test: `displayNameStyle` unknown extra key → rejected (`.strict()`)
+  - Test: `titleStyle` on link valid → accepted
+  - **Status:** pending
+
+##### `test/unit/server/user/links/schema.test.ts` (extend existing)
+
+- [ ] **Extend existing tests**
+  - Test: [NEW] `buttonColor` valid → accepted
+  - Test: [NEW] `buttonColor` invalid hex → rejected
+  - Test: [NEW] `buttonTextColor` valid → accepted
+  - Test: [NEW] `titleStyle` field → accepted
+  - Test: [NEW] title exactly 100 chars → accepted (boundary)
+  - Test: [NEW] description exactly 500 chars → accepted (boundary)
+  - Test: [NEW] assert error messages contain expected paths (e.g., `"title"`, `"url"`)
+  - **Status:** pending
+
+---
+
+#### P5: UI Component Tests
+
+##### `test/unit/components/control-panel/text-style-popover.test.tsx`
+
+- [ ] **Unit test: `TextStylePopover`**
+  - Test: renders when anchor provided
+  - Test: ColorPicker shows 8 preset swatches
+  - Test: ColorPicker HSL gradient renders
+  - Test: ColorPicker hex input accepts valid hex
+  - Test: ColorPicker hex input rejects invalid hex
+  - Test: FontPicker search filters fonts
+  - Test: FontPicker category groups render
+  - Test: selecting a font → `onChange` called with new style
+  - Test: selecting a color → `onChange` called with new style
+  - Test: "Reset" button clears style → `onChange` called with `null`
+  - Test: Escape key closes popover
+  - Test: click outside closes popover
+  - Test: switching target (different element) → updates anchor, keeps popover open
+  - **Status:** pending
+
+##### `test/unit/components/control-panel/status-indicator.test.tsx`
+
+- [ ] **Unit test: `StatusIndicator`**
+  - Test: idle → renders null / empty
+  - Test: saving → renders Loader2 + "Saving..."
+  - Test: saved → renders Check + "Saved"
+  - Test: error-retryable → renders AlertTriangle + "Retry" button
+  - Test: error-retryable → click Retry → `onRetry` called
+  - Test: error-validation → renders AlertTriangle, no Retry button
+  - **Status:** pending
+
+---
+
+#### P6: Infrastructure — Breathe Life Into Dead Files
+
+- [ ] **Use `test/mocks/prisma.ts`** in integration tests — import `prisma` mock, not re-mock inline
+- [ ] **Use `test/mocks/auth.ts`** in auth integration tests — `setAuthenticated()` / `setUnauthenticated()`
+- [ ] **Use `test/mocks/upload.ts`** in upload-related tests — `getUploadUrl` mock
+- [ ] **Use `test/fixtures/profile.ts`** (`mockProfile`, `mockProfileWithLinks`) across tests, replace inline duplicates
+- [ ] **Use `test/fixtures/links.ts`** (`mockLinks`, `mockInvalidLinks`) in link-related tests
+- [ ] **Use `test/fixtures/analytics.ts`** (`mockLinkAnalytics`) in analytics tests
+- [ ] **Wrap `customRender`** in `test/utils.tsx` with actual providers (`QueryClientProvider`, `ThemeProvider`) — or add per-test wrapping via `wrapper` option
+- [ ] **Remove redundant `test/mocks/next-navigation.ts`** — global mock in `setup.ts` covers it. If needed, extend `setup.ts`.
+- **Status:** pending
+
+---
+
+#### P7: E2E Tooling
+
+- [ ] **Add Firefox + WebKit projects** to `playwright.config.ts` (currently chromium-only)
+- [ ] **Add mobile viewport project** (iPhone 12 viewport) for responsive testing
+- [ ] **Fill `test/e2e/visual/`** — visual regression snapshots of public profile page
+- [ ] **Fill `test/ui/playwright/`** — component tests for complex UI (ColorPicker HSL pad, dnd-kit sortable)
+- **Status:** pending
+
+---
+
+#### P8: Final Verification
+
+- [ ] `tsc --noEmit` — 0 new errors
+- [ ] `vitest run --coverage` — target >60% line coverage (server actions + store + hooks)
+- [ ] `playwright test` — all E2E pass
+- [ ] `next build` — passes (blocked by Phase 1 auth dead code, separate issue)
+- [ ] Manual QA: edit profile → auto-save fires → refresh → draft restored
+- [ ] Manual QA: edit profile → save success → status indicator shows check → fades
+- [ ] Manual QA: edit profile → network error → status shows AlertTriangle → Retry works
+- [ ] Manual QA: navigation away mid-edit → draft flushed before route change
+- [ ] Manual QA: close tab mid-edit → beforeunload dialog shown
+- [ ] Manual QA: open two tabs → edit in tab A → switch to tab B → version stamp prevents stale override
+- **Status:** pending
+
+---
+
+#### Test Target Summary
+
+| Area | Current | Target | Files Needed |
+|------|---------|--------|-------------|
+| `save-profile-action.ts` | **17** | 18 | `test/unit/server/user/profile/save-profile.test.ts` ✅ |
+| `editor-store.ts` | **19** | 15 | `test/unit/lib/stores/editor-store.test.ts` ✅ |
+| `use-autosave.ts` | **12** | 11 | `test/unit/hooks/use-autosave.test.ts` ✅ |
+| `SaveProfileSchema` | 0 | 16 | `test/unit/server/user/profile/schema.test.ts` |
+| `LinkSchema` (extend) | 13 | 20 | existing, extend |
+| `Button` (fix) | **16** | 15 | existing, rewrite ✅ |
+| `ProfileEditor` (fix) | **7** | 7 | existing, extend ✅ |
+| `TextStylePopover` | 0 | 13 | new |
+| `StatusIndicator` | 0 | 6 | new |
+| Integration: autosave | 0 | 5 | `test/integration/editor/autosave-flow.test.ts` |
+| Integration: auth | 0 | 4 | `test/integration/auth/session-flow.test.ts` |
+| E2E: auth | 2 | 6 | existing, extend |
+| E2E: profile | 2*** | 8 | existing, extend |
+| Infrastructure | n/a | 7 | fix mocks/fixtures/utils |
+
+**P0+P1 delivered: 89 tests total (from 23 baseline = +66).** P2-P7 pending.
+
+**Status:** P0+P1 completed, P2-P7 pending
 
 ## Decisions Made
 | Decision | Rationale |
@@ -189,12 +522,22 @@ Phase 1
 | Status indicator replaces Save button | `saving`/`saved (fade 2s)`/`error-retryable (Retry)`/`error-validation`; Discard stays |
 | `@deprecated` JSDoc on 7 per-entity actions | Marker for future contributors; file kept as instant rollback path |
 | `buttonColor`/`buttonTextColor` added to `LinkSchema` + diff | Defensive — currently in payload but missing from schema; investigate dead-vs-editable in separate phase |
+| Test priority: P0 fix broken → P1 cover Phase 8 → P2 integrate mocks → P3 fix E2E | Risk-weighted: newest code (Phase 8) has 0 coverage; existing mocks unused; E2E tests shallow |
+| Unit test saveProfile diff logic via mock Prisma | Don't need real DB; mock `$transaction` + model mocks → assert call shapes |
+| `initializeEditor` 4-case guard tested separately from hook | Store logic independent of save timing; test state transitions in isolation |
+| Hook test via `@testing-library/react-hooks` or manual act() wrapper | Zustand store is pure JS — hook can be tested with store mocks |
+| Integration test fills `test/integration/` folders | Existing placeholder structure signals intent; honor it |
+| P5 (UI component tests) + P7 (E2E tooling) lower priority | P0-P3 cover the critical risk surface (Phase 8 + auth); visual/component tests less urgent |
 
 ## Notes
 - No CONTEXT.md exists — consider creating one lazily if domain terms get sharpened
 - No ADRs exist yet — `docs/adr/0001-server-side-diff-autosave.md` to be created after Phase 8 confirmed working in production
-- All 24 existing tests pass — baseline preserved
+- 89 tests pass (up from 23 baseline) — P0 (fix broken) + P1 (Phase 8 coverage) delivered: button.test.tsx (16), profile-editor.test.tsx (7), save-profile.test.ts (17), editor-store.test.ts (19), use-autosave.test.ts (12), utils.test.ts (5), links/schema.test.ts (13)
+- tsc --noEmit: 0 new errors in test or production code (all remaining errors are pre-existing auth dead code from Phase 1)
 - Multi-tab sync explicitly out of scope for Phase 8 (single-tab is 99% use case; localStorage persistence is the safety net)
-- `bgEffects`/`bgPattern` clear-to-null latent bug (was `!= null` in `saveAllProfileChanges`) — fixed implicitly by server-side JSON.stringify diff; also fixed Zod shape mismatch (2026-07-06: `BgPatternSchema` → `{ animatedId, animatedConfig }`, `BgEffectsSchema` → `Record<string, number>`)
+- `bgEffects`/`bgPattern` clear-to-null latent bug fixed implicitly by server-side JSON.stringify diff
+- Phase 9 remaining: P2 (integration tests), P3 (fix E2E), P4 (schema tests), P5 (UI components), P6 (infrastructure/mocks), P7 (E2E tooling)
+- `test/mocks/next-navigation.ts` redundant with `setup.ts` global mock — consider removal during P6
+- editor-store.test.ts uses `vi.mock("zustand/middleware")` to bypass persist/localStorage interference in happy-dom
 
 
