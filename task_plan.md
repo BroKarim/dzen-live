@@ -91,6 +91,36 @@ Phase 1
 - `mode="editor"` makes link cards non-clickable (no expand, no navigate). This is intentional — the editor is for editing, not previewing navigation. Public page uses `mode="public"` and gets the original behavior.
 - The popover is portal'd to `document.body` to escape the preview's `overflow-hidden` + `transform` ancestors. Position is computed from `getBoundingClientRect` at click time.
 
+### Phase 8: Auto-Save Migration — Debounced Server-Side Diff
+- [ ] **Server: single `saveProfile` endpoint**
+  - [ ] Create `server/user/profile/save-profile-action.ts` — one server action that accepts `{ profile, links, socials }` and runs in a single Prisma transaction
+  - [ ] Move all diffing logic (profile field compare, link/social create/update/delete/reorder, temp-ID resolution) to the server
+  - [ ] Client sends entire draft; server loads current DB state, diffs, and applies changes
+  - [ ] Return resolved real IDs for created links/socials so client can update its store
+- [ ] **Client: debounce hook**
+  - [ ] Create `hooks/use-autosave.ts` — debounced (~1.5s) auto-save trigger watching `isDirty` from editor store
+  - [ ] Expose status state: `idle | saving | saved | error`
+  - [ ] On error: keep draft dirty, surface toast, retry on next change
+- [ ] **Client: store integration**
+  - [ ] Update `lib/stores/editor-store.ts` — `markAsSaved()` already exists; wire auto-save hook in `editor-client.tsx`
+  - [ ] After save resolves, `updateDraft()` with resolved real IDs (same as current `handleSave` does) then `markAsSaved()`
+- [ ] **Client: header simplification**
+  - [ ] Remove the monolith `handleSave` block (~175 lines) from `editor-header.tsx`
+  - [ ] Remove the Save button; replace with status indicator ("Saving…" spinner → "Saved" checkmark → "Error" with retry)
+  - [ ] Keep Discard button (visible when `isDirty`)
+  - [ ] Remove `isPending`/`startTransition` plumbing — auto-save hook handles status
+- [ ] **Client: unload guard**
+  - [ ] Add `beforeunload` listener in `editor-client.tsx` that warns when `isDirty` (auto-save in-flight or just-made change not yet debounced)
+- [ ] **Cleanup: delete old per-entity actions**
+  - [ ] After `saveProfile` works, deprecate (don't delete yet) `createLink`, `updateLink`, `deleteLink`, `reorderLinks`, `createSocialLink`, `updateSocialLink`, `deleteSocialLink` — keep until migration confirmed
+  - [ ] Remove imports of those actions from `editor-header.tsx`
+- [ ] **Verify**
+  - [ ] tsc --noEmit
+  - [ ] tests (update `profile-editor.test.tsx` to assert no Save button, no manual save call)
+  - [ ] build
+  - [ ] manual QA: edit profile/links/socials → watch auto-save indicator → refresh → confirm persistence
+- **Status:** pending
+
 ## Decisions Made
 | Decision | Rationale |
 |----------|-----------|

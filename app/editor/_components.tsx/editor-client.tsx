@@ -24,6 +24,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
   const { draftProfile, isDirty, initializeEditor, updateDraft, discardChanges, _hasHydrated, openStylePopover } = useEditorStore();
 
   // Check for draft conflict inline during render (not in an effect)
+  // React 18+ batches state updates during render, so this is safe.
   if (_hasHydrated && !hasInitialized && isDirty && draftProfile) {
     const hasDraft = JSON.stringify(draftProfile) !== JSON.stringify(initialProfile);
     if (hasDraft) {

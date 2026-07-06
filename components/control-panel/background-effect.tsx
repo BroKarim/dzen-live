@@ -3,7 +3,7 @@
 import { Button2 } from "@/components/ui/button-2";
 import { IntensitySlider } from "@/components/ui/intesity-slider";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Sun, Droplets, Contrast, EyeOff, Settings2, RotateCcw } from "lucide-react";
+import { Settings2, RotateCcw } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 
@@ -12,16 +12,20 @@ interface BackgroundEffectsProps {
   onUpdate: (profile: ProfileEditorData) => void;
 }
 
-export default function BackgroundEffects({ profile, onUpdate }: BackgroundEffectsProps) {
-  const defaultEffects = {
-    blur: 0,
-    noise: 0,
-    brightness: 100,
-    saturation: 100,
-    contrast: 100,
-  };
+interface BackgroundEffectValues {
+  [key: string]: number;
+}
 
-  const bgEffects = (profile.bgEffects as any) || defaultEffects;
+const defaultEffects: BackgroundEffectValues = {
+  blur: 0,
+  noise: 0,
+  brightness: 100,
+  saturation: 100,
+  contrast: 100,
+};
+
+export default function BackgroundEffects({ profile, onUpdate }: BackgroundEffectsProps) {
+  const bgEffects = (profile.bgEffects as BackgroundEffectValues | null) ?? defaultEffects;
 
   const settings = [
     { id: "blur", label: "Blur", min: 0, max: 20, step: 1, unit: "px" },

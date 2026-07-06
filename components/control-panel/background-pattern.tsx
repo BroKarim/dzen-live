@@ -9,6 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 import { ANIMATED_BACKGROUNDS, type AnimatedBackgroundMeta } from "@/lib/animated-backgrounds";
 
+interface BgPattern {
+  animatedId: string;
+  animatedConfig: Record<string, unknown>;
+}
+
 interface BackgroundPatternProps {
   profile: ProfileEditorData;
   onUpdate: (profile: ProfileEditorData) => void;
@@ -27,19 +32,19 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
       bgPattern: {
         animatedId: meta.id,
         animatedConfig: { ...meta.defaultConfig },
-      },
-    } as any);
+      } satisfies BgPattern,
+    } as ProfileEditorData);
   };
 
   const handleAnimatedConfigChange = (nextConfig: Record<string, unknown>) => {
     onUpdate({
       ...profile,
-      bgPattern: { animatedId, animatedConfig: nextConfig },
-    } as any);
+      bgPattern: { animatedId: animatedId!, animatedConfig: nextConfig } satisfies BgPattern,
+    } as ProfileEditorData);
   };
 
   const handleReset = () => {
-    onUpdate({ ...profile, bgPattern: null } as any);
+    onUpdate({ ...profile, bgPattern: null } as ProfileEditorData);
   };
 
   return (
@@ -86,7 +91,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
           {selectedMeta && animatedConfig && (
             <div className="space-y-3 ">
               {/* <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{selectedMeta.label} Settings</p> */}
-              {selectedMeta.configFields.map((field: any) =>
+              {selectedMeta.configFields.map((field: AnimatedBackgroundMeta["configFields"][number]) =>
                 field.type === "range" ? (
                   <div key={field.key} className="space-y-2">
                     <div className="flex items-center justify-between">

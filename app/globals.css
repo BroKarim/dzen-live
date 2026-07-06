@@ -151,6 +151,11 @@
   }
 }
 
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
 @layer utilities {
   .scrollbar-thin::-webkit-scrollbar {
     height: 8px;

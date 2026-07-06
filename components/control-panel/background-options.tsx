@@ -10,6 +10,8 @@ import type { BackgroundPreset } from "@/server/website/background-presets/schem
 import { useEffect, useState } from "react";
 import WallpaperCategorySection from "./wallpaper-category-section";
 
+type BgType = "color" | "wallpaper" | "image";
+
 interface BackgroundOptionsProps {
   profile: ProfileEditorData;
   onUpdate: (profile: ProfileEditorData) => void;
@@ -39,7 +41,6 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
 
   const wallpapersByCategory = (() => {
     const grouped = new Map<string, BackgroundPreset[]>();
-
     wallpaperPresets.forEach((preset) => {
       const category = preset.category || "Uncategorized";
       if (!grouped.has(category)) {
@@ -47,29 +48,11 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
       }
       grouped.get(category)!.push(preset);
     });
-
-    return Array.from(grouped.entries()).map(([category, wallpapers]) => ({
-      category,
-      wallpapers,
-    }));
+    return Array.from(grouped.entries()).map(([category, wallpapers]) => ({ category, wallpapers }));
   })();
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handleBackgroundChange({
-          bgType: "image",
-          bgImage: reader.result as string,
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   return (
-    <Tabs value={activeTab} onValueChange={(v) => handleBackgroundChange({ bgType: v as any })}>
+    <Tabs value={activeTab} onValueChange={(v) => handleBackgroundChange({ bgType: v as BgType })}>
       <TabsList className="h-10 rounded-[99px] bg-[#222] gap-1 w-full justify-center items-center shadow-dzenn inline-flex overflow-hidden ">
         <TabsTrigger value="color" asChild className="rounded-full w-full  data-[state=active]:shadow-[inset_0_1px_rgb(255_255_255/0.15)] transition-all">
           <div className="flex items-center justify-center gap-2">
