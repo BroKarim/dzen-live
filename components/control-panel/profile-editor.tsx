@@ -75,9 +75,8 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
     } catch (error: any) {
       console.error("Upload error:", error);
       toast.error(error.message || "Failed to upload avatar");
-    } finally {
-      setIsUploading(false);
     }
+    setIsUploading(false);
   };
 
   return (

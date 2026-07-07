@@ -135,9 +135,8 @@ export function AnalyticsTab({ profileId, links }: AnalyticsTabProps) {
       ]);
     } catch (error) {
       console.error("Failed to refresh analytics:", error);
-    } finally {
-      setIsRefreshing(false);
     }
+    setIsRefreshing(false);
   };
 
   const selectedLink = selectedLinkId ? links.find((l) => l.id === selectedLinkId) : null;

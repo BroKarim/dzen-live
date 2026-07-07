@@ -1,14 +1,17 @@
 "use client";
 
+import { useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { MenuIcon } from "./icons";
-import { usePathname } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 
 export function Header() {
   const { data: session, isPending } = useSession();
-  const pathname = usePathname();
+
+  const scrollToFeatures = useCallback(() => {
+    document.getElementById("features")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   return (
     <header className="fixed top-3 left-0 z-50 w-full px-4 sm:px-6">
@@ -19,14 +22,15 @@ export function Header() {
           </Link>
 
           <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-0 md:flex">
-            <Link
-              href="/athas/pricing"
-              className="inline-flex h-9 items-center rounded-md px-3 font-sans text-sm font-medium text-white/85 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-transparent"
+            <button
+              type="button"
+              onClick={scrollToFeatures}
+              className="inline-flex h-9 cursor-pointer items-center rounded-md px-3 font-sans text-sm font-medium text-white/85 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-transparent"
             >
               Features
-            </Link>
+            </button>
             <Link
-              href="/athas/extensions"
+              href="/info"
               className="inline-flex h-9 items-center rounded-md px-3 font-sans text-sm font-medium text-white/85 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-transparent"
             >
               Info

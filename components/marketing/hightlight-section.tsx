@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { Heart, Code2, ChartLine } from "lucide-react";
 
 const highlights = [
@@ -23,7 +26,14 @@ const highlights = [
 
 export function HighlightsSection() {
   return (
-    <section className="mx-auto grid max-w-6xl gap-8 px-8 sm:grid-cols-2 sm:px-10 lg:grid-cols-3 lg:px-16 xl:px-24" aria-label="Dzenn highlights">
+    <motion.section
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="mx-auto grid max-w-6xl gap-8 px-8 sm:grid-cols-2 sm:px-10 lg:grid-cols-3 lg:px-16 xl:px-24"
+      aria-label="Dzenn highlights"
+    >
       {highlights.map((item) => (
         <div key={item.title} className="min-w-0">
           <div className={`inline-flex size-11 items-center justify-center rounded-lg border ${item.className}`}>
@@ -33,6 +43,6 @@ export function HighlightsSection() {
           <p className="mt-3 text-base leading-6 text-muted-foreground">{item.description}</p>
         </div>
       ))}
-    </section>
+    </motion.section>
   );
 }

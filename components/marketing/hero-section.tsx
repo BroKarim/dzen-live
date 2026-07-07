@@ -21,7 +21,7 @@ export function HeroSection() {
               </Link>
             </div>
 
-            <h1 className="mx-auto mt-5 max-w-[34rem] text-4xl font-medium leading-none tracking-tight text-white sm:text-5xl lg:text-6xl [text-shadow:0_2px_22px_rgb(0_0_0_/_0.3)]">Lightweight, open-source code editor.</h1>
+            <h1 className="mx-auto mt-5 max-w-[34rem] text-4xl font-medium leading-none tracking-tight text-white sm:text-5xl lg:text-6xl [text-shadow:0_2px_22px_rgb(0_0_0_/_0.3)]">Nonchalant <br/>Link In Bio.</h1>
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Link href={session ? "/editor" : "/login"}>

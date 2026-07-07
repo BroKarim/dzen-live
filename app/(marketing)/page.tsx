@@ -22,7 +22,7 @@ export default function DzennHome() {
       <main className="flex-1 pt-16">
         <div className="space-y-24 lg:space-y-28">
           <HeroSection />
-          <HighlightsSection />
+          <div id="features"><HighlightsSection /></div>
           <FeaturesSection />
         </div>
       </main>
