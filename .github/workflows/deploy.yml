@@ -44,8 +44,7 @@ jobs:
           tags: |
             ${{ steps.set_tag.outputs.image_tag }}:latest
             ${{ steps.set_tag.outputs.image_tag }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          no-cache: true
           platforms: linux/arm64
           build-args: |
             NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://dzenn.live' }}
