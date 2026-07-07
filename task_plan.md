@@ -103,36 +103,36 @@ Phase 9 (P0+P1 complete, P2-P7 pending)
 
 **Implementation sequence:**
 
-- [ ] **Step 1 — Server: S3 cleanup safety net in save actions**
-  - [ ] `server/user/profile/save-profile-action.ts`: tambahkan tracking `bgImage` ke `s3KeysToClean` (sama pattern dengan `avatarUrl`) — jika `profile.bgImage` berubah/dihapus saat save, hapus dari S3 post-commit
-  - [ ] `server/user/profile/actions.ts` (`saveAllProfileChanges`): tambahkan cleanup `bgImage` lama jika berubah (sementara action ini masih dipakai, meski `@deprecated`)
-  - [ ] Verify: tsc --noEmit, tests
+- [x] **Step 1 — Server: S3 cleanup safety net in save actions** ✅
+  - [x] `server/user/profile/save-profile-action.ts`: tambahkan tracking `bgImage` ke `s3KeysToClean` (sama pattern dengan `avatarUrl`) — jika `profile.bgImage` berubah/dihapus saat save, hapus dari S3 post-commit
+  - [x] `server/user/profile/actions.ts` (`saveAllProfileChanges`): tambahkan cleanup `bgImage` lama jika berubah (sementara action ini masih dipakai, meski `@deprecated`)
+  - [x] Verify: tsc --noEmit (0 new errors), tests (89/89 pass)
 
-- [ ] **Step 2 — Server: `deleteImage` action**
-  - [ ] `server/upload/actions.ts`: tambahkan `deleteImage(url: string)` — cek auth, panggil `deleteFromS3(url)`, return `{ success } | { success: false, error }`
-  - [ ] `deleteFromS3` sudah ada guard `url.startsWith(S3_PUBLIC_URL)` — aman dari arbitrary URL deletion
+- [x] **Step 2 — Server: `deleteImage` action** ✅
+  - [x] `server/upload/actions.ts`: tambahkan `deleteImage(url: string)` — cek auth, panggil `deleteFromS3(url)`, return `{ success } | { success: false, error }`
+  - [x] `deleteFromS3` sudah ada guard `url.startsWith(S3_PUBLIC_URL)` — aman dari arbitrary URL deletion
 
-- [ ] **Step 3 — Client: aktifkan UI upload di `background-options.tsx`**
-  - [ ] Hapus banner "Coming Soon" dan uncomment original upload logic
-  - [ ] Implementasikan `handleImageUpload`:
+- [x] **Step 3 — Client: aktifkan UI upload di `background-options.tsx`** ✅
+  - [x] Hapus banner "Coming Soon" dan uncomment original upload logic
+  - [x] Implementasikan `handleImageUpload`:
     1. Validasi file: `image/*`, max **5MB** sebelum kompresi
     2. Kompresi via `compressImage(file, { maxSizeMB: 0.5, maxWidthOrHeight: 1920 })` — target ~500KB, preserve quality
     3. Ambil presigned URL via `getUploadUrl(file.name, file.type)`
     4. Upload ke S3 via `fetch PUT`
     5. Jika `profile.bgImage` ada (gambar lama), panggil `deleteImage(profile.bgImage)` — **fire-and-forget**, log error tapi jangan block UI
     6. `handleBackgroundChange({ bgType: "image", bgImage: publicUrl })`
-  - [ ] Tambahkan loading state (`isUploading`) — spinner di area upload
-  - [ ] Aktifkan tombol "Remove Image": set `bgImage: null` (cleanup-nya dihandle saat save via Step 1, atau bisa juga langsung `deleteImage` tergantung UX preference — rekomendasi: hapus dari state saja, S3 cleanup nunggu save)
-  - [ ] Preview uploaded image di area upload (sudah ada di commented code — pakai `<Image src={profile.bgImage} ... />`, tambahkan `unoptimized` jika perlu untuk CloudFront)
-  - [ ] Import yang dibutuhkan: `Image` dari next/image, `Button`, `getUploadUrl`, `deleteImage`, `compressImage`, `toast`, `useState`
+  - [x] Tambahkan loading state (`isUploading`) — spinner di area upload
+  - [x] Aktifkan tombol "Remove Image": set `bgImage: null` (cleanup-nya dihandle saat save via Step 1)
+  - [x] Preview uploaded image di area upload (`<Image src={profile.bgImage} fill unoptimized ... />`)
+  - [x] Import yang dibutuhkan: `Image` dari next/image, `Button`, `getUploadUrl`, `deleteImage`, `compressImage`, `toast`, `useState`
 
-- [ ] **Step 4 — Client: update `profile-editor.tsx` avatar constraints**
-  - [ ] Ubah max file size avatar dari 10MB → **3MB**
-  - [ ] Pastikan kompresi avatar tetap `maxSizeMB: 0.5`
+- [x] **Step 4 — Client: update `profile-editor.tsx` avatar constraints** ✅
+  - [x] Ubah max file size avatar dari 10MB → **3MB**
+  - [x] Kompresi avatar tetap `maxSizeMB: 0.5`
 
-- [ ] **Step 5 — Verify**
-  - [ ] `tsc --noEmit`: 0 errors
-  - [ ] Tests: 23/23 pass
+- [x] **Step 5 — Verify** ✅
+  - [x] `tsc --noEmit`: 0 new errors (semua error adalah pre-existing auth dead code Phase 1)
+  - [x] Tests: 89/89 pass
   - [ ] Manual QA: upload background image → preview muncul → save profile → image lama dihapus dari S3
   - [ ] Manual QA: pindah ke tab color → save → bgImage dihapus dari DB + S3
   - [ ] Manual QA: upload file >5MB → error toast

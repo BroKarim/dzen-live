@@ -37,7 +37,7 @@ function toJsonInput(v: unknown): Prisma.InputJsonValue | typeof Prisma.JsonNull
 export const saveAllProfileChanges = withAuth("profile/actions", async (user, data: SaveAllProfileChangesInput) => {
   const currentProfile = await db.profile.findFirst({
     where: { userId: user.id },
-    select: { id: true, avatarUrl: true },
+    select: { id: true, avatarUrl: true, bgImage: true },
   });
 
   if (!currentProfile) throw new Error("Profile not found");
@@ -77,6 +77,14 @@ export const saveAllProfileChanges = withAuth("profile/actions", async (user, da
 
   if (data.avatarUrl && currentProfile.avatarUrl && currentProfile.avatarUrl !== data.avatarUrl) {
     deleteFromS3(currentProfile.avatarUrl).catch(console.error);
+  }
+
+  if (data.bgImage && currentProfile.bgImage && currentProfile.bgImage !== data.bgImage) {
+    deleteFromS3(currentProfile.bgImage).catch(console.error);
+  }
+
+  if (data.bgImage === null && currentProfile.bgImage) {
+    deleteFromS3(currentProfile.bgImage).catch(console.error);
   }
 
   revalidatePath(`/${user.username}`);

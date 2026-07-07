@@ -27,8 +27,8 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("Image is too large (max 10MB)");
+    if (file.size > 3 * 1024 * 1024) {
+      toast.error("Image is too large (max 3MB)");
       return;
     }
 

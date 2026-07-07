@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { uploadBase64ToS3, getPresignedUploadUrl } from "@/lib/s3";
+import { uploadBase64ToS3, getPresignedUploadUrl, deleteFromS3 } from "@/lib/s3";
 
 export async function uploadImage(base64: string, fileName: string) {
   try {
@@ -44,5 +44,24 @@ export async function getUploadUrl(fileName: string, contentType: string) {
   } catch (error) {
     console.error("Failed to get upload URL:", error);
     return { success: false, error: "Failed to get upload URL" };
+  }
+}
+
+export async function deleteImage(url: string) {
+  try {
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      return { success: false as const, error: "Unauthorized" };
+    }
+
+    await deleteFromS3(url);
+
+    return { success: true as const };
+  } catch (error) {
+    console.error("Failed to delete image:", error);
+    return { success: false as const, error: "Failed to delete image" };
   }
 }

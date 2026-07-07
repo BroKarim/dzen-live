@@ -56,9 +56,12 @@ export const saveProfile = withAuth("profile/save", async (user, data: unknown) 
     }
   }
 
-  // Track avatar S3 cleanup
+  // Track avatar + bgImage S3 cleanup
   if (profile.avatarUrl && draft.avatarUrl !== undefined && profile.avatarUrl !== draft.avatarUrl) {
     s3KeysToClean.push(profile.avatarUrl);
+  }
+  if (profile.bgImage && draft.bgImage !== undefined && profile.bgImage !== draft.bgImage) {
+    s3KeysToClean.push(profile.bgImage);
   }
 
   if (Object.keys(updateData).length > 0) {
