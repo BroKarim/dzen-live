@@ -47,6 +47,7 @@ jobs:
           no-cache: true
           platforms: linux/arm64
           build-args: |
+            BUILD_DATE=${{ github.run_id }}-${{ github.run_attempt }}
             NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://dzenn.live' }}
             NEXT_PUBLIC_BETTER_AUTH_URL=${{ vars.NEXT_PUBLIC_BETTER_AUTH_URL || 'https://dzenn.live' }}
 
