@@ -440,6 +440,10 @@ function createFallbackGridStyle(cellSize: number, lineColor: string): CSSProper
   };
 }
 
+function bindShaderProgram(gl: WebGLRenderingContext, program: WebGLProgram) {
+  gl.useProgram(program);
+}
+
 export function RetroGrid({ className, angle = 65, cellSize = 60, opacity = 0.5, lightLineColor = "gray", darkLineColor = "gray", style, ...props }: RetroGridProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -581,7 +585,7 @@ export function RetroGrid({ className, angle = 65, cellSize = 60, opacity = 0.5,
         return;
       }
 
-      gl.useProgram(programInfo.program);
+      bindShaderProgram(gl, programInfo.program);
       gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
       gl.enableVertexAttribArray(programInfo.attributeLocation);
       gl.vertexAttribPointer(programInfo.attributeLocation, 2, gl.FLOAT, false, 0, 0);

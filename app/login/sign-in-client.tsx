@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Github } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -30,11 +30,7 @@ function SignInInner() {
   const [isGithubLoading, setIsGithubLoading] = useState(false);
   const [isDiscordLoading, setIsDiscordLoading] = useState(false);
 
-  const [lastMethod, setLastMethod] = useState<string | null>(null);
-
-  useEffect(() => {
-    setLastMethod(authClient.getLastUsedLoginMethod());
-  }, []);
+  const [lastMethod] = useState<string | null>(() => authClient.getLastUsedLoginMethod());
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -44,53 +40,32 @@ function SignInInner() {
 
   const handleSignInGoogle = async () => {
     setIsGoogleLoading(true);
-    try {
-      const result = await authClient.signIn.social({
-        provider: "google",
-        callbackURL: getCallbackUrl(),
-        errorCallbackURL: `${appUrl}/login`,
-      });
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-    } catch {
-    } finally {
-      setIsGoogleLoading(false);
-    }
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: getCallbackUrl(),
+      errorCallbackURL: `${appUrl}/login`,
+    }).catch(() => {});
+    setIsGoogleLoading(false);
   };
 
   const handleSignInGithub = async () => {
     setIsGithubLoading(true);
-    try {
-      const result = await authClient.signIn.social({
-        provider: "github",
-        callbackURL: getCallbackUrl(),
-        errorCallbackURL: `${appUrl}/login`,
-      });
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-    } catch {
-    } finally {
-      setIsGithubLoading(false);
-    }
+    await authClient.signIn.social({
+      provider: "github",
+      callbackURL: getCallbackUrl(),
+      errorCallbackURL: `${appUrl}/login`,
+    }).catch(() => {});
+    setIsGithubLoading(false);
   };
 
   const handleSignInDiscord = async () => {
     setIsDiscordLoading(true);
-    try {
-      const result = await authClient.signIn.social({
-        provider: "discord",
-        callbackURL: getCallbackUrl(),
-        errorCallbackURL: `${appUrl}/login`,
-      });
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-    } catch {
-    } finally {
-      setIsDiscordLoading(false);
-    }
+    await authClient.signIn.social({
+      provider: "discord",
+      callbackURL: getCallbackUrl(),
+      errorCallbackURL: `${appUrl}/login`,
+    }).catch(() => {});
+    setIsDiscordLoading(false);
   };
 
   return (

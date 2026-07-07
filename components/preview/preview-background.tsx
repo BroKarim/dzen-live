@@ -1,3 +1,4 @@
+import { createElement } from "react";
 import { getBackgroundStyle, getFilterStyle, shouldScaleForBlur } from "@/lib/utils/preview-background";
 import { getAnimatedBackgroundComponent } from "@/lib/animated-backgrounds";
 import type { BackgroundEffects } from "@/lib/utils/preview-background";
@@ -36,9 +37,7 @@ export function PreviewBackground({ profile }: PreviewBackgroundProps) {
         }}
       />
 
-      {AnimatedComponent && (
-        <AnimatedComponent className="absolute inset-0" {...animatedConfig} />
-      )}
+      {AnimatedComponent && createElement(AnimatedComponent, { className: "absolute inset-0", ...animatedConfig })}
 
       {filterStyle !== "none" && (
         <div
