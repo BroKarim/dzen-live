@@ -7,6 +7,10 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Authenticating · Dzenn",
   description: "Securely logging you in and preparing your space.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default async function AuthCallbackPage() {

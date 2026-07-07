@@ -10,6 +10,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Dzenn - Not your ordinary linktree",
   description: "Replace your boring static website with a stunning, interactive link-in-bio that actually converts. Built for creators who demand excellence.",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function DzennHome() {

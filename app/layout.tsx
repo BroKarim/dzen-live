@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
 import { FONT_CATALOG_CLASSNAMES } from "@/lib/font-catalog";
+import { buildWebSiteSchema, buildOrganizationSchema, serializeJsonLd } from "@/lib/seo/json-ld";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,9 +16,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Dzenn - Not your ordinary linktree",
   description: "A nonchalant link-in-bio that hits different. No cap, just vibes. Your main character era starts here – slay your links, bestie. 💅✨",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Dzenn - Not your ordinary linktree",
     description: "A nonchalant link-in-bio that hits different. No cap, just vibes. Your main character era starts here – slay your links, bestie. 💅✨",
@@ -52,6 +59,17 @@ export const metadata: Metadata = {
   },
 };
 
+const websiteSchema = buildWebSiteSchema({
+  name: "Dzenn",
+  url: siteUrl,
+});
+
+const organizationSchema = buildOrganizationSchema({
+  name: "Dzenn",
+  url: siteUrl,
+  logo: `${siteUrl}/og.png`,
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -64,6 +82,16 @@ export default function RootLayout({
           <Script src="//unpkg.com/react-scan/dist/auto.global.js" crossOrigin="anonymous" strategy="beforeInteractive" />
         )} 
       </head>*/}
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(websiteSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(organizationSchema) }}
+        />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${FONT_CATALOG_CLASSNAMES} antialiased`}>
         <Providers>{children}</Providers>
       </body>

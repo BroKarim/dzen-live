@@ -8,6 +8,10 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
   return {
     title: `Editing @${username} · Dzenn`,
     description: `Customize and manage your @${username} link-in-bio page on Dzenn.`,
+    robots: {
+      index: false,
+      follow: false,
+    },
   };
 }
 

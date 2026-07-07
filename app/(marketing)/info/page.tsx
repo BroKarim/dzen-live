@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Why Dzenn",
   description: "Learn about the mindset behind Dzenn—why digital identity became stale and how we're redefining the link-in-bio for modern creators.",
+  alternates: {
+    canonical: "/info",
+  },
 };
 
 export default function WhyPage() {

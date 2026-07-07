@@ -8,6 +8,10 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Setup Your Page · Dzenn",
   description: "Claim your unique username and start building your non-chalant link-in-bio page today.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default async function NewPage() {
