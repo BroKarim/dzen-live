@@ -13,6 +13,11 @@ import { LinkSchema } from "@/server/user/links/schema";
 
 type LinkType = "url" | "media";
 
+const typeOptions = [
+  { id: "url" as LinkType, icon: LinkIcon, label: "URL" },
+  { id: "media" as LinkType, icon: ImageIcon, label: "Media" },
+];
+
 interface LinkData {
   id: string;
   title: string;
@@ -136,11 +141,6 @@ export function LinkEditDialog({ link, open, onOpenChange, onSave }: LinkEditDia
     onSave({ ...link, ...payload });
     onOpenChange(false);
   };
-
-  const typeOptions = [
-    { id: "url" as LinkType, icon: LinkIcon, label: "URL" },
-    { id: "media" as LinkType, icon: ImageIcon, label: "Media" },
-  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

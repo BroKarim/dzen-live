@@ -541,3 +541,8 @@ Phase 9 (P0+P1 complete, P2-P7 pending)
 - editor-store.test.ts uses `vi.mock("zustand/middleware")` to bypass persist/localStorage interference in happy-dom
 
 
+-------
+
+
+
+

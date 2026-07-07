@@ -124,18 +124,20 @@ export function AnalyticsTab({ profileId, links }: AnalyticsTabProps) {
     gcTime: 60000,
   });
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["analytics", selectedLinkId] }),
-      queryClient.invalidateQueries({ queryKey: ["link-click-counts"] }),
-      queryClient.refetchQueries({ queryKey: ["analytics", selectedLinkId] }),
-      queryClient.refetchQueries({ queryKey: ["link-click-counts"] }),
-    ]).catch((error) => {
+    try {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["analytics", selectedLinkId] }),
+        queryClient.invalidateQueries({ queryKey: ["link-click-counts"] }),
+        queryClient.refetchQueries({ queryKey: ["analytics", selectedLinkId] }),
+        queryClient.refetchQueries({ queryKey: ["link-click-counts"] }),
+      ]);
+    } catch (error) {
       console.error("Failed to refresh analytics:", error);
-    }).finally(() => {
+    } finally {
       setIsRefreshing(false);
-    });
+    }
   };
 
   const selectedLink = selectedLinkId ? links.find((l) => l.id === selectedLinkId) : null;

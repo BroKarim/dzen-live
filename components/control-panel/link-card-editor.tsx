@@ -24,6 +24,11 @@ interface LinkCardEditorProps {
 
 type LinkType = "url" | "media";
 
+const typeOptions = [
+  { id: "url" as LinkType, icon: LinkIcon, label: "URL" },
+  { id: "media" as LinkType, icon: ImageIcon, label: "Media" },
+];
+
 export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
   const [uiState, setUiState] = useState({
     isAdding: false,
@@ -139,11 +144,6 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
 
     onUpdate({ ...profile, links: newLinks });
   };
-
-  const typeOptions = [
-    { id: "url" as LinkType, icon: LinkIcon, label: "URL" },
-    { id: "media" as LinkType, icon: ImageIcon, label: "Media" },
-  ];
 
   return (
     <div className="space-y-3">

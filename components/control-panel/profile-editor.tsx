@@ -34,7 +34,7 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
 
     setIsUploading(true);
 
-    (async () => {
+    try {
       try {
         const compressed = await compressImage(file, {
           maxSizeMB: 0.5,
@@ -72,12 +72,12 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
         ...profile,
         avatarUrl: publicUrl!,
       });
-    })().catch((error: any) => {
+    } catch (error: any) {
       console.error("Upload error:", error);
       toast.error(error.message || "Failed to upload avatar");
-    }).finally(() => {
+    } finally {
       setIsUploading(false);
-    });
+    }
   };
 
   return (

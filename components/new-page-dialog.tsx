@@ -21,13 +21,14 @@ export function NewPageDialog() {
     setLoading(true);
     setError("");
 
-    const isAvailable = await checkUsernameAvailability(username).catch(() => {
+    let isAvailable: boolean;
+    try {
+      isAvailable = await checkUsernameAvailability(username);
+    } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
-      return undefined;
-    });
-
-    if (isAvailable === undefined) return;
+      return;
+    }
 
     if (!isAvailable) {
       setError("Username is already taken");
@@ -35,17 +36,17 @@ export function NewPageDialog() {
       return;
     }
 
-    const result = await setupUsername(username).catch(() => {
+    try {
+      const result = await setupUsername(username);
+      if (result.success && result.username) {
+        push(`/editor/${result.username}`);
+      }
+    } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
-      return undefined;
-    });
-
-    if (!result) return;
-
-    if (result.success) {
-      push(`/editor/${result.username}`);
+      return;
     }
+
     setLoading(false);
   };
 

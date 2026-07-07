@@ -16,14 +16,6 @@ interface EditorClientProps {
   initialProfile: ProfileEditorData;
 }
 
-function usePrev<T>(value: T) {
-  const ref = useRef<T | undefined>(undefined);
-  useEffect(() => {
-    ref.current = value;
-  });
-  return ref;
-}
-
 export default function EditorClient({ initialProfile }: EditorClientProps) {
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
 
@@ -31,7 +23,6 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
   const { status, retry, flushSave } = useAutosave();
   const pathname = usePathname();
 
-  // beforeunload guard (consolidated from NavigationGuard)
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (isDirty || status === "saving") {
@@ -43,21 +34,24 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
     return () => window.removeEventListener("beforeunload", handler);
   }, [isDirty, status]);
 
-  // Flush save on in-app navigation (best-effort, non-blocking)
-  const prevPathnameRef = usePrev(pathname);
+  const flushSaveRef = useRef(flushSave);
+  const prevPathnameRef = useRef(pathname);
   useEffect(() => {
-    if (prevPathnameRef.current && prevPathnameRef.current !== pathname) {
-      flushSave();
+    flushSaveRef.current = flushSave;
+    if (prevPathnameRef.current !== pathname) {
+      flushSaveRef.current();
+      prevPathnameRef.current = pathname;
     }
   }, [pathname, flushSave]);
 
   const initRef = useRef(false);
+  const initialProfileRef = useRef(initialProfile);
   useEffect(() => {
     if (_hasHydrated && !initRef.current) {
       initRef.current = true;
-      initializeEditor(initialProfile);
+      initializeEditor(initialProfileRef.current);
     }
-  }, [_hasHydrated, initializeEditor, initialProfile]);
+  }, [_hasHydrated, initializeEditor]);
 
   const handlePreviewStyleClick = useCallback((target: StyleTarget) => {
     const id = styleTargetId(target);
