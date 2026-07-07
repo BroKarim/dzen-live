@@ -7,8 +7,8 @@ export function FooterCTA() {
   const { data: session } = useSession();
   return (
     <section className="relative mb-4 w-full overflow-hidden rounded-xl bg-muted px-6 py-20 text-center sm:mb-6 sm:px-8 sm:py-24 lg:px-10 lg:py-28 dark:bg-surface">
-      <div aria-hidden="true" className="absolute inset-0 bg-cover bg-center dark:hidden" style={{ backgroundImage: "url('/images/athas/athas-sky-bg.webp')" }} />
-      <div aria-hidden="true" className="absolute inset-0 hidden bg-cover bg-center dark:block" style={{ backgroundImage: "url('/images/athas/athas-sky-dark-bg.webp')" }} />
+      <div aria-hidden="true" className="absolute inset-0 bg-cover bg-top " style={{ backgroundImage: "url('/images/tokyo-day.webp')" }} />
+      {/* <div aria-hidden="true" className="absolute inset-0 hidden bg-cover bg-center dark:block" style={{ backgroundImage: "url('/images/athas/athas-sky-dark-bg.webp')" }} /> */}
 
       <div className="relative mx-auto max-w-3xl">
         <h2 className="text-3xl leading-tight text-white sm:text-4xl [text-shadow:0_2px_18px_rgb(0_0_0_/_0.35)]">Ready to try?</h2>

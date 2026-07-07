@@ -546,3 +546,7 @@ Phase 9 (P0+P1 complete, P2-P7 pending)
 
 
 
+- periksa metadat
+- perbaiki footer
+- 
+

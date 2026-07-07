@@ -11,8 +11,7 @@ export function HeroSection() {
     <section className="-mt-16">
       <div className="mx-auto max-w-none px-0">
         <div className="relative isolate overflow-hidden rounded-b-2xl px-6 pt-44 pb-10 sm:px-10 lg:pt-48 lg:pb-14">
-          <div aria-hidden="true" className="absolute inset-0 z-[-1] bg-cover bg-center bg-no-repeat dark:hidden" style={{ backgroundImage: "url('/images/tokyo-night.webp')" }} />
-          <div aria-hidden="true" className="absolute inset-0 z-[-1] hidden bg-cover bg-center bg-no-repeat dark:block" style={{ backgroundImage: "url('/images/tokyo-night.webp')" }} />
+          <div aria-hidden="true" className="absolute inset-0 z-[-1] bg-cover bg-center bg-no-repeat " style={{ backgroundImage: "url('/images/tokyo-night.webp')" }} />
 
           <div className="mx-auto max-w-3xl text-center">
             <div className="flex justify-center">
