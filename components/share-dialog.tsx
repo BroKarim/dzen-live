@@ -72,7 +72,7 @@ export function ShareDialog({ open, onOpenChange, name, username, avatarUrl }: S
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* og-image for user */}
+          {/* user card */}
           <div className="rounded-lg bg-white p-6">
             <div className="flex flex-col items-center space-y-3">
               <Avatar className="size-16 border-2">
