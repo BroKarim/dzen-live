@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2, Edit2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Button2 } from "@/components/button-2";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
-import { createSocialLink, updateSocialLink, deleteSocialLink } from "@/server/user/links/actions";
 import { toast } from "sonner";
 
 interface SocialMediaEditorProps {
@@ -48,17 +47,33 @@ export function SocialMediaEditor({ profile, onUpdate }: SocialMediaEditorProps)
     }));
   };
 
+  const normalizeUrl = (raw: string) => {
+    const trimmed = raw.trim();
+    if (!trimmed) return { url: "", error: "URL is required" };
+    if (/^https?:\/\//i.test(trimmed)) {
+      try { new URL(trimmed); return { url: trimmed, error: null }; } catch { return { url: trimmed, error: "Invalid URL" }; }
+    }
+    const withProtocol = `https://${trimmed}`;
+    try { new URL(withProtocol); return { url: withProtocol, error: null }; } catch { return { url: withProtocol, error: "Invalid URL" }; }
+  };
+
   const handleSave = () => {
     if (!formState.selectedPlatform) return;
 
+    const { url, error } = normalizeUrl(formState.url);
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
     if (formState.editingId) {
-      const updatedSocials = profile.socials.map((s) => (s.id === formState.editingId ? { ...s, platform: formState.selectedPlatform, url: formState.url } : s));
+      const updatedSocials = profile.socials.map((s) => (s.id === formState.editingId ? { ...s, platform: formState.selectedPlatform, url } : s));
       onUpdate({ ...profile, socials: updatedSocials });
     } else {
       const newSocial = {
         id: `temp-${Date.now()}`,
         platform: formState.selectedPlatform,
-        url: formState.url,
+        url,
         position: profile.socials.length,
       };
       onUpdate({ ...profile, socials: [...profile.socials, newSocial as any] });

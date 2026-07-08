@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { User, Globe, Trash2, LogOut, Loader2 } from "lucide-react";
+import { useState, useTransition, useRef, useEffect, useCallback } from "react";
+import { User, Globe, Trash2, LogOut, Loader2, AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { updateProfileUsername, togglePublishStatus, deleteProfileOrAccount } from "@/server/user/settings/actions";
+import { updateProfileUsername, togglePublishStatus, deleteProfileOrAccount, checkUsernameAvailability } from "@/server/user/settings/actions";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useEditorStore } from "@/lib/stores/editor-store";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 
 interface SettingsTabProps {
@@ -23,12 +24,57 @@ export function SettingsTab({ profile }: SettingsTabProps) {
   const [isPublished, setIsPublished] = useState(profile.isPublished);
   const [isPending, startTransition] = useTransition();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { draftProfile, updateDraft } = useEditorStore();
 
   const hasChanges = username !== profile.username || isPublished !== profile.isPublished;
+
+  const checkAvailability = useCallback(
+    async (value: string) => {
+      if (value.length < 1) return;
+      setIsCheckingUsername(true);
+      try {
+        const isAvailable = await checkUsernameAvailability(value);
+        if (!isAvailable) {
+          setUsernameError("Username is already taken");
+        } else {
+          setUsernameError(null);
+        }
+      } catch {
+        setUsernameError(null);
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
     setUsername(sanitized);
+
+    if (draftProfile) {
+      updateDraft({ ...draftProfile, username: sanitized });
+    }
+
+    if (sanitized !== profile.username) {
+      setUsernameError(null);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        checkAvailability(sanitized);
+      }, 300);
+    } else {
+      setUsernameError(null);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    }
   };
 
   const handleSaveSettings = () => {
@@ -169,6 +215,18 @@ export function SettingsTab({ profile }: SettingsTabProps) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground">Choose a unique username for your profile URL</p>
+          {usernameError && (
+            <p className="text-xs text-destructive flex items-center gap-1">
+              <AlertCircle className="size-3" />
+              {usernameError}
+            </p>
+          )}
+          {isCheckingUsername && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <Loader2 className="size-3 animate-spin" />
+              Checking availability...
+            </p>
+          )}
         </div>
 
         <Separator />
@@ -192,7 +250,7 @@ export function SettingsTab({ profile }: SettingsTabProps) {
         <Separator />
 
         {/* Save Button */}
-        <Button onClick={handleSaveSettings} disabled={!hasChanges || isPending} className="w-full">
+          <Button onClick={handleSaveSettings} disabled={!hasChanges || isPending || !!usernameError || isCheckingUsername} className="w-full">
           {isPending ? (
             <>
               <Loader2 className="mr-2 size-4 animate-spin" />

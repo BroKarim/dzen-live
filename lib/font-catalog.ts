@@ -87,23 +87,24 @@ export const spaceMono = Space_Mono({
 export type FontEntry = {
   name: string;
   variable: string;
+  cssVar: string;
   className: string;
   category: "sans" | "serif" | "mono" | "display";
 };
 
 export const FONT_CATALOG: FontEntry[] = [
-  { name: "Inter", variable: inter.variable, className: inter.className, category: "sans" },
-  { name: "Outfit", variable: outfit.variable, className: outfit.className, category: "sans" },
-  { name: "Open Sans", variable: openSans.variable, className: openSans.className, category: "sans" },
-  { name: "Roboto", variable: roboto.variable, className: roboto.className, category: "sans" },
-  { name: "Poppins", variable: poppins.variable, className: poppins.className, category: "sans" },
-  { name: "Montserrat", variable: montserrat.variable, className: montserrat.className, category: "sans" },
-  { name: "DM Sans", variable: dmSans.variable, className: dmSans.className, category: "sans" },
-  { name: "Space Grotesk", variable: spaceGrotesk.variable, className: spaceGrotesk.className, category: "sans" },
-  { name: "Lato", variable: lato.variable, className: lato.className, category: "sans" },
-  { name: "Playfair Display", variable: playfairDisplay.variable, className: playfairDisplay.className, category: "serif" },
-  { name: "Instrument Serif", variable: instrumentSerif.variable, className: instrumentSerif.className, category: "serif" },
-  { name: "Space Mono", variable: spaceMono.variable, className: spaceMono.className, category: "mono" },
+  { name: "Inter", variable: inter.variable, cssVar: "--font-inter", className: inter.className, category: "sans" },
+  { name: "Outfit", variable: outfit.variable, cssVar: "--font-outfit", className: outfit.className, category: "sans" },
+  { name: "Open Sans", variable: openSans.variable, cssVar: "--font-open-sans", className: openSans.className, category: "sans" },
+  { name: "Roboto", variable: roboto.variable, cssVar: "--font-roboto", className: roboto.className, category: "sans" },
+  { name: "Poppins", variable: poppins.variable, cssVar: "--font-poppins", className: poppins.className, category: "sans" },
+  { name: "Montserrat", variable: montserrat.variable, cssVar: "--font-montserrat", className: montserrat.className, category: "sans" },
+  { name: "DM Sans", variable: dmSans.variable, cssVar: "--font-dm-sans", className: dmSans.className, category: "sans" },
+  { name: "Space Grotesk", variable: spaceGrotesk.variable, cssVar: "--font-space-grotesk", className: spaceGrotesk.className, category: "sans" },
+  { name: "Lato", variable: lato.variable, cssVar: "--font-lato", className: lato.className, category: "sans" },
+  { name: "Playfair Display", variable: playfairDisplay.variable, cssVar: "--font-playfair-display", className: playfairDisplay.className, category: "serif" },
+  { name: "Instrument Serif", variable: instrumentSerif.variable, cssVar: "--font-instrument-serif", className: instrumentSerif.className, category: "serif" },
+  { name: "Space Mono", variable: spaceMono.variable, cssVar: "--font-space-mono", className: spaceMono.className, category: "mono" },
 ];
 
 export const FONT_CATALOG_NAMES: Set<string> = new Set(FONT_CATALOG.map((f) => f.name));
@@ -120,5 +121,5 @@ export const FONT_CATALOG_CLASSNAMES: string = FONT_CATALOG.map((f) => f.variabl
  */
 export function getFontVariable(name: string | undefined | null): string | undefined {
   if (!name) return undefined;
-  return FONT_CATALOG.find((f) => f.name === name)?.variable;
+  return FONT_CATALOG.find((f) => f.name === name)?.cssVar;
 }

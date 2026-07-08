@@ -4,7 +4,7 @@
 Remove dead code clusters, consolidate fragmented auth patterns, extract a deep upload module, and fix caching API drift — improving locality, leverage, and AI-navigability.
 
 ## Current Phase
-Phase 9 (P0+P1 complete, P2-P7 pending)
+Phase 10 (active)
 
 ## Phases
 
@@ -498,6 +498,77 @@ Phase 9 (P0+P1 complete, P2-P7 pending)
 
 **Status:** P0+P1 completed, P2-P7 pending
 
+---
+
+### Phase 10: Bug Fixes + Dynamic OG Image
+
+**Goal:** Fix FontPicker (font tidak berubah), wire DomainView ke editor store, tambah username uniqueness check real-time, dan generate dynamic OG image per profile.
+
+#### Background
+
+**FontPicker root cause:** `getFontVariable()` di `lib/font-catalog.ts:121` return `fontEntry.variable` = **class name hash** dari `next/font/google` (bukan CSS variable name seperti `"--font-outfit"`). Dipakai di `PreviewProfile` sebagai `var(hash)` → invalid CSS → browser fallback ke Geist → font tidak berubah baik di editor maupun public page.
+
+**DomainView root cause:** `settings-tab.tsx` local state terisolasi, tidak update editor store. `editor-header.tsx:21` baca `profile.username` dari prop server, tidak dari store.
+
+**Username check:** `checkUsernameAvailability` ada di `server/user/settings/actions.ts:30` tapi tidak dipakai client-side. SettingsTab hanya validasi saat save via `updateProfileUsername`.
+
+**OG image:** Saat ini static `/og.png` untuk semua profile. Perlu dinamis per-user menggunakan card dari `share-dialog.tsx` dengan background sesuai `Profile.bgType`.
+
+#### Implementation sequence
+
+- [x] **Step 1 — FontPicker: `getFontVariable` fix**
+  - [x] `lib/font-catalog.ts`: tambah field `cssVar: string` ke type `FontEntry` — CSS variable name asli (e.g., `"--font-inter"`)
+  - [x] Set `cssVar` di setiap entry `FONT_CATALOG` ke string yg dipass ke `next/font/google`
+  - [x] `getFontVariable()` → return `fontEntry.cssVar` (bukan `variable`)
+  - [x] `FONT_CATALOG_CLASSNAMES` tetap pakai `variable` (class hash — untuk mount ke `<body>`)
+  - [x] Test: unit test `getFontVariable` return CSS var name (9 tests)
+
+- [x] **Step 2 — DomainView: wire settings-tab + editor-header**
+  - [x] `settings-tab.tsx`: import `useEditorStore`, panggil `updateDraft` di `handleUsernameChange` → partial update `{ ...profile, username: sanitized }`
+  - [x] `settings-tab.tsx`: tambah `checkUsernameAvailability` debounce (300ms) → inline error "Username taken" + disable save button jika taken
+  - [x] `editor-header.tsx`: baca username dari `useEditorStore().draftProfile?.username ?? profile.username` (prefer draft)
+  - [x] `server/user/profile/save-profile-action.ts`: **NO CHANGE** — `username` tidak termasuk `scalarFields`, aman
+  - [x] Test: unit test `editor-header` read from store (3 tests); unit test `settings-tab` update store + uniqueness check (5 tests)
+
+- [x] **Step 3 — OG Image: dynamic per-profile**
+  - [x] **`components/og-image-card.tsx`** (NEW): OG card 1200×630 — avatar bulat (left), name + `@username` + bio (right), background solid color / wallpaper / custom image, font dari `displayNameStyle?.fontFamily`. Tanpa texture/effects/blur (Satori limitasi).
+  - [x] **`app/api/og/route.tsx`** (NEW): GET handler `?username=xxx`, query DB via `getPublicProfile`, fetch avatar + bg image ke `Uint8Array` (Satori perlu `fetch` dulu), render `<OgCard />` via `ImageResponse` dari `next/og`, `Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400`
+  - [x] **`app/[username]/page.tsx`** — `generateMetadata`: ganti `images: "/og.png"` → `images: "/api/og?username=${username}"`; fallback ke `/og.png` jika unpublished
+  - [x] Test: unit test API route return `ImageResponse` (4 tests); unit test `og-image-card` (4 tests)
+
+- [ ] **Step 4 — Verify**
+  - [x] `tsc --noEmit`: 0 new errors
+  - [x] `vitest run`: 133 tests pass (was 108, +25 new: font-catalog 9, editor-header 3, settings-tab 5, og-image-card 4, og/route 4)
+  - [ ] Manual QA: FontPicker → font berubah di editor + public page
+  - [ ] Manual QA: SettingsTab ubah username → DomainView update real-time
+  - [ ] Manual QA: Username taken → inline error muncul, save disabled
+  - [ ] Manual QA: Share public profile → OG image dinamis (debug via Facebook Sharing Debugger / Twitter Card Validator)
+
+#### Ad-hoc Fixes (Completed)
+- [x] **Social media URL validation** — `social-editor.tsx`: `normalizeUrl()` prepend `https://` jika tanpa protokol, toast error untuk URL kosong/invalid. Hapus unused imports (deprecated per-entity actions, `Loader2`). Test: `social-editor.test.tsx` (13 tests). 2026-07-08.
+- [x] Verify: 108 tests pass (was 95), `tsc --noEmit` 0 errors.
+
+#### Test Target
+| Area | Current | Target | File |
+|------|---------|--------|------|
+| `font-catalog.ts` (`getFontVariable`) | 0 | 3 | `test/unit/lib/font-catalog.test.ts` |
+| `editor-header.tsx` (store read) | 0 | 3 | extend `test/unit/components/editor/editor-header.test.tsx` |
+| `settings-tab.tsx` (store write + uniqueness) | 0 | 4 | `test/unit/components/control-panel/settings-tab.test.tsx` |
+| `og-image-card.tsx` | 0 | 4 | `test/unit/components/og-image-card.test.tsx` |
+| `og/route.tsx` (API) | 0 | 4 | `test/unit/app/api/og/route.test.ts` |
+| `[username]/page.tsx` (generateMetadata) | 0 | 3 | integration test |
+
+#### Decisions Made
+| Decision | Rationale |
+|----------|-----------|
+| `cssVar` field di `FontEntry` instead of rename `variable` | `variable` masih dipakai di `FONT_CATALOG_CLASSNAMES` untuk mount ke `<body>` — pisahkan concern: class hash vs CSS var name |
+| DomainView baca dari editor store, bukan prop server | Real-time UX; `saveProfile` skip `username` di scalarFields — aman tidak trigger auto-save untuk username change |
+| `checkUsernameAvailability` di-trigger debounce 300ms client-side | Hindari spam server; tetap di-validate lagi oleh `updateProfileUsername` di server (defense in depth) |
+| OG image via `next/og` (bukan `@vercel/og`) | Built-in Next.js 16, zero install, cukup untuk card simpel |
+| OG card tanpa texture/effects/blur | Satori tidak support `backdrop-filter`, SVG filter, dan `backdrop-filter` untuk glassmorphism |
+| OG image cache 1 jam + stale 24 jam | Balancen freshness vs server load; CloudFront CDN sudah aktif |
+| `next/font/google` compile-time fonts vs `loadStyleFonts` runtime fonts | Keduanya coexist — `next/font/google` untuk default catalog (CSS var on body), `loadStyleFonts` untuk dynamic injection via raw Google Fonts CDN. Historical trade-off documented in Phase 7.5 |
+
 ## Decisions Made
 | Decision | Rationale |
 |----------|-----------|
@@ -532,21 +603,10 @@ Phase 9 (P0+P1 complete, P2-P7 pending)
 ## Notes
 - No CONTEXT.md exists — consider creating one lazily if domain terms get sharpened
 - No ADRs exist yet — `docs/adr/0001-server-side-diff-autosave.md` to be created after Phase 8 confirmed working in production
-- 89 tests pass (up from 23 baseline) — P0 (fix broken) + P1 (Phase 8 coverage) delivered: button.test.tsx (16), profile-editor.test.tsx (7), save-profile.test.ts (17), editor-store.test.ts (19), use-autosave.test.ts (12), utils.test.ts (5), links/schema.test.ts (13)
+- 133 tests pass (up from 23 baseline) — P0 (fix broken) + P1 (Phase 8 coverage) + ad-hoc bug fixes + Phase 10 (font-catalog, editor-header, settings-tab, og-image-card, og/route): button.test.tsx (16), profile-editor.test.tsx (7), save-profile.test.ts (17), editor-store.test.ts (19), use-autosave.test.ts (12), social-editor.test.tsx (13), utils.test.ts (5), links/schema.test.ts (13), json-ld.test.ts (6), font-catalog.test.ts (9), editor-header.test.tsx (3), settings-tab.test.tsx (5), og-image-card.test.tsx (4), og/route.test.ts (4)
 - tsc --noEmit: 0 new errors in test or production code (all remaining errors are pre-existing auth dead code from Phase 1)
 - Multi-tab sync explicitly out of scope for Phase 8 (single-tab is 99% use case; localStorage persistence is the safety net)
 - `bgEffects`/`bgPattern` clear-to-null latent bug fixed implicitly by server-side JSON.stringify diff
 - Phase 9 remaining: P2 (integration tests), P3 (fix E2E), P4 (schema tests), P5 (UI components), P6 (infrastructure/mocks), P7 (E2E tooling)
 - `test/mocks/next-navigation.ts` redundant with `setup.ts` global mock — consider removal during P6
 - editor-store.test.ts uses `vi.mock("zustand/middleware")` to bypass persist/localStorage interference in happy-dom
-
-
--------
-
-
-
-
-- periksa metadat
-- perbaiki footer
-- 
-

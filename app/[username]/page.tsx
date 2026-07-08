@@ -24,6 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const displayName = profile.displayName || `@${username}`;
   const bio = profile.bio || `Visit ${displayName}'s profile on Dzenn`;
+  const ogImageUrl = `/api/og?username=${encodeURIComponent(username)}`;
 
   return {
     title: `${displayName} (@${username}) · Dzenn`,
@@ -38,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Dzenn",
       images: [
         {
-          url: "/og.png",
+          url: ogImageUrl,
           width: 1200,
           height: 630,
           alt: `${displayName} on Dzenn`,
@@ -51,7 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title: `${displayName} (@${username})`,
       description: bio,
-      images: ["/og.png"],
+      images: [ogImageUrl],
     },
   };
 }
