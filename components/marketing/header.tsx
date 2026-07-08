@@ -35,7 +35,7 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 z-50 w-full pt-4 px-4 sm:px-6 flex justify-center pointer-events-none">
       <motion.nav
-        layout="size" 
+        layout="size"
         transition={HEADER_TRANSITION}
         animate={{
           maxWidth: isScrolled ? "540px" : "1400px",
@@ -51,8 +51,8 @@ export function Header() {
       >
         {/* logo */}
         <div className="flex items-center shrink-0">
-          <Link href="/athas" className="z-10 flex items-center text-foreground">
-            <Image src="/images/logo.png" alt="Athas" width={32} height={32} className="size-8 shrink-0 rounded" />
+          <Link href="/" className="z-10 flex items-center text-foreground">
+            <Image src="/images/logo.png" alt="dzenn" width={32} height={32} className="size-8 shrink-0 rounded" />
           </Link>
         </div>
 
@@ -72,7 +72,7 @@ export function Header() {
             Info
           </Link>
           <Link
-            href="/athas/blog"
+            href="https://github.com/BroKarim/dzenn-live"
             className="inline-flex h-9 items-center rounded-md px-3 font-sans text-sm font-medium text-white/85 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
           >
             Github

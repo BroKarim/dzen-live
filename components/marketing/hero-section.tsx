@@ -15,12 +15,13 @@ export function HeroSection() {
 
           <div className="mx-auto max-w-3xl text-center">
             <div className="flex justify-center">
-              <Link href="/athas/changelog" className="inline-flex items-center rounded-md px-3 py-1.5 font-mono text-sm text-white/75 transition-colors hover:bg-white/15 hover:text-white">
-                currently in beta
-              </Link>
+              <p className="inline-flex items-center rounded-md px-3 py-1.5 font-mono text-sm text-white/75 transition-colors hover:bg-white/15 hover:text-white">currently in beta</p>
             </div>
 
-            <h1 className="mx-auto mt-5 max-w-[34rem] text-4xl font-medium leading-none tracking-tight text-white sm:text-5xl lg:text-6xl [text-shadow:0_2px_22px_rgb(0_0_0_/_0.3)]">Nonchalant <br/>Link In Bio.</h1>
+            <h1 className="mx-auto mt-5 max-w-[34rem] text-4xl font-medium leading-none tracking-tight text-white sm:text-5xl lg:text-6xl [text-shadow:0_2px_22px_rgb(0_0_0_/_0.3)]">
+              Nonchalant <br />
+              Link In Bio.
+            </h1>
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
               <Link href={session ? "/editor" : "/login"}>
@@ -33,7 +34,7 @@ export function HeroSection() {
 
           <div className="mt-16">
             <div className="overflow-hidden">
-              <Image src="/images/demo1.webp" alt="Athas Code Editor" width={2400} height={1552} className="w-full" priority />
+              <Image src="/images/demo1.webp" alt="dzenn Editor" width={2400} height={1552} className="w-full" priority />
             </div>
           </div>
         </div>
