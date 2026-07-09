@@ -31,13 +31,21 @@ export const saveProfile = withAuth("profile/save", async (user, data: unknown) 
 
   if (!profile) throw new Error("Profile not found");
 
+  // ── Username uniqueness check ─────────────────────────────────────────────────
+  if (draft.username !== undefined && draft.username !== profile.username) {
+    const existingWithUsername = await db.profile.findUnique({ where: { username: draft.username } });
+    if (existingWithUsername) {
+      return { success: false as const, error: "Username is already taken" };
+    }
+  }
+
   const operations: Prisma.PrismaPromise<any>[] = [];
   const s3KeysToClean: string[] = [];
 
   // ── Profile scalars ──────────────────────────────────────────────────────────
 
   const updateData: Record<string, any> = {};
-  const scalarFields = ["displayName", "bio", "avatarUrl", "layout", "bgType", "bgColor", "bgWallpaper", "bgImage", "cardTexture"] as const;
+  const scalarFields = ["username", "displayName", "bio", "avatarUrl", "layout", "bgType", "bgColor", "bgWallpaper", "bgImage", "cardTexture"] as const;
 
   for (const field of scalarFields) {
     const draftVal = draft[field];

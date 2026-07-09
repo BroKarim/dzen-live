@@ -4,7 +4,7 @@
 Remove dead code clusters, consolidate fragmented auth patterns, extract a deep upload module, and fix caching API drift — improving locality, leverage, and AI-navigability.
 
 ## Current Phase
-Phase 10 (active)
+Phase 11 (active)
 
 ## Phases
 
@@ -546,7 +546,7 @@ Phase 10 (active)
   - [x] `settings-tab.tsx`: import `useEditorStore`, panggil `updateDraft` di `handleUsernameChange` → partial update `{ ...profile, username: sanitized }`
   - [x] `settings-tab.tsx`: tambah `checkUsernameAvailability` debounce (300ms) → inline error "Username taken" + disable save button jika taken
   - [x] `editor-header.tsx`: baca username dari `useEditorStore().draftProfile?.username ?? profile.username` (prefer draft)
-  - [x] `server/user/profile/save-profile-action.ts`: **NO CHANGE** — `username` tidak termasuk `scalarFields`, aman
+  - [x] `server/user/profile/save-profile-action.ts`: **NO CHANGE** — `username` tidak termasuk `scalarFields`, aman (keputusan ini di-reverse oleh Phase 11 — username sekarang auto-save)
   - [x] Test: unit test `editor-header` read from store (3 tests); unit test `settings-tab` update store + uniqueness check (5 tests)
 
 - [x] **Step 3 — OG Image: dynamic per-profile**
@@ -581,8 +581,8 @@ Phase 10 (active)
 | Decision | Rationale |
 |----------|-----------|
 | `cssVar` field di `FontEntry` instead of rename `variable` | `variable` masih dipakai di `FONT_CATALOG_CLASSNAMES` untuk mount ke `<body>` — pisahkan concern: class hash vs CSS var name |
-| DomainView baca dari editor store, bukan prop server | Real-time UX; `saveProfile` skip `username` di scalarFields — aman tidak trigger auto-save untuk username change |
-| `checkUsernameAvailability` di-trigger debounce 300ms client-side | Hindari spam server; tetap di-validate lagi oleh `updateProfileUsername` di server (defense in depth) |
+| DomainView baca dari editor store, bukan prop server | Real-time UX; awalnya `saveProfile` skip `username` (Phase 10), tapi di-reverse Phase 11 — username sekarang auto-save + redirect |
+| `checkUsernameAvailability` di-trigger debounce 300ms client-side | Hindari spam server; tetap di-validate lagi oleh `saveProfile` uniqueness check (defense in depth) |
 | OG image via `next/og` (bukan `@vercel/og`) | Built-in Next.js 16, zero install, cukup untuk card simpel |
 | OG card tanpa texture/effects/blur | Satori tidak support `backdrop-filter`, SVG filter, dan `backdrop-filter` untuk glassmorphism |
 | OG image cache 1 jam + stale 24 jam | Balancen freshness vs server load; CloudFront CDN sudah aktif |
@@ -598,23 +598,23 @@ Phase 10 (active)
 
 **Implementation sequence:**
 
-- [ ] **Step 1 — Server: add `username` to `saveProfile` scalarFields**
+- [x] **Step 1 — Server: add `username` to `saveProfile` scalarFields** ✅
   - `server/user/profile/save-profile-action.ts:40`: tambah `"username"` ke `scalarFields` array
-  - `server/user/profile/schema.ts`: tambah `username: z.string().optional()` ke `SaveProfileSchema` (biar explicit, meski `.passthrough()` sudah handle extra fields)
+  - `server/user/profile/schema.ts`: tambah `username: z.string().optional()` ke `SaveProfileSchema`
   - Note: `Profile.username` is `@unique` — Prisma throw error jika duplicate. Perlu explicit uniqueness check.
 
-- [ ] **Step 2 — Server: uniqueness validation di `saveProfile`**
+- [x] **Step 2 — Server: uniqueness validation di `saveProfile`** ✅
   - Sebelum `$transaction`, cek apakah `draft.username` berbeda dari `profile.username` di DB
   - Jika berbeda, cek `db.profile.findUnique({ where: { username: draft.username } })`
   - Jika taken oleh user lain, return `{ success: false, error: "Username is already taken" }`
   - Jika taken oleh profile sendiri (no-op — sama dengan existing), skip check
 
-- [ ] **Step 3 — Client: redirect setelah username auto-save**
+- [x] **Step 3 — Client: redirect setelah username auto-save** ✅
   - `app/editor/_components.tsx/editor-client.tsx`: setelah `status === "saved"`, cek apakah `draftProfile.username` berubah dari `initialProfile.username`
   - Jika berubah, panggil `router.replace('/editor/${newUsername}')`
   - Gunakan `useRef` untuk prevent infinite loop redirect
 
-- [ ] **Step 4 — Client: simplify Settings tab**
+- [x] **Step 4 — Client: simplify Settings tab** ✅
   - `components/control-panel/tabs/settings-tab.tsx`:
     - `handleSaveSettings`: hapus `updateProfileUsername` call (auto-save handle username)
     - Button sekarang cuma handle `togglePublishStatus` — hanya aktif jika publish state berubah
@@ -622,18 +622,16 @@ Phase 10 (active)
   - Keep `checkUsernameAvailability` debounce (real-time validation tetap jalan)
   - Keep `usernameError` + `isCheckingUsername` UI
 
-- [ ] **Step 5 — Media: comment out media upload UI**
+- [x] **Step 5 — Media: comment out media upload UI** ✅
   - `components/control-panel/link-card-editor.tsx`:
-    - Comment out block `{uiState.selectedType === "media" && (...)}` (lines 197–214)
-    - Comment out "Media" tab dari `typeOptions` (atau keep tapi jadi noop)
-    - Hapus unused imports jika tidak dipakai lagi (`ImageIcon` dari lucide, `handleMediaUpload`)
+    - Comment out block `{uiState.selectedType === "media" && (...)}` dengan `{false && null}`
+    - Hapus "Media" dari `typeOptions` — hanya URL
+    - Hapus unused imports: `Image` (next/image), `ImageIcon` (lucide), `uploadFile`, `handleMediaUpload`
 
-- [ ] **Step 6 — Verify**
+- [x] **Step 6 — Verify** ✅
   - `tsc --noEmit`: 0 new errors
-  - `vitest run`: all existing tests pass
-  - Manual QA: Settings tab → ketik username baru → auto-save fires → DB terupdate → public URL work
-  - Manual QA: username taken → real-time error muncul → auto-save skip
-  - Manual QA: media upload tab sudah tidak muncul di UI
+  - `vitest run`: 133/133 pass
+  - `pnpm build`: pre-existing OG route error (tidak terkait)
 
 #### Decisions Made
 | Decision | Rationale |

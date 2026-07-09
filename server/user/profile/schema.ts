@@ -14,6 +14,7 @@ const SocialLinkWithIdSchema = SocialLinkSchema.extend({ id: z.string().optional
 
 export const SaveProfileSchema = z
   .object({
+    username: z.string().optional(),
     displayName: z.string().max(100).nullable().optional(),
     bio: z.string().max(160).nullable().optional(),
     avatarUrl: z.string().url().nullable().optional(),

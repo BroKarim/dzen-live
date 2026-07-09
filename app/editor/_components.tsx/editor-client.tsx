@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import EditorHeader from "./editor-header";
 import Preview from "./editor-preview";
 import ControlPanel from "./control-panel";
@@ -21,6 +21,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
 
   const { draftProfile, isDirty, initializeEditor, updateDraft, _hasHydrated, openStylePopover } = useEditorStore();
   const { status, retry, flushSave } = useAutosave();
+  const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
@@ -52,6 +53,19 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
       initializeEditor(initialProfileRef.current);
     }
   }, [_hasHydrated, initializeEditor]);
+
+  // Redirect when username changes after auto-save
+  const savedUsernameRef = useRef(initialProfile.username);
+  useEffect(() => {
+    if (status === "saved") {
+      const { draftProfile } = useEditorStore.getState();
+      const newUsername = draftProfile?.username;
+      if (newUsername && newUsername !== savedUsernameRef.current) {
+        savedUsernameRef.current = newUsername;
+        router.replace(`/editor/${newUsername}`);
+      }
+    }
+  }, [status, router]);
 
   const handlePreviewStyleClick = useCallback((target: StyleTarget) => {
     const id = styleTargetId(target);

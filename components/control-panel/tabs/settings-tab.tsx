@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { updateProfileUsername, togglePublishStatus, deleteProfileOrAccount, checkUsernameAvailability } from "@/server/user/settings/actions";
+import { togglePublishStatus, deleteProfileOrAccount, checkUsernameAvailability } from "@/server/user/settings/actions";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -29,7 +29,7 @@ export function SettingsTab({ profile }: SettingsTabProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { draftProfile, updateDraft } = useEditorStore();
 
-  const hasChanges = username !== profile.username || isPublished !== profile.isPublished;
+  const hasChanges = isPublished !== profile.isPublished;
 
   const checkAvailability = useCallback(
     async (value: string) => {
@@ -80,58 +80,22 @@ export function SettingsTab({ profile }: SettingsTabProps) {
   const handleSaveSettings = () => {
     startTransition(async () => {
       const toastId = toast.loading("Saving settings...");
-      const hasUsernameChange = username !== profile.username;
-      const hasPublishChange = isPublished !== profile.isPublished;
 
-      const promises = [];
-      if (hasUsernameChange) {
-        promises.push(updateProfileUsername(username));
-      }
-      if (hasPublishChange) {
-        promises.push(togglePublishStatus(isPublished));
-      }
-
-      if (promises.length === 0) {
+      if (!hasChanges) {
         toast.dismiss(toastId);
         return;
       }
 
-      let results;
       try {
-        results = await Promise.allSettled(promises);
+        const result = await togglePublishStatus(isPublished);
+        if (!result.success) {
+          toast.error(result.error || "Failed to save settings", { id: toastId });
+          return;
+        }
+        toast.success("Settings saved successfully", { id: toastId });
+        refresh();
       } catch (error) {
         toast.error("Failed to save settings", { id: toastId });
-        return;
-      }
-
-      // Check results outside try block
-      const usernameResult = hasUsernameChange ? (results[0] as PromiseFulfilledResult<any>).value : null;
-      const publishResult = hasPublishChange ? (hasUsernameChange ? (results[1] as PromiseFulfilledResult<any>).value : (results[0] as PromiseFulfilledResult<any>).value) : null;
-
-      let errorMsg = "";
-
-      if (usernameResult && !usernameResult.success) {
-        errorMsg += usernameResult.error + ". ";
-      }
-      if (publishResult && !publishResult.success) {
-        errorMsg += publishResult.error;
-      }
-
-      if (errorMsg) {
-        toast.error(errorMsg, { id: toastId });
-        return;
-      }
-
-      toast.success("Settings saved successfully", { id: toastId });
-
-      // Redirect to new username if changed
-      if (hasUsernameChange) {
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("dzenn-editor-draft");
-        }
-        push(`/editor/${username}`);
-      } else {
-        refresh();
       }
     });
   };
@@ -249,8 +213,8 @@ export function SettingsTab({ profile }: SettingsTabProps) {
 
         <Separator />
 
-        {/* Save Button */}
-          <Button onClick={handleSaveSettings} disabled={!hasChanges || isPending || !!usernameError || isCheckingUsername} className="w-full">
+        {/* Save Button (publish-only — username auto-saves) */}
+          <Button onClick={handleSaveSettings} disabled={!hasChanges || isPending} className="w-full">
           {isPending ? (
             <>
               <Loader2 className="mr-2 size-4 animate-spin" />

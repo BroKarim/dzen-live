@@ -3,12 +3,10 @@
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Image from "next/image";
-import { Loader2, Plus, Link as LinkIcon, Image as ImageIcon, X, GripVertical, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { Loader2, Plus, Link as LinkIcon, X, GripVertical, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
-import { uploadFile } from "@/lib/upload";
 import { LinkEditDialog } from "./link-edit-dialog";
 import { toast } from "sonner";
 import { Button2 } from "@/components/ui/button-2";
@@ -26,7 +24,6 @@ type LinkType = "url" | "media";
 
 const typeOptions = [
   { id: "url" as LinkType, icon: LinkIcon, label: "URL" },
-  { id: "media" as LinkType, icon: ImageIcon, label: "Media" },
 ];
 
 export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
@@ -49,23 +46,6 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
     description: "",
     mediaUrl: null as string | null,
   });
-
-  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const publicUrl = await uploadFile(file, {
-        allowedTypes: ["image/jpeg", "image/png", "image/webp", "image/jpg"],
-        maxSizeMB: 10,
-        compression: { maxSizeMB: 0.5, maxWidthOrHeight: 800 },
-      });
-      setNewLink((prev) => ({ ...prev, mediaUrl: publicUrl }));
-      setUiState((prev) => ({ ...prev, mediaPreview: publicUrl }));
-    } catch (error: any) {
-      toast.error(error.message || "Error uploading media");
-    }
-  };
 
   const handleAdd = async () => {
     const payload = {
@@ -194,24 +174,8 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
 
             {uiState.selectedType === "url" && <Input value={newLink.url} onChange={(e) => setNewLink(prev => ({ ...prev, url: e.target.value }))} placeholder="https://example.com" className="h-10 text-sm" />}
 
-            {uiState.selectedType === "media" && (
-              <div className="relative">
-                <input id="media-upload" type="file" accept="image/*" onChange={handleMediaUpload} className="absolute inset-0 size-full opacity-0 cursor-pointer z-20" style={{ pointerEvents: "auto" }} />
-                <label
-                  htmlFor="media-upload"
-                  className="h-20 rounded-lg border border-dashed border-border bg-muted/50 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden relative"
-                >
-                  {uiState.mediaPreview ? (
-                    <Image src={uiState.mediaPreview} alt="Media" fill sizes="(max-width: 768px) 100vw, 400px" className="object-cover" unoptimized />
-                  ) : (
-                    <>
-                      <ImageIcon className="size-5 text-muted-foreground mb-1" />
-                      <span className="text-[10px] text-muted-foreground">Click to upload</span>
-                    </>
-                  )}
-                </label>
-              </div>
-            )}
+            {/* Media upload UI commented out — focus on URL only */}
+            {false && null}
 
             <div className="flex gap-2 pt-1">
               <Button onClick={handleAdd} disabled={uiState.isSaving || !newLink.title} size="sm" className="flex-1 h-9 text-sm">
