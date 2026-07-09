@@ -16,11 +16,7 @@ function DiscordIcon({ className }: { className?: string }) {
 }
 
 function LastUsedBadge() {
-  return (
-    <span className="absolute -top-2.5 right-3 z-10 bg-black text-[10px] text-zinc-400 font-medium px-2 py-0.5 rounded-full border border-zinc-800">
-      Last used
-    </span>
-  );
+  return <span className="absolute -top-2.5 right-3 z-10 shadow-dzenn bg-black text-[10px] text-zinc-400 font-medium px-2 py-0.5 rounded-full border border-zinc-800">Last used</span>;
 }
 
 function SignInInner() {
@@ -40,47 +36,46 @@ function SignInInner() {
 
   const handleSignInGoogle = async () => {
     setIsGoogleLoading(true);
-    await authClient.signIn.social({
-      provider: "google",
-      callbackURL: getCallbackUrl(),
-      errorCallbackURL: `${appUrl}/login`,
-    }).catch(() => {});
+    await authClient.signIn
+      .social({
+        provider: "google",
+        callbackURL: getCallbackUrl(),
+        errorCallbackURL: `${appUrl}/login`,
+      })
+      .catch(() => {});
     setIsGoogleLoading(false);
   };
 
   const handleSignInGithub = async () => {
     setIsGithubLoading(true);
-    await authClient.signIn.social({
-      provider: "github",
-      callbackURL: getCallbackUrl(),
-      errorCallbackURL: `${appUrl}/login`,
-    }).catch(() => {});
+    await authClient.signIn
+      .social({
+        provider: "github",
+        callbackURL: getCallbackUrl(),
+        errorCallbackURL: `${appUrl}/login`,
+      })
+      .catch(() => {});
     setIsGithubLoading(false);
   };
 
   const handleSignInDiscord = async () => {
     setIsDiscordLoading(true);
-    await authClient.signIn.social({
-      provider: "discord",
-      callbackURL: getCallbackUrl(),
-      errorCallbackURL: `${appUrl}/login`,
-    }).catch(() => {});
+    await authClient.signIn
+      .social({
+        provider: "discord",
+        callbackURL: getCallbackUrl(),
+        errorCallbackURL: `${appUrl}/login`,
+      })
+      .catch(() => {});
     setIsDiscordLoading(false);
   };
 
   return (
-    <div className="h-svh w-full overflow-y-auto bg-[#0a0a0a] text-zinc-200 flex flex-col items-center justify-center px-4 py-6 sm:py-10">
-      <div className="flex items-center gap-2 mb-6">
-        <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M4 4h3v16H4V4zm5 4h3v12H9V8zm5 5h3v7h-3v-7zm5-8h3v15h-3V5z" />
-        </svg>
-        <span className="text-xl font-bold text-white tracking-wide">Dzenn</span>
-      </div>
-
-      <div className="w-full max-w-[440px]">
-        <div className="bg-[#121212] border border-zinc-800/80 rounded-2xl p-8 shadow-2xl">
+    <div className="h-svh w-full overflow-y-auto bg-[#181819]  text-zinc-200 flex flex-col items-center justify-center px-4 py-6 sm:py-10">
+      <div className="w-full max-w-[440px] ">
+        <div className="bg-[#121212] shadow-dzenn border border-zinc-800/80 rounded-2xl p-8 shadow-2xl">
           <div className="space-y-1.5 mb-8">
-            <h1 className="text-xl font-semibold text-white tracking-tight">Welcome back</h1>
+            <h1 className="text-xl font-semibold text-white tracking-tight">Welcome home</h1>
             <p className="text-sm text-zinc-500">Enter your credentials to access your workspace</p>
           </div>
 

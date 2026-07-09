@@ -18,7 +18,7 @@ interface FlickeringGridProps extends React.HTMLAttributes<HTMLDivElement> {
 export const FlickeringGrid: React.FC<FlickeringGridProps> = ({ squareSize = 4, gridGap = 6, flickerChance = 0.3, color = "rgb(0, 0, 0)", width, height, className, maxOpacity = 0.3, ...props }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isInView, setIsInView] = useState(false);
+  const isInViewRef = useRef(false);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
   const memoizedColor = useMemo(() => {
@@ -107,7 +107,7 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({ squareSize = 4, 
 
       let lastTime = 0;
       const animate = (time: number) => {
-        if (!isInView || !gridParams) return;
+        if (!isInViewRef.current || !gridParams) return;
 
         const deltaTime = (time - lastTime) / 1000;
         lastTime = time;
@@ -124,15 +124,22 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({ squareSize = 4, 
 
       intersectionObserver = new IntersectionObserver(
         ([entry]) => {
-          setIsInView(entry.isIntersecting);
+          isInViewRef.current = entry.isIntersecting;
+          if (entry.isIntersecting) {
+            if (!animationFrameId) {
+              lastTime = 0;
+              animationFrameId = requestAnimationFrame(animate);
+            }
+          } else {
+            if (animationFrameId) {
+              cancelAnimationFrame(animationFrameId);
+              animationFrameId = null;
+            }
+          }
         },
         { threshold: 0 },
       );
       intersectionObserver.observe(canvas);
-
-      if (isInView) {
-        animationFrameId = requestAnimationFrame(animate);
-      }
     }
 
     return () => {
@@ -146,7 +153,7 @@ export const FlickeringGrid: React.FC<FlickeringGridProps> = ({ squareSize = 4, 
         intersectionObserver.disconnect();
       }
     };
-  }, [setupCanvas, updateSquares, drawGrid, width, height, isInView]);
+    }, [setupCanvas, updateSquares, drawGrid, width, height]);
 
   return (
     <div ref={containerRef} className={cn(`h-full w-full ${className}`)} {...props}>

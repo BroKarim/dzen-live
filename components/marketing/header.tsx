@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { MenuIcon } from "./icons";
 import { useSession } from "@/lib/auth-client";
-import { motion, useScroll, useMotionValueEvent, type Transition } from "framer-motion";
+import { LazyMotion, m, domAnimation, useScroll, useMotionValueEvent, type Transition } from "framer-motion";
 
 const HEADER_TRANSITION: Transition = {
   type: "spring",
@@ -34,10 +34,11 @@ export function Header() {
 
   return (
     <header className="fixed top-0 left-0 z-50 w-full pt-4 px-4 sm:px-6 flex justify-center pointer-events-none">
-      <motion.nav
-        layout="size"
-        transition={HEADER_TRANSITION}
-        animate={{
+      <LazyMotion features={domAnimation}>
+        <m.nav
+          layout="size"
+          transition={HEADER_TRANSITION}
+          animate={{
           maxWidth: isScrolled ? "540px" : "1400px",
           backgroundColor: isScrolled ? "rgba(24, 24, 27, 0.8)" : "rgba(24, 24, 27, 0)",
           backdropFilter: isScrolled ? "blur(12px)" : "blur(0px)",
@@ -102,7 +103,8 @@ export function Header() {
         >
           <MenuIcon className="size-5" />
         </button>
-      </motion.nav>
+        </m.nav>
+      </LazyMotion>
     </header>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Plus, Link as LinkIcon, X, GripVertical, Pencil, Trash2, ExternalLink } from "lucide-react";
@@ -14,27 +14,22 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { LinkSchema } from "@/server/user/links/schema";
+import type { LinkData } from "./link-edit-dialog";
+
+type EditorLink = ProfileEditorData['links'][number];
 
 interface LinkCardEditorProps {
   profile: ProfileEditorData;
   onUpdate: (profile: ProfileEditorData) => void;
 }
 
-type LinkType = "url" | "media";
-
-const typeOptions = [
-  { id: "url" as LinkType, icon: LinkIcon, label: "URL" },
-];
-
 export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
   const [uiState, setUiState] = useState({
     isAdding: false,
     isSaving: false,
-    selectedType: "url" as LinkType,
     deleteDialogOpen: false,
     deletingId: null as string | null,
-    mediaPreview: null as string | null,
-    editingLink: null as any | null,
+    editingLink: null as LinkData | null,
     editDialogOpen: false,
   });
 
@@ -44,7 +39,6 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
     title: "",
     url: "",
     description: "",
-    mediaUrl: null as string | null,
   });
 
   const handleAdd = async () => {
@@ -53,10 +47,13 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
       title: newLink.title,
       url: newLink.url.trim(),
       description: newLink.description || null,
-      mediaUrl: newLink.mediaUrl || null,
+      mediaUrl: null,
+      buttonColor: null,
+      buttonTextColor: null,
+      titleStyle: null,
       position: profile.links.length,
       isActive: true,
-    } as any;
+    };
 
     const { id, ...validationPayload } = payload;
     const validation = LinkSchema.safeParse(validationPayload);
@@ -82,18 +79,15 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
     setUiState((prev) => ({
       ...prev,
       isAdding: false,
-      selectedType: "url",
-      mediaPreview: null,
     }));
     setNewLink({
       title: "",
       url: "",
       description: "",
-      mediaUrl: null,
     });
   };
 
-  const handleEdit = (link: any) => {
+  const handleEdit = (link: EditorLink) => {
     setUiState((prev) => ({
       ...prev,
       editingLink: link,
@@ -101,10 +95,10 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
     }));
   };
 
-  const handleEditSave = (updatedLink: any) => {
+  const handleEditSave = (updatedLink: LinkData) => {
     onUpdate({
       ...profile,
-      links: profile.links.map((l) => (l.id === updatedLink.id ? updatedLink : l)),
+      links: profile.links.map((l) => (l.id === updatedLink.id ? { ...l, ...updatedLink } : l)),
     });
   };
 
@@ -146,36 +140,11 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
           </div>
 
           <div className="p-3 space-y-3">
-            <Input value={newLink.title} onChange={(e) => setNewLink(prev => ({ ...prev, title: e.target.value }))} placeholder="Link title" className="h-10 text-sm" />
+            <Input value={newLink.title} onChange={(e) => setNewLink((prev) => ({ ...prev, title: e.target.value }))} placeholder="Link title" className="h-10 text-sm" />
 
-            <Input value={newLink.description} onChange={(e) => setNewLink(prev => ({ ...prev, description: e.target.value }))} placeholder="Description (optional)" className="h-10 text-sm" />
+            {/* <Input value={newLink.description} onChange={(e) => setNewLink(prev => ({ ...prev, description: e.target.value }))} placeholder="Description (optional)" className="h-10 text-sm" /> */}
 
-            <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
-              {typeOptions.map((type) => {
-                const Icon = type.icon;
-                const isActive = uiState.selectedType === type.id;
-
-                return (
-                  <button
-                    key={type.id}
-                    type="button"
-                    onClick={() => setUiState((prev) => ({ ...prev, selectedType: type.id }))}
-                    className={`
-                      flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium transition-all
-                      ${isActive ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}
-                    `}
-                  >
-                    <Icon className="size-3.5" />
-                    <span className="hidden sm:inline">{type.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {uiState.selectedType === "url" && <Input value={newLink.url} onChange={(e) => setNewLink(prev => ({ ...prev, url: e.target.value }))} placeholder="https://example.com" className="h-10 text-sm" />}
-
-            {/* Media upload UI commented out — focus on URL only */}
-            {false && null}
+            <Input value={newLink.url} onChange={(e) => setNewLink((prev) => ({ ...prev, url: e.target.value }))} placeholder="https://example.com" className="h-10 text-sm" />
 
             <div className="flex gap-2 pt-1">
               <Button onClick={handleAdd} disabled={uiState.isSaving || !newLink.title} size="sm" className="flex-1 h-9 text-sm">
@@ -194,7 +163,7 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={profile.links?.map((l) => l.id) || []} strategy={verticalListSortingStrategy}>
             <TooltipProvider>
-              {profile.links?.map((link: any) => (
+              {profile.links?.map((link: EditorLink) => (
                 <SortableLinkItem key={link.id} link={link} onEdit={handleEdit} onDelete={handleDelete} deletingId={uiState.deletingId} />
               ))}
             </TooltipProvider>
@@ -237,8 +206,8 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
 const Link2Icon = LinkIcon;
 
 interface SortableLinkItemProps {
-  link: any;
-  onEdit: (link: any) => void;
+  link: EditorLink;
+  onEdit: (link: EditorLink) => void;
   onDelete: (id: string) => void;
   deletingId: string | null;
 }

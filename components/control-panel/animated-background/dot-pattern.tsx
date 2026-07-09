@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useId } from "react";
-import { motion } from "framer-motion";
+import { LazyMotion, m, domAnimation } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
@@ -82,14 +82,16 @@ export function DotPattern({ width = 16, height = 16, x = 0, y = 0, cx = 1, cy =
       <rect width="100%" height="100%" fill={`url(#${id}-dots)`} />
 
       {glow && (
-        <motion.rect
-          width="100%"
-          height="100%"
-          fill={`url(#${id}-gradient)`}
-          initial={{ opacity: 0.3 }}
-          animate={{ opacity: [0.3, 0.8, 0.3] }}
-          transition={{ duration: 3, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-        />
+        <LazyMotion features={domAnimation}>
+          <m.rect
+            width="100%"
+            height="100%"
+            fill={`url(#${id}-gradient)`}
+            initial={{ opacity: 0.3 }}
+            animate={{ opacity: [0.3, 0.8, 0.3] }}
+            transition={{ duration: 3, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+          />
+        </LazyMotion>
       )}
     </svg>
   );

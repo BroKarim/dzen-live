@@ -4,8 +4,6 @@ import { publicProfilePayload } from "@/server/website/profile/payloads";
 import { OgImageCard } from "@/components/og-image-card";
 import type { OgProfile } from "@/components/og-image-card";
 
-export const runtime = "edge";
-
 async function fetchImageAsBuffer(url: string): Promise<ArrayBuffer | null> {
   try {
     const res = await fetch(url);

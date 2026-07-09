@@ -44,9 +44,8 @@ export function SettingsTab({ profile }: SettingsTabProps) {
         }
       } catch {
         setUsernameError(null);
-      } finally {
-        setIsCheckingUsername(false);
       }
+      setIsCheckingUsername(false);
     },
     [],
   );

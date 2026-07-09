@@ -75,7 +75,7 @@ export default async function PublicProfilePage({ params }: Props) {
   const displayName = profile.displayName || `@${username}`;
   const bio = profile.bio || null;
   const avatarUrl = profile.avatarUrl || null;
-  const sameAs = profile.socials.map((s) => s.url).filter(Boolean);
+  const sameAs = profile.socials.flatMap((s) => s.url ? [s.url] : []);
 
   const jsonLd = buildProfilePageSchema({
     name: displayName,

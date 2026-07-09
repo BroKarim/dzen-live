@@ -3,7 +3,7 @@
 import { PreviewBackground, PreviewProfile, PreviewSocials, PreviewLinks } from "@/components/preview";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 import { useEffect } from "react";
-import { loadStyleFonts, type StyleTarget } from "@/lib/text-style";
+import { loadStyleFonts, type StyleTarget, type TextStyle } from "@/lib/text-style";
 
 interface PreviewProps {
   profile: ProfileEditorData;
@@ -37,16 +37,16 @@ export default function Preview({ profile, viewMode, onStyleTargetClick }: Previ
                   displayName: profile.displayName,
                   bio: profile.bio,
                   avatarUrl: profile.avatarUrl,
-                  layout: profile.layout as unknown as string,
-                  displayNameStyle: (profile.displayNameStyle as any) ?? null,
-                  bioStyle: (profile.bioStyle as any) ?? null,
+                  layout: profile.layout,
+                  displayNameStyle: profile.displayNameStyle as TextStyle | null,
+                  bioStyle: profile.bioStyle as TextStyle | null,
                 }}
                 mode="editor"
                 onStyleTargetClick={onStyleTargetClick}
               />
               <PreviewLinks
                 profile={{
-                  links: (profile.links ?? []).map((l) => ({ ...l, titleStyle: (l as any).titleStyle ?? null })),
+                  links: (profile.links ?? []).map((l) => ({ ...l, titleStyle: l.titleStyle as TextStyle | null })),
                   cardTexture: profile.cardTexture,
                 }}
                 mode="editor"

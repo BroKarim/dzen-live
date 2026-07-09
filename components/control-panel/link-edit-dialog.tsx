@@ -18,7 +18,7 @@ const typeOptions = [
   { id: "media" as LinkType, icon: ImageIcon, label: "Media" },
 ];
 
-interface LinkData {
+export interface LinkData {
   id: string;
   title: string;
   url: string;
