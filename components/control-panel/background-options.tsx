@@ -40,9 +40,6 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
 
   const handleBackgroundChange = (updates: Partial<ProfileEditorData>) => {
     onUpdate({ ...profile, ...updates });
-    if (updates.bgType) {
-      setActiveTab(updates.bgType);
-    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,7 +121,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
   })();
 
   return (
-    <Tabs value={activeTab} onValueChange={(v) => handleBackgroundChange({ bgType: v as BgType })}>
+    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as BgType)}>
       <TabsList className="h-10 rounded-[99px] bg-[#222] gap-1 w-full justify-center items-center shadow-dzenn inline-flex overflow-hidden ">
         <TabsTrigger value="color" asChild className="rounded-full w-full  data-[state=active]:shadow-[inset_0_1px_rgb(255_255_255/0.15)] transition-all">
           <div className="flex items-center justify-center gap-2">

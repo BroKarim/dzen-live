@@ -20,7 +20,7 @@ export function ProfileView({ user: profile }: { user: any }) {
 
       <div className="relative z-10 min-h-screen" style={{ padding: `${profile.padding || 32}px` }}>
         <div className="absolute top-0 left-0 right-0 z-20 px-6 pt-8">
-          <ProfileHeaderButtons name={profile.user?.name} username={profile.username} avatarUrl={avatarUrl} />
+          <ProfileHeaderButtons name={profile.user?.name} username={profile.username} avatarUrl={avatarUrl} bgType={profile.bgType} bgColor={profile.bgColor} bgWallpaper={profile.bgWallpaper} bgImage={profile.bgImage} />
         </div>
 
         <div className="mx-auto flex w-full max-w-[420px] flex-col items-center pb-24 pt-12 space-y-4">

@@ -38,7 +38,26 @@ Phase 10 (active)
 
 ### Phase 4: Cache API & Proxy Cleanup
 - [ ] Migrate `server/user/profile/queries.ts` from unstable_cache to stable cache API
-- [ ] Update `proxy.ts` matcher to guard actual routes or remove proxy
+- [ ] Run tests
+- **Status:** pending
+
+### Phase 4.5: proxy.ts Accidental Middleware Bug Fix
+
+**Background:** `proxy.ts` at project root is auto-discovered as middleware by Next.js 16 — any file named `proxy.ts` with `export function proxy()` + `export const config = { matcher }` is compiled as middleware. The matcher includes `"/login"`, so every browser speculative request to `/login` (from Chrome preload/prerender) runs through the proxy. Since these requests lack auth cookies, the proxy can't redirect and the login page renders (200). This causes confusing `GET /login 200` spam in dev logs while user is on the editor page.
+
+**Diagnosis (2026-07-08):**
+- Bukti: `.next/dev/server/middleware.js` registers `proxy.ts [middleware]` as `INNER_MIDDLEWARE_MODULE`
+- Alur: browser GET /login (tanpa cookie) → proxy.ts → `session?.user = null` → `NextResponse.next()` → login page render → log `GET /login 200 (proxy.ts: 6ms, render: 35ms)`
+- Bukan bug kode — proxy berfungsi sesuai rancangan. Tapi middleware tersembunyi ini menimbulkan overhead + spam log + potensi perilaku tak terduga.
+
+**Implementation options (pick one):**
+
+- [ ] **Opsi A (Minimal):** Hapus `/login` dan `/signup` dari matcher, hanya `["/editor/:path*"]` — berhenti intercept request ke halaman publik, tapi middleware tetap berjalan
+- [ ] **Opsi B (Cleanest):** Hapus `proxy.ts` sepenuhnya, ganti auth gating dengan `app/editor/layout.tsx` layout-level — zero middleware, referensi auth di satu tempat
+- [ ] **Opsi C (Intentional):** Rename `proxy.ts` → `middleware.ts`, singkronkan dengan Auth Gate dari Phase 2
+- [ ] Setelah dipilih, update `proxy.ts` / `middleware.ts` matcher dan/atau hapus file
+- [ ] Verifikasi: `GET /login` tidak lagi muncul saat idle di editor page
+- [ ] Verifikasi: `/editor/:path*` masih terproteksi untuk unauthenticated user
 - [ ] Run tests
 - **Status:** pending
 
@@ -569,36 +588,63 @@ Phase 10 (active)
 | OG image cache 1 jam + stale 24 jam | Balancen freshness vs server load; CloudFront CDN sudah aktif |
 | `next/font/google` compile-time fonts vs `loadStyleFonts` runtime fonts | Keduanya coexist — `next/font/google` untuk default catalog (CSS var on body), `loadStyleFonts` untuk dynamic injection via raw Google Fonts CDN. Historical trade-off documented in Phase 7.5 |
 
-## Decisions Made
+### Phase 11: Username Auto-Save & Simplify Editor UX
+
+**Goal:** Perbaiki username update flow — dari explicit-save di Settings tab menjadi auto-save via `saveProfile` agar konsisten dengan field lain. Serta sembunyikan media upload UI.
+
+**Problem:** DomainView update real-time ketika username diubah di Settings tab (karena baca dari draft store), tapi DB tidak berubah sampai user klik "Save Settings". Ini bikin confusion: user lihat URL baru tapi 404, URL lama masih work, editor URL tidak berubah.
+
+**Root cause:** Phase 10 Step 2 sengaja exclude `username` dari `saveProfile` scalarFields dengan alasan "aman tidak trigger auto-save." Tapi ini split save flow: semua field auto-save kecuali username (harus explicit save di Settings tab).
+
+**Implementation sequence:**
+
+- [ ] **Step 1 — Server: add `username` to `saveProfile` scalarFields**
+  - `server/user/profile/save-profile-action.ts:40`: tambah `"username"` ke `scalarFields` array
+  - `server/user/profile/schema.ts`: tambah `username: z.string().optional()` ke `SaveProfileSchema` (biar explicit, meski `.passthrough()` sudah handle extra fields)
+  - Note: `Profile.username` is `@unique` — Prisma throw error jika duplicate. Perlu explicit uniqueness check.
+
+- [ ] **Step 2 — Server: uniqueness validation di `saveProfile`**
+  - Sebelum `$transaction`, cek apakah `draft.username` berbeda dari `profile.username` di DB
+  - Jika berbeda, cek `db.profile.findUnique({ where: { username: draft.username } })`
+  - Jika taken oleh user lain, return `{ success: false, error: "Username is already taken" }`
+  - Jika taken oleh profile sendiri (no-op — sama dengan existing), skip check
+
+- [ ] **Step 3 — Client: redirect setelah username auto-save**
+  - `app/editor/_components.tsx/editor-client.tsx`: setelah `status === "saved"`, cek apakah `draftProfile.username` berubah dari `initialProfile.username`
+  - Jika berubah, panggil `router.replace('/editor/${newUsername}')`
+  - Gunakan `useRef` untuk prevent infinite loop redirect
+
+- [ ] **Step 4 — Client: simplify Settings tab**
+  - `components/control-panel/tabs/settings-tab.tsx`:
+    - `handleSaveSettings`: hapus `updateProfileUsername` call (auto-save handle username)
+    - Button sekarang cuma handle `togglePublishStatus` — hanya aktif jika publish state berubah
+    - Hapus `push('/editor/${username}')` redirect (auto-save handle redirect)
+  - Keep `checkUsernameAvailability` debounce (real-time validation tetap jalan)
+  - Keep `usernameError` + `isCheckingUsername` UI
+
+- [ ] **Step 5 — Media: comment out media upload UI**
+  - `components/control-panel/link-card-editor.tsx`:
+    - Comment out block `{uiState.selectedType === "media" && (...)}` (lines 197–214)
+    - Comment out "Media" tab dari `typeOptions` (atau keep tapi jadi noop)
+    - Hapus unused imports jika tidak dipakai lagi (`ImageIcon` dari lucide, `handleMediaUpload`)
+
+- [ ] **Step 6 — Verify**
+  - `tsc --noEmit`: 0 new errors
+  - `vitest run`: all existing tests pass
+  - Manual QA: Settings tab → ketik username baru → auto-save fires → DB terupdate → public URL work
+  - Manual QA: username taken → real-time error muncul → auto-save skip
+  - Manual QA: media upload tab sudah tidak muncul di UI
+
+#### Decisions Made
 | Decision | Rationale |
 |----------|-----------|
-| Remove dead code entirely | Deletion test passes — complexity already lives elsewhere |
-| Consolidate auth in `server/user/auth.ts` | One seam, shared — already exists in `withAuth()`, just needs a home |
-| Extract `uploadFile()` as standalone module | Two duplicate handlers already in one component = real seam |
-| Migrate to stable `next/cache` API | `unstable_*` is deprecated path |
-| Remove theme system entirely | No user value beyond defaults; per-element override is the new customization surface |
-| Per-element text style as JSON column | 2 properties (color, fontFamily), strict Zod, easy to extend; no migration per new property |
-| `null` = inherit, JSON = override | Theme switch never breaks custom styles; users opt in to override |
-| Popover anchored to clicked element | Figma-like WYSIWYG; switch in place between elements |
-| `next/font/google` for default catalog fonts | Production-ready font loading; preview in catalog renders each in own typography |
-| Server-side diffing for auto-save | Single source of truth, eliminates partial-save bugs, client becomes dumb sender |
-| "ID not in DB = create" temp-ID contract | Eliminates cross-reload collision; client free to use any ID scheme |
-| DB in `$transaction`, S3 post-commit `Promise.allSettled` | Atomic data writes, non-blocking asset cleanup (preserves existing pattern) |
-| Version stamp counter for save-in-flight race | Prevents lost-update when user edits during save; simple integer, no deep reconcile |
-| Position implicit from array order | Always rewrite `position = index`; eliminates position drift class of bugs |
-| Full Zod on `saveProfile` input | Defense in depth; profile fields had zero server-side validation before |
-| Return `links[]` + `socials[]` only | No server-side transform on profile scalar; smaller payload, actionable for client |
-| `hooks/use-autosave.ts` + manual debounce | No new dep, full control over edge cases (version stamp, flush, retry) |
-| `beforeunload` + flush on navigation, no route block | Auto-save = user doesn't think about save; draft persisted via `localStorage` as safety net |
-| Status indicator replaces Save button | `saving`/`saved (fade 2s)`/`error-retryable (Retry)`/`error-validation`; Discard stays |
-| `@deprecated` JSDoc on 7 per-entity actions | Marker for future contributors; file kept as instant rollback path |
-| `buttonColor`/`buttonTextColor` added to `LinkSchema` + diff | Defensive — currently in payload but missing from schema; investigate dead-vs-editable in separate phase |
-| Test priority: P0 fix broken → P1 cover Phase 8 → P2 integrate mocks → P3 fix E2E | Risk-weighted: newest code (Phase 8) has 0 coverage; existing mocks unused; E2E tests shallow |
-| Unit test saveProfile diff logic via mock Prisma | Don't need real DB; mock `$transaction` + model mocks → assert call shapes |
-| `initializeEditor` 4-case guard tested separately from hook | Store logic independent of save timing; test state transitions in isolation |
-| Hook test via `@testing-library/react-hooks` or manual act() wrapper | Zustand store is pure JS — hook can be tested with store mocks |
-| Integration test fills `test/integration/` folders | Existing placeholder structure signals intent; honor it |
-| P5 (UI component tests) + P7 (E2E tooling) lower priority | P0-P3 cover the critical risk surface (Phase 8 + auth); visual/component tests less urgent |
+| `username` masuk auto-save, bukan explicit save | Konsisten dengan field profile lain; hilangkan split-brain antara DomainView (real-time update) dan DB (stuck sampai explicit save) |
+| Redirect via `router.replace` di editor-client | Tidak perlu ubah `useAutosave` hook; cukup react terhadap `status === "saved"` |
+| Keep `checkUsernameAvailability` debounce | Defense in depth — cegah user mengetik taken username sebelum auto-save fire |
+| Comment out (bukan delete) media UI | Mudah di-revert nanti; zero dead-code overhead karena block tidak di-render |
+| Uniqueness check server-side sebelum `$transaction` | Cegah Prisma unique constraint error; return user-friendly error message |
+
+---
 
 ## Notes
 - No CONTEXT.md exists — consider creating one lazily if domain terms get sharpened
@@ -610,3 +656,10 @@ Phase 10 (active)
 - Phase 9 remaining: P2 (integration tests), P3 (fix E2E), P4 (schema tests), P5 (UI components), P6 (infrastructure/mocks), P7 (E2E tooling)
 - `test/mocks/next-navigation.ts` redundant with `setup.ts` global mock — consider removal during P6
 - editor-store.test.ts uses `vi.mock("zustand/middleware")` to bypass persist/localStorage interference in happy-dom
+
+
+- user card, bagain name itu samakan dgn colorfont
+- login card perbagus, hapus aja logo
+- buat konten landing page, buat dia responsive dlu
+- animated backgroudn mash ada yg pelru disesuain
+- pastiin gambar g ilang pasti ganti tab

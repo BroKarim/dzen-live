@@ -15,11 +15,20 @@ interface ShareDialogProps {
   name: string;
   username: string | null;
   avatarUrl: string | null;
+  bgType: string;
+  bgColor: string;
+  bgWallpaper: string | null;
+  bgImage: string | null;
 }
 
-export function ShareDialog({ open, onOpenChange, name, username, avatarUrl }: ShareDialogProps) {
+export function ShareDialog({ open, onOpenChange, name, username, avatarUrl, bgType, bgColor, bgWallpaper, bgImage }: ShareDialogProps) {
   const [copied, setCopied] = useState(false);
   const profileUrl = username ? `https://dzenn.live/${username}` : "";
+
+  const cardBackgroundStyle: React.CSSProperties =
+    bgType === "color"
+      ? { backgroundColor: bgColor }
+      : { backgroundImage: `url(${(bgType === "wallpaper" ? bgWallpaper : bgImage) ?? ""})`, backgroundSize: "cover", backgroundPosition: "center" };
 
   const handleCopy = async () => {
     if (!profileUrl) return;
@@ -73,7 +82,7 @@ export function ShareDialog({ open, onOpenChange, name, username, avatarUrl }: S
 
         <div className="space-y-4">
           {/* user card */}
-          <div className="rounded-lg bg-white p-6">
+          <div className="rounded-lg p-6" style={cardBackgroundStyle}>
             <div className="flex flex-col items-center space-y-3">
               <Avatar className="size-16 border-2">
                 {avatarUrl && <AvatarImage src={avatarUrl} alt={name} />}

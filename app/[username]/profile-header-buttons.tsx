@@ -12,9 +12,13 @@ interface ProfileHeaderButtonsProps {
   name: string;
   username: string | null;
   avatarUrl: string | null;
+  bgType: string;
+  bgColor: string;
+  bgWallpaper: string | null;
+  bgImage: string | null;
 }
 
-export function ProfileHeaderButtons({ name, username, avatarUrl }: ProfileHeaderButtonsProps) {
+export function ProfileHeaderButtons({ name, username, avatarUrl, bgType, bgColor, bgWallpaper, bgImage }: ProfileHeaderButtonsProps) {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   return (
@@ -37,7 +41,7 @@ export function ProfileHeaderButtons({ name, username, avatarUrl }: ProfileHeade
         </div>
       </TooltipProvider>
 
-      {username && <ShareDialog open={shareDialogOpen} onOpenChange={setShareDialogOpen} name={name} username={username} avatarUrl={avatarUrl} />}
+      {username && <ShareDialog open={shareDialogOpen} onOpenChange={setShareDialogOpen} name={name} username={username} avatarUrl={avatarUrl} bgType={bgType} bgColor={bgColor} bgWallpaper={bgWallpaper} bgImage={bgImage} />}
     </>
   );
 }
