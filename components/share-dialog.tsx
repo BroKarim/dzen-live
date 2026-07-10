@@ -19,9 +19,10 @@ interface ShareDialogProps {
   bgColor: string;
   bgWallpaper: string | null;
   bgImage: string | null;
+  displayNameStyle?: { color?: string } | null;
 }
 
-export function ShareDialog({ open, onOpenChange, name, username, avatarUrl, bgType, bgColor, bgWallpaper, bgImage }: ShareDialogProps) {
+export function ShareDialog({ open, onOpenChange, name, username, avatarUrl, bgType, bgColor, bgWallpaper, bgImage, displayNameStyle }: ShareDialogProps) {
   const [copied, setCopied] = useState(false);
   const profileUrl = username ? `https://dzenn.live/${username}` : "";
 
@@ -93,8 +94,8 @@ export function ShareDialog({ open, onOpenChange, name, username, avatarUrl, bgT
                 </AvatarFallback>
               </Avatar>
               <div className="text-center">
-                <p className="font-semibold text-lg">{name}</p>
-                <p className="text-sm text-muted-foreground">@{username}</p>
+                <p className="font-semibold text-lg" style={{ color: displayNameStyle?.color }}>{name}</p>
+                <p className="text-sm" style={{ color: displayNameStyle?.color }}>@{username}</p>
               </div>
             </div>
           </div>

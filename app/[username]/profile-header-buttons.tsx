@@ -16,9 +16,10 @@ interface ProfileHeaderButtonsProps {
   bgColor: string;
   bgWallpaper: string | null;
   bgImage: string | null;
+  displayNameStyle?: { color?: string } | null;
 }
 
-export function ProfileHeaderButtons({ name, username, avatarUrl, bgType, bgColor, bgWallpaper, bgImage }: ProfileHeaderButtonsProps) {
+export function ProfileHeaderButtons({ name, username, avatarUrl, bgType, bgColor, bgWallpaper, bgImage, displayNameStyle }: ProfileHeaderButtonsProps) {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   return (
@@ -41,7 +42,7 @@ export function ProfileHeaderButtons({ name, username, avatarUrl, bgType, bgColo
         </div>
       </TooltipProvider>
 
-      {username && <ShareDialog open={shareDialogOpen} onOpenChange={setShareDialogOpen} name={name} username={username} avatarUrl={avatarUrl} bgType={bgType} bgColor={bgColor} bgWallpaper={bgWallpaper} bgImage={bgImage} />}
+      {username && <ShareDialog open={shareDialogOpen} onOpenChange={setShareDialogOpen} name={name} username={username} avatarUrl={avatarUrl} bgType={bgType} bgColor={bgColor} bgWallpaper={bgWallpaper} bgImage={bgImage} displayNameStyle={displayNameStyle} />}
     </>
   );
 }
