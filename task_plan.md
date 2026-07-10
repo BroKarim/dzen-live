@@ -644,6 +644,43 @@ Phase 11 (active)
 
 ---
 
+### Phase 12: Link Defaults, Edit Dialog Cleanup, Schema-Resilient Autosave
+
+**Goal:** Fix default title colors per texture, modernize link editor (description/media removal), normalize + allowlist schema writes to prevent localStorage drift → failed autosave.
+
+**Implementation (branch `texture`, 2026-07-10):**
+
+| # | Item | Files | Status |
+|---|------|-------|--------|
+| A | Default title color: base=white, glassy=black | `components/texture-card.tsx` | ✅ |
+| B | Hapus description + mediaUrl dari UI + server + schema | `link-edit-dialog.tsx`, `link-card-editor.tsx`, `preview-links.tsx`, `prisma/schema.prisma`, `server/user/links/schema.ts`, `server/user/profile/payloads.ts`, `server/website/profile/payloads.ts`, `server/user/links/actions.ts` | ✅ |
+| C1 | Allowlist Prisma writes (toLinkWrite/toSocialWrite) | `server/user/profile/save-profile-action.ts` | ✅ |
+| C2 | Draft normalizer + schema version | `lib/editor-draft.ts` **(NEW)**, `lib/stores/editor-store.ts` | ✅ |
+| C3 | Error UX di autosave (lastError, tooltip) | `hooks/use-autosave.ts`, `app/editor/_components.tsx/editor-header.tsx`, `editor-client.tsx` | ✅ |
+| — | Cleanup texture-card.tsx dead expand/image/description code | `components/texture-card.tsx` | ✅ |
+| — | Simplify migrate() — discard draft on version mismatch | `lib/stores/editor-store.ts` | ✅ |
+| — | PrismaClientKnownRequestError.code P2022 instead of string match | `server/user/profile/save-profile-action.ts` | ✅ |
+| — | Tests + fixtures cleaned (description/mediaUrl removed) | `test/fixtures/*.ts`, `test/unit/server/links/schema.test.ts` | ✅ |
+| — | Prisma schema drop description/mediaUrl | `prisma/schema.prisma` | ✅ |
+
+**Pending:**
+- [ ] `tsc --noEmit` verifikasi
+- [ ] `vitest run` verifikasi
+- [ ] Deploy order: code dulu, baru `prisma db push` drop column
+
+#### Decisions Made
+| Decision | Rationale |
+|----------|-----------|
+| glassy=text-black meski transparan | User confirmed — desired aesthetic meski di atas background gelap |
+| CSS default color, not titleStyle on create | Dinamis mengikuti texture switch; custom style tetap override via inline style |
+| Full drop description/mediaUrl (not half-comment) | End half-migrated state yang sudah cause production save failures |
+| Allowlist Prisma writes | Single choke point terhadap unknown/stale client fields |
+| Draft schema version + normalizer | localStorage adalah sumber utama old-format, bukan row user |
+| migrate() discard if version < current | Lebih simple daripada partial migrate; normalizer di onRehydrateStorage sebagai safety net |
+| PrismaClientKnownRequestError.code P2022 | Lebih robust daripada string matching (langsung cek error code) |
+
+---
+
 ## Notes
 - No CONTEXT.md exists — consider creating one lazily if domain terms get sharpened
 - No ADRs exist yet — `docs/adr/0001-server-side-diff-autosave.md` to be created after Phase 8 confirmed working in production

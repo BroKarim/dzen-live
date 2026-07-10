@@ -32,8 +32,6 @@ const serverProfile: ProfileEditorData = {
       id: "link-1",
       title: "GitHub",
       url: "https://github.com",
-      description: null,
-      mediaUrl: null,
       position: 0,
       isActive: true,
       buttonColor: null,

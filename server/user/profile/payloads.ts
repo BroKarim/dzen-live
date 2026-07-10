@@ -27,8 +27,6 @@ export const profileEditorPayload = {
       title: true,
       url: true,
       isActive: true,
-      description: true,
-      mediaUrl: true,
       position: true,
       buttonColor: true,
       buttonTextColor: true,
@@ -67,8 +65,6 @@ export const profilePublicPayload = {
     select: {
       title: true,
       url: true,
-      description: true,
-      mediaUrl: true,
       position: true,
       titleStyle: true,
     },

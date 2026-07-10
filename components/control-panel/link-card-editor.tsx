@@ -16,7 +16,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { LinkSchema } from "@/server/user/links/schema";
 import type { LinkData } from "./link-edit-dialog";
 
-type EditorLink = ProfileEditorData['links'][number];
+type EditorLink = ProfileEditorData["links"][number];
 
 interface LinkCardEditorProps {
   profile: ProfileEditorData;
@@ -38,7 +38,6 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
   const [newLink, setNewLink] = useState({
     title: "",
     url: "",
-    description: "",
   });
 
   const handleAdd = async () => {
@@ -46,8 +45,6 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
       id: `temp-${++tempIdCounter.current}`,
       title: newLink.title,
       url: newLink.url.trim(),
-      description: newLink.description || null,
-      mediaUrl: null,
       buttonColor: null,
       buttonTextColor: null,
       titleStyle: null,
@@ -83,14 +80,22 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
     setNewLink({
       title: "",
       url: "",
-      description: "",
     });
   };
 
   const handleEdit = (link: EditorLink) => {
     setUiState((prev) => ({
       ...prev,
-      editingLink: link,
+      editingLink: {
+        id: link.id,
+        title: link.title,
+        url: link.url,
+        isActive: link.isActive,
+        position: link.position,
+        buttonColor: link.buttonColor,
+        buttonTextColor: link.buttonTextColor,
+        titleStyle: link.titleStyle as LinkData["titleStyle"],
+      },
       editDialogOpen: true,
     }));
   };
@@ -141,8 +146,6 @@ export function LinkCardEditor({ profile, onUpdate }: LinkCardEditorProps) {
 
           <div className="p-3 space-y-3">
             <Input value={newLink.title} onChange={(e) => setNewLink((prev) => ({ ...prev, title: e.target.value }))} placeholder="Link title" className="h-10 text-sm" />
-
-            {/* <Input value={newLink.description} onChange={(e) => setNewLink(prev => ({ ...prev, description: e.target.value }))} placeholder="Description (optional)" className="h-10 text-sm" /> */}
 
             <Input value={newLink.url} onChange={(e) => setNewLink((prev) => ({ ...prev, url: e.target.value }))} placeholder="https://example.com" className="h-10 text-sm" />
 

@@ -33,7 +33,7 @@ export function ProfileHeaderButtons({ name, username, avatarUrl, bgType, bgColo
                 className="flex size-10 items-center justify-center rounded-full bg-white/10 backdrop-blur-md text-white border border-white/10 hover:bg-white/20 transition-all shadow-xl"
                 aria-label="Share profile"
               >
-                <Share2 className="size-4" />
+                <Share2 className="size-4 text-black" />
               </button>
             </TooltipTrigger>
             <TooltipContent>Share profile</TooltipContent>

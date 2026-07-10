@@ -178,9 +178,6 @@ model Link {
   
   title       String
   url         String
-  description String?
-  
-  mediaUrl    String?   
   
   position    Int      @default(0)
   isActive    Boolean  @default(true)

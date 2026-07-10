@@ -20,7 +20,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
 
   const { draftProfile, isDirty, initializeEditor, updateDraft, _hasHydrated, openStylePopover } = useEditorStore();
-  const { status, retry, flushSave } = useAutosave();
+  const { status, lastError, retry, flushSave } = useAutosave();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -94,7 +94,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
     <main className="min-h-screen flex h-screen flex-col bg-background">
       {/* Mobile: show header + "go to desktop" message, hide everything else */}
       <div className="flex md:hidden flex-col h-screen">
-        <EditorHeader profile={currentProfile} saveStatus={status} onRetry={retry} />
+        <EditorHeader profile={currentProfile} saveStatus={status} lastError={lastError} onRetry={retry} />
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
           <p className="font-bold text-base leading-snug">Go to desktop.</p>
           <p className="text-sm text-muted-foreground leading-relaxed">I didn&apos;t have time for mobile responsiveness, I have a life.</p>
@@ -103,7 +103,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
 
       {/* Desktop: full editor layout */}
       <div className="hidden md:flex flex-col flex-1 h-screen">
-        <EditorHeader profile={currentProfile} saveStatus={status} onRetry={retry} />
+        <EditorHeader profile={currentProfile} saveStatus={status} lastError={lastError} onRetry={retry} />
 
         <div className="flex flex-1 gap-6 overflow-hidden p-6" style={{ zoom: 0.9 }}>
           <Preview profile={currentProfile} viewMode={viewMode} onStyleTargetClick={handlePreviewStyleClick} />

@@ -6,16 +6,18 @@ import Link from "next/link";
 import { DomainView } from "@/components/domain-view";
 import { ProfileEditorData } from "@/server/user/profile/payloads";
 import { useEditorStore } from "@/lib/stores/editor-store";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error-retryable" | "error-validation";
 
 interface EditorHeaderProps {
   profile: ProfileEditorData;
   saveStatus: SaveStatus;
+  lastError?: string | null;
   onRetry: () => void;
 }
 
-export default function EditorHeader({ profile, saveStatus, onRetry }: EditorHeaderProps) {
+export default function EditorHeader({ profile, saveStatus, lastError, onRetry }: EditorHeaderProps) {
   const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "dzenn.live").replace(/https?:\/\//, "");
   const { isDirty, discardChanges, draftProfile } = useEditorStore();
   const username = draftProfile?.username || profile.username || "user";
@@ -57,14 +59,14 @@ export default function EditorHeader({ profile, saveStatus, onRetry }: EditorHea
           )}
 
           {/* Status indicator */}
-          <StatusIndicator status={saveStatus} onRetry={onRetry} />
+          <StatusIndicator status={saveStatus} lastError={lastError} onRetry={onRetry} />
         </div>
       </div>
     </header>
   );
 }
 
-function StatusIndicator({ status, onRetry }: { status: SaveStatus; onRetry: () => void }) {
+function StatusIndicator({ status, lastError, onRetry }: { status: SaveStatus; lastError?: string | null; onRetry: () => void }) {
   switch (status) {
     case "saving":
       return (
@@ -84,19 +86,33 @@ function StatusIndicator({ status, onRetry }: { status: SaveStatus; onRetry: () 
 
     case "error-retryable":
       return (
-        <Button onClick={onRetry} size="sm" variant="ghost" className="h-8 gap-1.5 text-xs text-destructive hover:bg-destructive/10 px-2">
-          <AlertTriangle className="size-3.5" />
-          <span className="hidden sm:inline">Save failed</span>
-          <span className="underline">Retry</span>
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={onRetry} size="sm" variant="ghost" className="h-8 gap-1.5 text-xs text-destructive hover:bg-destructive/10 px-2">
+                <AlertTriangle className="size-3.5" />
+                <span className="hidden sm:inline">Save failed</span>
+                <span className="underline">Retry</span>
+              </Button>
+            </TooltipTrigger>
+            {lastError && <TooltipContent side="bottom">{lastError}</TooltipContent>}
+          </Tooltip>
+        </TooltipProvider>
       );
 
     case "error-validation":
       return (
-        <span className="inline-flex items-center gap-1.5 text-xs text-destructive">
-          <AlertTriangle className="size-3.5" />
-          <span className="hidden sm:inline">Save failed</span>
-        </span>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex items-center gap-1.5 text-xs text-destructive max-w-[200px] truncate cursor-default">
+                <AlertTriangle className="size-3.5 shrink-0" />
+                <span className="hidden sm:inline truncate">{lastError || "Save failed"}</span>
+              </span>
+            </TooltipTrigger>
+            {lastError && <TooltipContent side="bottom">{lastError}</TooltipContent>}
+          </Tooltip>
+        </TooltipProvider>
       );
 
     default:

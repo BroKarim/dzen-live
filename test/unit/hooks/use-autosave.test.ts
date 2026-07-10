@@ -31,7 +31,7 @@ const serverProfile: ProfileEditorData = {
   bgPattern: null,
   isPublished: false,
   links: [
-    { id: "link-1", title: "GitHub", url: "https://github.com", description: null, mediaUrl: null, position: 0, isActive: true, buttonColor: null, buttonTextColor: null, titleStyle: null },
+    { id: "link-1", title: "GitHub", url: "https://github.com", position: 0, isActive: true, buttonColor: null, buttonTextColor: null, titleStyle: null },
   ],
   socials: [
     { id: "social-1", platform: "twitter", url: "https://twitter.com/user" },

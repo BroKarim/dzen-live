@@ -13,173 +13,220 @@ function toJsonInput(v: unknown): Prisma.InputJsonValue | typeof Prisma.JsonNull
   return v as Prisma.InputJsonValue;
 }
 
+const LINK_SELECT = {
+  id: true,
+  title: true,
+  url: true,
+  position: true,
+  isActive: true,
+  buttonColor: true,
+  buttonTextColor: true,
+  titleStyle: true,
+} as const;
+
+/** Allowlisted link fields only — never spread raw draft into Prisma. */
+function toLinkWrite(
+  draftLink: {
+    title: string;
+    url: string;
+    isActive?: boolean;
+    buttonColor?: string | null;
+    buttonTextColor?: string | null;
+    titleStyle?: unknown;
+  },
+  position: number,
+) {
+  return {
+    title: draftLink.title,
+    url: draftLink.url,
+    position,
+    isActive: draftLink.isActive ?? true,
+    buttonColor: draftLink.buttonColor ?? null,
+    buttonTextColor: draftLink.buttonTextColor ?? null,
+    titleStyle: toJsonInput(draftLink.titleStyle ?? null),
+  };
+}
+
+function toSocialWrite(
+  draftSocial: { platform: string; url: string },
+  position: number,
+) {
+  return {
+    platform: draftSocial.platform,
+    url: draftSocial.url,
+    position,
+  };
+}
+
 export const saveProfile = withAuth("profile/save", async (user, data: unknown) => {
-  const parsed = SaveProfileSchema.safeParse(data);
-  if (!parsed.success) {
-    return { success: false as const, error: parsed.error.message };
-  }
-
-  const draft = parsed.data;
-
-  const profile = await db.profile.findFirst({
-    where: { userId: user.id },
-    include: {
-      links: { select: { id: true, title: true, url: true, description: true, mediaUrl: true, position: true, isActive: true, buttonColor: true, buttonTextColor: true, titleStyle: true } },
-      socials: { select: { id: true, platform: true, url: true, position: true } },
-    },
-  });
-
-  if (!profile) throw new Error("Profile not found");
-
-  // ── Username uniqueness check ─────────────────────────────────────────────────
-  if (draft.username !== undefined && draft.username !== profile.username) {
-    const existingWithUsername = await db.profile.findUnique({ where: { username: draft.username } });
-    if (existingWithUsername) {
-      return { success: false as const, error: "Username is already taken" };
+  try {
+    const parsed = SaveProfileSchema.safeParse(data);
+    if (!parsed.success) {
+      return { success: false as const, error: parsed.error.message };
     }
-  }
 
-  const operations: Prisma.PrismaPromise<any>[] = [];
-  const s3KeysToClean: string[] = [];
+    const draft = parsed.data;
 
-  // ── Profile scalars ──────────────────────────────────────────────────────────
+    const profile = await db.profile.findFirst({
+      where: { userId: user.id },
+      include: {
+        links: { select: LINK_SELECT },
+        socials: { select: { id: true, platform: true, url: true, position: true } },
+      },
+    });
 
-  const updateData: Record<string, any> = {};
-  const scalarFields = ["username", "displayName", "bio", "avatarUrl", "layout", "bgType", "bgColor", "bgWallpaper", "bgImage", "cardTexture"] as const;
-
-  for (const field of scalarFields) {
-    const draftVal = draft[field];
-    if (draftVal !== undefined && draftVal !== profile[field]) {
-      updateData[field] = draftVal;
+    if (!profile) {
+      return { success: false as const, error: "Profile not found" };
     }
-  }
 
-  const jsonFields = ["displayNameStyle", "bioStyle", "bgEffects", "bgPattern"] as const;
-  for (const field of jsonFields) {
-    const draftVal = draft[field];
-    if (draftVal !== undefined) {
-      if (JSON.stringify(draftVal) !== JSON.stringify(profile[field])) {
-        updateData[field] = toJsonInput(draftVal);
+    // ── Username uniqueness check ─────────────────────────────────────────────
+    if (draft.username !== undefined && draft.username !== profile.username) {
+      const existingWithUsername = await db.profile.findUnique({ where: { username: draft.username } });
+      if (existingWithUsername) {
+        return { success: false as const, error: "Username is already taken" };
       }
     }
-  }
 
-  // Track avatar + bgImage S3 cleanup
-  if (profile.avatarUrl && draft.avatarUrl !== undefined && profile.avatarUrl !== draft.avatarUrl) {
-    s3KeysToClean.push(profile.avatarUrl);
-  }
-  if (profile.bgImage && draft.bgImage !== undefined && profile.bgImage !== draft.bgImage) {
-    s3KeysToClean.push(profile.bgImage);
-  }
+    const operations: Prisma.PrismaPromise<unknown>[] = [];
+    const s3KeysToClean: string[] = [];
 
-  if (Object.keys(updateData).length > 0) {
-    operations.push(db.profile.update({ where: { id: profile.id }, data: updateData }));
-  }
+    // ── Profile scalars ───────────────────────────────────────────────────────
 
-  // ── Links ────────────────────────────────────────────────────────────────────
+    const updateData: Record<string, unknown> = {};
+    const scalarFields = ["username", "displayName", "bio", "avatarUrl", "layout", "bgType", "bgColor", "bgWallpaper", "bgImage", "cardTexture"] as const;
 
-  const dbLinkIds = new Set(profile.links.map((l) => l.id));
-  const dbLinksMap = new Map(profile.links.map((l) => [l.id, l]));
-  const draftLinks = draft.links ?? [];
-
-  for (let i = 0; i < draftLinks.length; i++) {
-    const { id, titleStyle, ...linkFields } = draftLinks[i];
-
-    if (!id || !dbLinkIds.has(id)) {
-      operations.push(
-        db.link.create({
-          data: {
-            ...linkFields,
-            titleStyle: toJsonInput(titleStyle),
-            position: i,
-            profileId: profile.id,
-          },
-        }),
-      );
-    } else {
-      const dbLink = dbLinksMap.get(id)!;
-      if (dbLink.mediaUrl && linkFields.mediaUrl !== undefined && linkFields.mediaUrl !== dbLink.mediaUrl) {
-        s3KeysToClean.push(dbLink.mediaUrl);
+    for (const field of scalarFields) {
+      const draftVal = draft[field];
+      if (draftVal !== undefined && draftVal !== profile[field]) {
+        updateData[field] = draftVal;
       }
+    }
 
-      operations.push(
-        db.link.update({
-          where: { id },
-          data: {
-            ...linkFields,
-            position: i,
-            ...(titleStyle !== undefined ? { titleStyle: toJsonInput(titleStyle) } : {}),
-          },
-        }),
+    const jsonFields = ["displayNameStyle", "bioStyle", "bgEffects", "bgPattern"] as const;
+    for (const field of jsonFields) {
+      const draftVal = draft[field];
+      if (draftVal !== undefined) {
+        if (JSON.stringify(draftVal) !== JSON.stringify(profile[field])) {
+          updateData[field] = toJsonInput(draftVal);
+        }
+      }
+    }
+
+    // Track avatar + bgImage S3 cleanup
+    if (profile.avatarUrl && draft.avatarUrl !== undefined && profile.avatarUrl !== draft.avatarUrl) {
+      s3KeysToClean.push(profile.avatarUrl);
+    }
+    if (profile.bgImage && draft.bgImage !== undefined && profile.bgImage !== draft.bgImage) {
+      s3KeysToClean.push(profile.bgImage);
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      operations.push(db.profile.update({ where: { id: profile.id }, data: updateData }));
+    }
+
+    // ── Links (allowlisted writes) ────────────────────────────────────────────
+
+    const dbLinkIds = new Set(profile.links.map((l) => l.id));
+    const draftLinks = draft.links ?? [];
+
+    for (let i = 0; i < draftLinks.length; i++) {
+      const draftLink = draftLinks[i];
+      const { id } = draftLink;
+      const write = toLinkWrite(draftLink, i);
+
+      if (!id || !dbLinkIds.has(id)) {
+        operations.push(
+          db.link.create({
+            data: {
+              ...write,
+              profileId: profile.id,
+            },
+          }),
+        );
+      } else {
+        operations.push(
+          db.link.update({
+            where: { id },
+            data: write,
+          }),
+        );
+      }
+    }
+
+    for (const dbLink of profile.links) {
+      if (!draftLinks.some((dl) => dl.id === dbLink.id)) {
+        operations.push(db.link.deleteMany({ where: { id: dbLink.id } }));
+      }
+    }
+
+    // ── Socials (allowlisted writes) ──────────────────────────────────────────
+
+    const dbSocialIds = new Set(profile.socials.map((s) => s.id));
+    const draftSocials = draft.socials ?? [];
+
+    for (let i = 0; i < draftSocials.length; i++) {
+      const draftSocial = draftSocials[i];
+      const { id } = draftSocial;
+      const write = toSocialWrite(draftSocial, i);
+
+      if (!id || !dbSocialIds.has(id)) {
+        operations.push(
+          db.socialLink.create({
+            data: { ...write, profileId: profile.id },
+          }),
+        );
+      } else {
+        operations.push(
+          db.socialLink.update({
+            where: { id },
+            data: write,
+          }),
+        );
+      }
+    }
+
+    for (const dbSocial of profile.socials) {
+      if (!draftSocials.some((ds) => ds.id === dbSocial.id)) {
+        operations.push(db.socialLink.deleteMany({ where: { id: dbSocial.id } }));
+      }
+    }
+
+    // ── Execute ───────────────────────────────────────────────────────────────
+
+    await db.$transaction(operations);
+
+    // Post-commit S3 cleanup (non-blocking)
+    if (s3KeysToClean.length > 0) {
+      Promise.allSettled(
+        s3KeysToClean.map((key) =>
+          deleteFromS3(key).catch((err) => console.error(`[profile/save] S3 cleanup failed:`, err)),
+        ),
       );
     }
-  }
 
-  for (const dbLink of profile.links) {
-    if (!draftLinks.some((dl) => dl.id === dbLink.id)) {
-      if (dbLink.mediaUrl) s3KeysToClean.push(dbLink.mediaUrl);
-      operations.push(db.link.deleteMany({ where: { id: dbLink.id } }));
+    revalidatePath(`/${user.username}`);
+
+    // ── Return refreshed links + socials (real IDs, correct positions) ────────
+
+    const finalLinks = await db.link.findMany({
+      where: { profileId: profile.id },
+      select: LINK_SELECT,
+      orderBy: { position: "asc" },
+    });
+
+    const finalSocials = await db.socialLink.findMany({
+      where: { profileId: profile.id },
+      select: { id: true, platform: true, url: true },
+      orderBy: { position: "asc" },
+    });
+
+    return { success: true as const, links: finalLinks, socials: finalSocials };
+  } catch (error) {
+    console.error("[profile/save] unexpected error:", error);
+    // P2022 = column does not exist (schema mismatch between code and DB)
+    if (error instanceof Error && "code" in error && error.code === "P2022") {
+      return { success: false as const, error: "Save failed due to a data format mismatch. Try discarding changes or refreshing the page." };
     }
+    throw error;
   }
-
-  // ── Socials ──────────────────────────────────────────────────────────────────
-
-  const dbSocialIds = new Set(profile.socials.map((s) => s.id));
-  const draftSocials = draft.socials ?? [];
-
-  for (let i = 0; i < draftSocials.length; i++) {
-    const { id, ...socialFields } = draftSocials[i];
-
-    if (!id || !dbSocialIds.has(id)) {
-      operations.push(
-        db.socialLink.create({
-          data: { ...socialFields, position: i, profileId: profile.id },
-        }),
-      );
-    } else {
-      operations.push(
-        db.socialLink.update({
-          where: { id },
-          data: { ...socialFields, position: i },
-        }),
-      );
-    }
-  }
-
-  for (const dbSocial of profile.socials) {
-    if (!draftSocials.some((ds) => ds.id === dbSocial.id)) {
-      operations.push(db.socialLink.deleteMany({ where: { id: dbSocial.id } }));
-    }
-  }
-
-  // ── Execute ──────────────────────────────────────────────────────────────────
-
-  await db.$transaction(operations);
-
-  // Post-commit S3 cleanup (non-blocking)
-  if (s3KeysToClean.length > 0) {
-    Promise.allSettled(
-      s3KeysToClean.map((key) =>
-        deleteFromS3(key).catch((err) => console.error(`[profile/save] S3 cleanup failed:`, err)),
-      ),
-    );
-  }
-
-  revalidatePath(`/${user.username}`);
-
-  // ── Return refreshed links + socials (real IDs, correct positions) ──────────
-
-  const finalLinks = await db.link.findMany({
-    where: { profileId: profile.id },
-    select: { id: true, title: true, url: true, description: true, mediaUrl: true, position: true, isActive: true, buttonColor: true, buttonTextColor: true, titleStyle: true },
-    orderBy: { position: "asc" },
-  });
-
-  const finalSocials = await db.socialLink.findMany({
-    where: { profileId: profile.id },
-    select: { id: true, platform: true, url: true },
-    orderBy: { position: "asc" },
-  });
-
-  return { success: true as const, links: finalLinks, socials: finalSocials };
 });

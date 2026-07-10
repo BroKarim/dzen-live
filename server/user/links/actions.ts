@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { withAuth } from "@/server/user/auth";
 import { SocialLinkSchema, LinkSchema, SocialLinkInput, LinkInput } from "./schema";
 import { revalidatePath } from "next/cache";
-import { deleteFromS3 } from "@/lib/s3";
 import { Prisma } from "@/lib/generated/prisma/client";
 
 async function getProfileId(userId: string) {
@@ -79,24 +78,24 @@ export const createLink = withAuth("links/actions", async (user, data: LinkInput
 export const updateLink = withAuth("links/actions", async (user, id: string, data: Partial<LinkInput>) => {
   const existing = await db.link.findUnique({
     where: { id },
-    select: { mediaUrl: true },
+    select: { id: true },
   });
 
   if (!existing) throw new Error("Link not found");
 
-  // Delete old S3 asset if replaced (non-blocking)
-  if (data.mediaUrl && existing.mediaUrl && data.mediaUrl !== existing.mediaUrl) {
-    deleteFromS3(existing.mediaUrl).catch(console.error);
-  }
-
-  const { titleStyle, ...rest } = data;
+  // Allowlist only — never spread raw partial into Prisma
+  const write: Record<string, unknown> = {};
+  if (data.title !== undefined) write.title = data.title;
+  if (data.url !== undefined) write.url = data.url;
+  if (data.position !== undefined) write.position = data.position;
+  if (data.isActive !== undefined) write.isActive = data.isActive;
+  if (data.buttonColor !== undefined) write.buttonColor = data.buttonColor;
+  if (data.buttonTextColor !== undefined) write.buttonTextColor = data.buttonTextColor;
+  if (data.titleStyle !== undefined) write.titleStyle = toJsonInput(data.titleStyle);
 
   await db.link.update({
     where: { id },
-    data: {
-      ...rest,
-      ...(titleStyle !== undefined ? { titleStyle: toJsonInput(titleStyle) } : {}),
-    },
+    data: write,
   });
 
   revalidatePath(`/${user.username}`);
@@ -105,18 +104,7 @@ export const updateLink = withAuth("links/actions", async (user, id: string, dat
 
 /** @deprecated Use {@link saveProfile} from `server/user/profile/save-profile-action` instead. Kept as rollback path during auto-save migration. */
 export const deleteLink = withAuth("links/actions", async (user, id: string) => {
-  const link = await db.link.findUnique({
-    where: { id },
-    select: { mediaUrl: true },
-  });
-
-  // Guard: record may already be gone (e.g. duplicate save scenario)
-  if (!link) return { success: true as const };
-
-  // Delete S3 asset first (non-blocking)
-  if (link.mediaUrl) deleteFromS3(link.mediaUrl).catch(console.error);
-
-  // deleteMany avoids P2025 if record was already deleted between the findUnique and delete
+  // deleteMany avoids P2025 if record was already deleted
   await db.link.deleteMany({ where: { id } });
 
   revalidatePath(`/${user.username}`);

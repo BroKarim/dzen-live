@@ -38,29 +38,27 @@ describe("LinkSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts optional description within limit", () => {
+  it("strips obsolete description/mediaUrl fields (schema evolution)", () => {
     const result = LinkSchema.safeParse({
       title: "Test",
       url: "https://example.com",
-      description: "A short description",
+      description: "legacy field",
+      mediaUrl: "https://example.com/image.jpg",
     });
     expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).not.toHaveProperty("description");
+      expect(result.data).not.toHaveProperty("mediaUrl");
+    }
   });
 
-  it("rejects description over 500 characters", () => {
+  it("accepts buttonColor and titleStyle", () => {
     const result = LinkSchema.safeParse({
-      title: "Test",
+      title: "Styled",
       url: "https://example.com",
-      description: "x".repeat(501),
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("accepts valid media link", () => {
-    const result = LinkSchema.safeParse({
-      title: "Photo",
-      url: "https://example.com/photo",
-      mediaUrl: "https://example.com/image.jpg",
+      buttonColor: "#111111",
+      buttonTextColor: "#ffffff",
+      titleStyle: { color: "#fff", fontFamily: "inter" },
     });
     expect(result.success).toBe(true);
   });

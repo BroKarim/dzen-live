@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useEditorStore } from "@/lib/stores/editor-store";
 import { saveProfile } from "@/server/user/profile/save-profile-action";
+import { normalizeEditorDraft } from "@/lib/editor-draft";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error-retryable" | "error-validation";
 
@@ -11,6 +12,7 @@ const SAVED_FADE_MS = 2000;
 
 export function useAutosave() {
   const [status, setStatus] = useState<SaveStatus>("idle");
+  const [lastError, setLastError] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const versionAtSaveStart = useRef<number>(0);
@@ -18,8 +20,14 @@ export function useAutosave() {
   const { draftProfile, isDirty, _draftVersion, updateDraft, markAsSaved } = useEditorStore();
 
   const clearTimers = useCallback(() => {
-    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
-    if (fadeRef.current) { clearTimeout(fadeRef.current); fadeRef.current = null; }
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (fadeRef.current) {
+      clearTimeout(fadeRef.current);
+      fadeRef.current = null;
+    }
   }, []);
 
   const performSave = useCallback(async () => {
@@ -27,13 +35,16 @@ export function useAutosave() {
 
     versionAtSaveStart.current = _draftVersion;
     setStatus("saving");
+    setLastError(null);
 
     try {
-      const res = await saveProfile(draftProfile);
+      // Normalize before send so obsolete localStorage fields never hit the server
+      const payload = normalizeEditorDraft(draftProfile) ?? draftProfile;
+      const res = await saveProfile(payload);
 
       if (!res.success) {
-        // Validation error from server
         setStatus("error-validation");
+        setLastError(res.error || "Validation failed");
         console.error("[useAutosave] validation error:", res.error);
         return;
       }
@@ -41,9 +52,10 @@ export function useAutosave() {
       // Only mark as saved if draft hasn't changed during save
       const currentVersion = useEditorStore.getState()._draftVersion;
       if (currentVersion === versionAtSaveStart.current) {
-        updateDraft({ ...draftProfile, links: res.links, socials: res.socials });
+        updateDraft({ ...payload, links: res.links, socials: res.socials });
         markAsSaved();
         setStatus("saved");
+        setLastError(null);
 
         // Fade to idle after 2s
         fadeRef.current = setTimeout(() => {
@@ -51,9 +63,10 @@ export function useAutosave() {
         }, SAVED_FADE_MS);
       }
       // else: newer changes pending, debounce will re-fire
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("[useAutosave] save failed:", error);
       setStatus("error-retryable");
+      setLastError(error instanceof Error ? error.message : "Save failed");
     }
   }, [draftProfile, isDirty, _draftVersion, updateDraft, markAsSaved]);
 
@@ -93,5 +106,5 @@ export function useAutosave() {
     return () => clearTimers();
   }, [clearTimers]);
 
-  return { status, retry, flushSave };
+  return { status, lastError, retry, flushSave };
 }

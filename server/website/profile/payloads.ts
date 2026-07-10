@@ -51,8 +51,6 @@ export const publicProfilePayload = {
       id: true,
       title: true,
       url: true,
-      description: true,
-      mediaUrl: true,
       position: true,
       titleStyle: true,
     },

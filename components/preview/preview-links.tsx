@@ -22,8 +22,6 @@ function LinkItem({ link, cardTexture, mode, onStyleTargetClick, renderLink }: {
       id={link.id}
       title={link.title}
       url={link.url}
-      description={link.description ?? undefined}
-      imageUrl={link.mediaUrl ?? undefined}
       backgroundColor="bg-[#222]"
       texture={cardTexture}
       mode={mode}

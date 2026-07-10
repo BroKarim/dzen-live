@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 import { applyStyleToProfile, type StyleTarget } from "@/lib/text-style";
+import { EDITOR_DRAFT_VERSION, normalizeEditorDraft } from "@/lib/editor-draft";
 
 interface PopoverAnchor {
   target: StyleTarget;
@@ -44,47 +45,47 @@ export const useEditorStore = create<EditorState>()(
         const state = get();
         if (!state._hasHydrated) return;
 
-        const { draftProfile } = state;
+        // Always normalize server + draft so dirty compare uses same shape
+        const normalizedServer = normalizeEditorDraft(serverProfile) ?? serverProfile;
+        const { draftProfile: rawDraft } = state;
+        const draftProfile = rawDraft ? normalizeEditorDraft(rawDraft) : null;
 
-        // Case 1: No existing draft — initialize fresh from server
+        // Case 1: No existing draft (or unusable after normalize) — init fresh
         if (!draftProfile) {
-          set({ originalProfile: serverProfile, draftProfile: serverProfile, isDirty: false, _draftVersion: 0 });
+          set({ originalProfile: normalizedServer, draftProfile: normalizedServer, isDirty: false, _draftVersion: 0 });
           return;
         }
 
         // Case 2: Draft belongs to a different profile (e.g. user switched account)
-        if (draftProfile.id !== serverProfile.id) {
-          set({ originalProfile: serverProfile, draftProfile: serverProfile, isDirty: false, _draftVersion: 0 });
+        if (draftProfile.id !== normalizedServer.id) {
+          set({ originalProfile: normalizedServer, draftProfile: normalizedServer, isDirty: false, _draftVersion: 0 });
           return;
         }
 
         // Case 3: Draft contains stale link IDs that no longer exist in the DB.
-        // This happens after a failed duplicate-save scenario (see NOTE in TODO.md).
-        // We detect "stale" as a non-temp ID that isn't in the server's current link list.
-        const serverLinkIds = new Set((serverProfile.links ?? []).map((l) => l.id));
+        const serverLinkIds = new Set((normalizedServer.links ?? []).map((l) => l.id));
         const hasStaleLinks = (draftProfile.links ?? []).some((l) => !String(l.id).startsWith("temp-") && !serverLinkIds.has(l.id));
 
         if (hasStaleLinks) {
-          set({ originalProfile: serverProfile, draftProfile: serverProfile, isDirty: false, _draftVersion: 0 });
+          set({ originalProfile: normalizedServer, draftProfile: normalizedServer, isDirty: false, _draftVersion: 0 });
           return;
         }
 
-        // Draft is valid — keep the user's in-progress edits as-is.
-        // Always update originalProfile to the latest server snapshot so that
-        // save diffs are calculated correctly on the next Save.
-        const hasDirtyChanges = JSON.stringify(draftProfile) !== JSON.stringify(serverProfile);
+        // Draft is valid — keep in-progress edits; update original to latest server snapshot
+        const hasDirtyChanges = JSON.stringify(draftProfile) !== JSON.stringify(normalizedServer);
         set({
-          originalProfile: serverProfile,
-          draftProfile, // preserve existing draft
+          originalProfile: normalizedServer,
+          draftProfile,
           isDirty: hasDirtyChanges,
         });
       },
 
       updateDraft: (profile) => {
         const { originalProfile, _draftVersion } = get();
+        const normalized = normalizeEditorDraft(profile) ?? profile;
         set({
-          draftProfile: profile,
-          isDirty: JSON.stringify(profile) !== JSON.stringify(originalProfile),
+          draftProfile: normalized,
+          isDirty: JSON.stringify(normalized) !== JSON.stringify(originalProfile),
           _draftVersion: _draftVersion + 1,
         });
       },
@@ -119,11 +120,26 @@ export const useEditorStore = create<EditorState>()(
     }),
     {
       name: "dzenn-editor-draft",
+      version: EDITOR_DRAFT_VERSION,
       // Only persist the draft — originalProfile always comes fresh from the server
       partialize: (state) => ({
         draftProfile: state.draftProfile,
       }),
+      migrate: (persisted: unknown, fromVersion: number) => {
+        const state = (persisted ?? {}) as { draftProfile?: unknown };
+        // Too old / unversioned → discard draft; onRehydrateStorage handles normalization
+        if (fromVersion < EDITOR_DRAFT_VERSION) {
+          return { draftProfile: null };
+        }
+        const normalized = state.draftProfile ? normalizeEditorDraft(state.draftProfile) : null;
+        return { draftProfile: normalized };
+      },
       onRehydrateStorage: () => (state) => {
+        if (state?.draftProfile) {
+          const normalized = normalizeEditorDraft(state.draftProfile);
+          // mutate rehydrated state before consumers read it
+          useEditorStore.setState({ draftProfile: normalized });
+        }
         state?.setHasHydrated(true);
       },
     },
