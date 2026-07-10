@@ -663,9 +663,10 @@ Phase 11 (active)
 | — | Tests + fixtures cleaned (description/mediaUrl removed) | `test/fixtures/*.ts`, `test/unit/server/links/schema.test.ts` | ✅ |
 | — | Prisma schema drop description/mediaUrl | `prisma/schema.prisma` | ✅ |
 
-**Pending:**
-- [ ] `tsc --noEmit` verifikasi
-- [ ] `vitest run` verifikasi
+**Verifikasi:**
+- [x] `tsc --noEmit`: 0 errors ✅
+- [x] `vitest run`: 132/132 pass ✅ (14 test files)
+- [x] `pnpm build`: ✅ compiled successfully
 - [ ] Deploy order: code dulu, baru `prisma db push` drop column
 
 #### Decisions Made
@@ -681,10 +682,45 @@ Phase 11 (active)
 
 ---
 
+## Release Flow (Standard Operating Procedure)
+
+**Goal:** Setiap rilis memiliki tag yang bisa di-rollback. AI cukup ikuti instruksi ini.
+
+**Trigger:** User bilang "release" atau "buat tag" atau "merge ke main".
+
+**Steps:**
+
+1. **Commit semua perubahan di branch fitur** — `git status`, pastikan clean
+2. **Switch ke `main`** — `git checkout main && git pull origin main`
+3. **Tag versi lama** (snapshot sebelum merge):
+   ```
+   git tag -a v0.1.N -m "v0.1.N — <deskripsi>"
+   git push origin main
+   git push origin v0.1.N
+   ```
+4. **Merge branch fitur ke `main`** — `git merge <branch>` (fast-forward atau no-ff)
+5. **Build** — `pnpm build`
+   - Jika gagal: fix error → commit → ulangi dari step 4 (merge ulang)
+6. **Tag versi baru**:
+   ```
+   git tag -a v0.1.M -m "v0.1.M — <deskripsi>"
+   git push origin main
+   git push origin v0.1.M
+   ```
+7. **Update task_plan.md**: dokumentasikan release + versi
+
+**Naming convention:** `v<major>.<minor>.<patch>` — increment patch per rilis.
+
+**History:**
+- `v0.1.1` (2026-07-10): baseline sebelum merge texture branch
+- `v0.1.2` (2026-07-10): Phase 12 — link defaults, edit dialog cleanup, schema-resilient autosave
+
+---
+
 ## Notes
 - No CONTEXT.md exists — consider creating one lazily if domain terms get sharpened
 - No ADRs exist yet — `docs/adr/0001-server-side-diff-autosave.md` to be created after Phase 8 confirmed working in production
-- 133 tests pass (up from 23 baseline) — P0 (fix broken) + P1 (Phase 8 coverage) + ad-hoc bug fixes + Phase 10 (font-catalog, editor-header, settings-tab, og-image-card, og/route): button.test.tsx (16), profile-editor.test.tsx (7), save-profile.test.ts (17), editor-store.test.ts (19), use-autosave.test.ts (12), social-editor.test.tsx (13), utils.test.ts (5), links/schema.test.ts (13), json-ld.test.ts (6), font-catalog.test.ts (9), editor-header.test.tsx (3), settings-tab.test.tsx (5), og-image-card.test.tsx (4), og/route.test.ts (4)
+- 132 tests pass (up from 23 baseline) — P0 (fix broken) + P1 (Phase 8 coverage) + ad-hoc bug fixes + Phase 10 (font-catalog, editor-header, settings-tab, og-image-card, og/route): button.test.tsx (16), profile-editor.test.tsx (7), save-profile.test.ts (17), editor-store.test.ts (19), use-autosave.test.ts (12), social-editor.test.tsx (13), utils.test.ts (5), links/schema.test.ts (12, -1 description test karena field dihapus), json-ld.test.ts (6), font-catalog.test.ts (9), editor-header.test.tsx (3), settings-tab.test.tsx (5), og-image-card.test.tsx (4), og/route.test.ts (4)
 - tsc --noEmit: 0 new errors in test or production code (all remaining errors are pre-existing auth dead code from Phase 1)
 - Multi-tab sync explicitly out of scope for Phase 8 (single-tab is 99% use case; localStorage persistence is the safety net)
 - `bgEffects`/`bgPattern` clear-to-null latent bug fixed implicitly by server-side JSON.stringify diff
