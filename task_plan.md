@@ -717,6 +717,57 @@ Phase 11 (active)
 
 ---
 
+### Phase 12.1: OG Image Background Fix + Ripple Animation Fix
+
+**Goal:** Fix OG image subpages (`/api/og?username=xxx`) that only rendered `bgColor` — ignored `bgWallpaper` and `bgImage`. Fix ripple animation that was broken due to missing keyframe.
+
+#### OG Image Background Fix
+
+**Root cause:** `OgProfile` type only had `bgType`/`bgColor`, missing `bgWallpaper`/`bgImage`. `OgImageCard` only rendered `backgroundColor`, ignoring wallpaper and image types.
+
+**Implementation:**
+- `components/og-image-card.tsx`:
+  - Extended `OgProfile` with `bgWallpaper`, `bgImage`, `displayNameStyle`
+  - Added `bgImageBuffer` prop for base64-inlined background image
+  - Imported `getBackgroundStyle` from `lib/utils/preview-background.ts` for color-type fallback
+  - Added localized dark gradient overlay (`linear-gradient(to right, rgba(0,0,0,0.45) → 0.15)`) for text readability on busy image backgrounds
+  - Applied `displayNameStyle?.color` to both name and username (fallback white)
+
+- `app/api/og/route.tsx`:
+  - Added `resolveBackgroundUrl()` — replicates CloudFront wallpaper URL resolution logic from `getBackgroundStyle`
+  - Fetches background image as `ArrayBuffer` server-side for `wallpaper` and `image` types
+  - Converts to base64 data URL and passes as `bgImageBuffer` prop
+  - Falls back to `bgColor` if fetch fails
+
+#### Ripple Animation Fix
+
+**Root cause:** `ripple.tsx` uses `animate-ripple` class but no keyframe was defined.
+
+**Fix:** Added to `app/globals.css` inside `@theme inline`:
+```css
+--animate-ripple: ripple 3s ease-out infinite;
+@keyframes ripple {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: var(--ripple-opacity, 0.3); }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+```
+
+#### Decisions Made
+| Decision | Rationale |
+|----------|-----------|
+| Fetch bg image server-side + inline as base64 | Avoids 403/CORS/broken renders if image host blocks serverless requests; self-contained OG image |
+| Reuse `getBackgroundStyle` as fallback | Single source of truth for background style computation; any future CloudFront URL resolution changes apply automatically |
+| Localized dark gradient (not full overlay) | Preserves background image's visual impact while ensuring text legibility |
+| `displayNameStyle.color` applied to both name and username | User confirmed — match editor styling |
+| Ripple keyframe via `@theme inline` | Matches Tailwind v4 pattern used for `--animate-skeleton` |
+
+#### Verifikasi
+- [x] `tsc --noEmit`: 0 errors ✅
+- [x] `vitest run`: 132/132 pass (14 test files) ✅
+- [x] `pnpm build`: compiled successfully ✅
+
+---
+
 ## Notes
 - No CONTEXT.md exists — consider creating one lazily if domain terms get sharpened
 - No ADRs exist yet — `docs/adr/0001-server-side-diff-autosave.md` to be created after Phase 8 confirmed working in production
