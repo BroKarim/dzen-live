@@ -11,28 +11,39 @@ function renderStatic(cmp: React.ReactElement) {
   return React.createElement("div", null, cmp);
 }
 
+const baseProfile = {
+  displayName: "John Doe",
+  username: "johndoe",
+  bio: null,
+  avatarUrl: null,
+  bgType: "color",
+  bgColor: "#ff0000",
+  bgWallpaper: null,
+  bgImage: null,
+  displayNameStyle: null,
+};
+
 describe("og-image-card", () => {
   it("renders display name and username", () => {
-    const profile = { displayName: "John Doe", username: "johndoe", bio: null, avatarUrl: null, bgType: "color", bgColor: "#ff0000" };
-    const el = renderStatic(<OgImageCard profile={profile} avatarBuffer={null} />);
+    const el = renderStatic(<OgImageCard profile={baseProfile} avatarBuffer={null} bgImageBuffer={null} />);
     expect(el).toBeDefined();
   });
 
   it("renders bio when available", () => {
-    const profile = { displayName: "Jane", username: "jane", bio: "A cool bio here", avatarUrl: null, bgType: "color", bgColor: "#111" };
-    const el = renderStatic(<OgImageCard profile={profile} avatarBuffer={null} />);
+    const profile = { ...baseProfile, displayName: "Jane", username: "jane", bio: "A cool bio here" };
+    const el = renderStatic(<OgImageCard profile={profile} avatarBuffer={null} bgImageBuffer={null} />);
     expect(el).toBeDefined();
   });
 
   it("falls back to username when displayName empty", () => {
-    const profile = { displayName: "", username: "anon", bio: null, avatarUrl: null, bgType: "color", bgColor: "#000" };
-    const el = renderStatic(<OgImageCard profile={profile} avatarBuffer={null} />);
+    const profile = { ...baseProfile, displayName: "", username: "anon" };
+    const el = renderStatic(<OgImageCard profile={profile} avatarBuffer={null} bgImageBuffer={null} />);
     expect(el).toBeDefined();
   });
 
   it("renders avatar initial when no avatar buffer", () => {
-    const profile = { displayName: "Test", username: "test", bio: null, avatarUrl: null, bgType: "color", bgColor: "#000" };
-    const el = renderStatic(<OgImageCard profile={profile} avatarBuffer={null} />);
+    const profile = { ...baseProfile, displayName: "Test", username: "test" };
+    const el = renderStatic(<OgImageCard profile={profile} avatarBuffer={null} bgImageBuffer={null} />);
     expect(el).toBeDefined();
   });
 });

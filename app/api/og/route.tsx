@@ -33,6 +33,19 @@ async function fetchFontBuffer(): Promise<ArrayBuffer | null> {
   }
 }
 
+function resolveBackgroundUrl(profile: { bgType: string; bgWallpaper: string | null; bgImage: string | null }): string | null {
+  if (profile.bgType === "wallpaper" && profile.bgWallpaper) {
+    const url = profile.bgWallpaper;
+    if (url.includes("cloudfront-base")) return url;
+    if (url.startsWith("http")) return url;
+    return `https://d1uuiykksp6inc.cloudfront.net/wallappers/${url}`;
+  }
+  if (profile.bgType === "image" && profile.bgImage) {
+    return profile.bgImage;
+  }
+  return null;
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const username = searchParams.get("username");
@@ -57,10 +70,16 @@ export async function GET(request: Request) {
     avatarUrl: profile.avatarUrl,
     bgType: profile.bgType,
     bgColor: profile.bgColor,
+    bgWallpaper: profile.bgWallpaper,
+    bgImage: profile.bgImage,
+    displayNameStyle: profile.displayNameStyle as { color?: string } | null | undefined,
   };
 
-  const [avatarBuffer, fontBuffer] = await Promise.all([
+  const bgUrl = resolveBackgroundUrl(profile);
+
+  const [avatarBuffer, bgImageBuffer, fontBuffer] = await Promise.all([
     ogProfile.avatarUrl ? fetchImageAsBuffer(ogProfile.avatarUrl) : Promise.resolve(null),
+    bgUrl ? fetchImageAsBuffer(bgUrl) : Promise.resolve(null),
     fetchFontBuffer(),
   ]);
 
@@ -69,7 +88,7 @@ export async function GET(request: Request) {
   }
 
   return new ImageResponse(
-    <OgImageCard profile={ogProfile} avatarBuffer={avatarBuffer} />,
+    <OgImageCard profile={ogProfile} avatarBuffer={avatarBuffer} bgImageBuffer={bgImageBuffer} />,
     {
       width: 1200,
       height: 630,

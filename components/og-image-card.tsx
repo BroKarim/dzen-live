@@ -1,4 +1,5 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { getBackgroundStyle } from "@/lib/utils/preview-background";
 
 export type OgProfile = {
   displayName: string;
@@ -7,21 +8,34 @@ export type OgProfile = {
   avatarUrl: string | null;
   bgType: string | null;
   bgColor: string | null;
+  bgWallpaper: string | null;
+  bgImage: string | null;
+  displayNameStyle?: { color?: string } | null;
 };
 
 interface OgImageCardProps {
   profile: OgProfile;
   avatarBuffer: ArrayBuffer | null;
+  bgImageBuffer: ArrayBuffer | null;
 }
 
-export function OgImageCard({ profile, avatarBuffer }: OgImageCardProps) {
+export function OgImageCard({ profile, avatarBuffer, bgImageBuffer }: OgImageCardProps) {
   const name = profile.displayName || `@${profile.username}`;
   const bio = profile.bio || `Check out ${name}'s profile on Dzenn`;
-  const bgColor = profile.bgColor || "#0a0a0a";
 
   const avatarDataUrl = avatarBuffer
     ? `data:image/png;base64,${Buffer.from(avatarBuffer).toString("base64")}`
     : null;
+
+  const bgDataUrl = bgImageBuffer
+    ? `data:image/png;base64,${Buffer.from(bgImageBuffer).toString("base64")}`
+    : null;
+
+  const bgStyle = bgDataUrl
+    ? { backgroundImage: `url(${bgDataUrl})`, backgroundSize: "cover" as const, backgroundPosition: "center" as const }
+    : getBackgroundStyle({ ...profile, bgType: profile.bgType || "color", bgColor: profile.bgColor || "#0a0a0a" });
+
+  const nameColor = profile.displayNameStyle?.color || "#ffffff";
 
   return (
     <div
@@ -29,13 +43,38 @@ export function OgImageCard({ profile, avatarBuffer }: OgImageCardProps) {
         display: "flex",
         width: 1200,
         height: 630,
-        backgroundColor: bgColor,
+        ...bgStyle,
         color: "#ffffff",
         fontFamily: "Inter",
         position: "relative",
         overflow: "hidden",
       }}
     >
+      {bgDataUrl && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(to right, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 100%)",
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
+      {!bgDataUrl && profile.bgColor && profile.bgColor !== "#0a0a0a" && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+            width: 400,
+            height: 400,
+            background: "radial-gradient(circle at 100% 0%, rgba(255,255,255,0.06), transparent 70%)",
+            pointerEvents: "none",
+          }}
+        />
+      )}
+
       <div
         style={{
           display: "flex",
@@ -95,7 +134,7 @@ export function OgImageCard({ profile, avatarBuffer }: OgImageCardProps) {
               fontSize: 52,
               fontWeight: 700,
               lineHeight: 1.2,
-              color: "#ffffff",
+              color: nameColor,
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
@@ -107,7 +146,8 @@ export function OgImageCard({ profile, avatarBuffer }: OgImageCardProps) {
             style={{
               fontSize: 32,
               fontWeight: 400,
-              color: "rgba(255,255,255,0.5)",
+              color: nameColor,
+              opacity: 0.5,
               marginTop: 8,
             }}
           >
@@ -131,20 +171,6 @@ export function OgImageCard({ profile, avatarBuffer }: OgImageCardProps) {
           </span>
         </div>
       </div>
-
-      {bgColor !== "#0a0a0a" && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            right: 0,
-            width: 400,
-            height: 400,
-            background: "radial-gradient(circle at 100% 0%, rgba(255,255,255,0.06), transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-      )}
     </div>
   );
 }
