@@ -14,7 +14,7 @@ export function DesignTab({ profile, onUpdate }: DesignTabProps) {
   return (
     <div className="px-3 pb-4">
       <div className="space-y-6">
-        <ResetStylesIndicator profile={profile} onUpdate={onUpdate} />
+        {/* <ResetStylesIndicator profile={profile} onUpdate={onUpdate} /> */}
 
         <div className="w-full flex gap-x-2 justify-between items-center">
           <BackgroundPattern profile={profile} onUpdate={onUpdate} />
