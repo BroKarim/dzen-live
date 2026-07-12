@@ -79,14 +79,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
     });
   }, [openStylePopover]);
 
-  if (!_hasHydrated) {
-    return (
-      <div className="h-screen w-screen flex flex-col items-center justify-center gap-4 bg-background">
-        <div className="size-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm font-medium animate-pulse">Synchronizing editor...</p>
-      </div>
-    );
-  }
+
 
   const currentProfile = draftProfile || initialProfile;
 

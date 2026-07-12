@@ -141,7 +141,7 @@ export const useEditorStore = create<EditorState>()(
             useEditorStore.setState({ draftProfile: normalized });
           }
         } finally {
-          state?.setHasHydrated(true);
+          useEditorStore.getState().setHasHydrated(true);
         }
       },
     },
