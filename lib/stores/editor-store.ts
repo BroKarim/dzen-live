@@ -135,12 +135,14 @@ export const useEditorStore = create<EditorState>()(
         return { draftProfile: normalized };
       },
       onRehydrateStorage: () => (state) => {
-        if (state?.draftProfile) {
-          const normalized = normalizeEditorDraft(state.draftProfile);
-          // mutate rehydrated state before consumers read it
-          useEditorStore.setState({ draftProfile: normalized });
+        try {
+          if (state?.draftProfile) {
+            const normalized = normalizeEditorDraft(state.draftProfile);
+            useEditorStore.setState({ draftProfile: normalized });
+          }
+        } finally {
+          state?.setHasHydrated(true);
         }
-        state?.setHasHydrated(true);
       },
     },
   ),

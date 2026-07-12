@@ -3,19 +3,16 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Upload, Image as ImageIcon, Palette, Loader2 } from "lucide-react";
+import { Upload, Palette, Loader2 } from "lucide-react";
 import Image from "next/image";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 import { BACKGROUND_COLORS } from "@/lib/background-colors";
-import { getBackgroundPresets } from "@/server/website/background-presets/actions";
-import type { BackgroundPreset } from "@/server/website/background-presets/schema";
-import { useEffect, useState } from "react";
-import WallpaperCategorySection from "./wallpaper-category-section";
+import { useState } from "react";
 import { getUploadUrl, deleteImage } from "@/server/upload/actions";
 import { compressImage } from "@/lib/media";
 import { toast } from "sonner";
 
-type BgType = "color" | "wallpaper" | "image";
+type BgType = "color" | "image";
 
 interface BackgroundOptionsProps {
   profile: ProfileEditorData;
@@ -23,20 +20,8 @@ interface BackgroundOptionsProps {
 }
 
 export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptionsProps) {
-  const [wallpaperPresets, setWallpaperPresets] = useState<BackgroundPreset[]>([]);
-  const [isLoadingWallpapers, setIsLoadingWallpapers] = useState(true);
-  const [activeTab, setActiveTab] = useState(profile.bgType || "wallpaper");
+  const [activeTab, setActiveTab] = useState(profile.bgType === "color" ? "color" : "image");
   const [isUploading, setIsUploading] = useState(false);
-
-  useEffect(() => {
-    async function loadWallpapers() {
-      setIsLoadingWallpapers(true);
-      const presets = await getBackgroundPresets();
-      setWallpaperPresets(presets);
-      setIsLoadingWallpapers(false);
-    }
-    loadWallpapers();
-  }, []);
 
   const handleBackgroundChange = (updates: Partial<ProfileEditorData>) => {
     onUpdate({ ...profile, ...updates });
@@ -108,18 +93,6 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
     });
   };
 
-  const wallpapersByCategory = (() => {
-    const grouped = new Map<string, BackgroundPreset[]>();
-    wallpaperPresets.forEach((preset) => {
-      const category = preset.category || "Uncategorized";
-      if (!grouped.has(category)) {
-        grouped.set(category, []);
-      }
-      grouped.get(category)!.push(preset);
-    });
-    return Array.from(grouped.entries()).map(([category, wallpapers]) => ({ category, wallpapers }));
-  })();
-
   return (
     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as BgType)}>
       <TabsList className="h-10 rounded-[99px] bg-[#222] gap-1 w-full justify-center items-center shadow-dzenn inline-flex overflow-hidden ">
@@ -127,12 +100,6 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
           <div className="flex items-center justify-center gap-2">
             <Palette className="size-5 text-muted-foreground" />
             <span className="text-[10px] font-medium text-muted-foreground">Color</span>
-          </div>
-        </TabsTrigger>
-        <TabsTrigger value="wallpaper" asChild className="rounded-full w-full  data-[state=active]:shadow-[inset_0_1px_rgb(255_255_255/0.15)] transition-all">
-          <div className="flex items-center justify-center gap-2">
-            <ImageIcon className="size-5 text-muted-foreground" />
-            <span className="text-[10px] font-medium text-muted-foreground">Wallpaper</span>
           </div>
         </TabsTrigger>
         <TabsTrigger value="image" asChild className="rounded-full w-full  data-[state=active]:shadow-[inset_0_1px_rgb(255_255_255/0.15)] transition-all">
@@ -165,28 +132,6 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
           <div className="relative h-8 w-12 overflow-hidden rounded-md border shadow-sm"></div>
           <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Custom Color</span>
         </div>
-      </TabsContent>
-
-      <TabsContent value="wallpaper" className="space-y-4 pt-4">
-        {isLoadingWallpapers ? (
-          <div className="grid grid-cols-3 gap-2">
-            {[...Array(6)].map((_, i) => (
-              <div key={`skeleton-${i}`} className="h-20 w-full animate-pulse rounded-lg bg-muted/50" />
-            ))}
-          </div>
-        ) : wallpaperPresets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-muted-foreground/20 bg-muted/10 py-12 text-center">
-            <ImageIcon className="size-8 text-muted-foreground/50" />
-            <p className="text-sm font-medium text-muted-foreground">No wallpapers available</p>
-            <p className="text-xs text-muted-foreground/70">Wallpapers will appear here once added</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {wallpapersByCategory.map(({ category, wallpapers }) => (
-              <WallpaperCategorySection key={category} category={category} wallpapers={wallpapers} selectedWallpaper={profile.bgWallpaper} onSelect={(url) => handleBackgroundChange({ bgType: "wallpaper", bgWallpaper: url })} />
-            ))}
-          </div>
-        )}
       </TabsContent>
       <TabsContent value="image" className="space-y-4 pt-4">
         <div className="flex flex-col gap-4">
