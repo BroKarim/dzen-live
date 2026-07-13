@@ -4,15 +4,16 @@ import { cn } from "@/lib/utils";
 
 interface StripedPatternProps extends React.SVGProps<SVGSVGElement> {
   direction?: "left" | "right";
+  lineColor?: string;
 }
 
-export function StripedPattern({ direction = "left", className, width = 10, height = 10, ...props }: StripedPatternProps) {
+export function StripedPattern({ direction = "left", className, width = 10, height = 10, lineColor = "gray", ...props }: StripedPatternProps) {
   const id = useId();
   const w = Number(width);
   const h = Number(height);
 
   return (
-    <svg aria-hidden="true" className={cn("pointer-events-none absolute inset-0 h-full w-full stroke-[0.5]", className)} xmlns="http://www.w3.org/2000/svg" {...props}>
+    <svg aria-hidden="true" className={cn("pointer-events-none absolute inset-0 h-full w-full stroke-[0.5]", className)} xmlns="http://www.w3.org/2000/svg" style={{ color: lineColor }} {...props}>
       <defs>
         <pattern id={id} width={w} height={h} patternUnits="userSpaceOnUse">
           {direction === "left" ? (

@@ -768,6 +768,95 @@ Phase 11 (active)
 
 ---
 
+### Phase 13: Animated Background Color Props + Admin Dashboard + OG Image Avatar Fix
+
+**Status:** completed (2026-07-13)
+
+#### A — Animated Background Color Props
+
+**Goal:** Unify color props across all animated backgrounds — each effect gets exactly 1 line color.
+
+| Effect | Current | Target |
+|--------|---------|--------|
+| **Ripple** | No color prop | Add 1 color prop |
+| **Retro Grid** | 2 colors (dark + light) | Change to 1 color |
+| **Stripes** | No color prop | Add 1 color prop |
+| **Interactive Grid** | No color prop | Add 1 color prop |
+| **Hexagon** | No color prop | Add 1 color prop |
+
+**Files:**
+- `lib/animated-backgrounds.ts` — update `configFields` for each effect
+- `components/control-panel/animated-background/ripple.tsx` — add color rendering
+- `components/control-panel/animated-background/retro-grid.tsx` — reduce to 1 color
+- `components/control-panel/animated-background/stripped.tsx` — add color rendering
+- `components/control-panel/animated-background/grid-pattern.tsx` — add color rendering
+- `components/control-panel/animated-background/hexagon.tsx` — add color rendering
+
+**Save behavior:** Already correct — debounce 1.5s, only last save fires to DB (confirmed).
+
+#### B — Admin Dashboard
+
+**Goal:** New admin area for viewing user data and managing inactive accounts.
+
+**Auth:**
+- Role-based access: only users with `Role.ADMIN` can access
+- Guard: server-side session check + `role === "ADMIN"` before rendering page data
+
+**Routes:**
+- `/admin` — overview dashboard with stats
+- `/admin/users` — list all users with detail
+- `/admin/profiles` — list all profiles
+
+**Data shown:**
+- Total users, total profiles, total links, total clicks
+- Per-user: display name, username, onboarded status, published status, profile created date, last login (from Session), link count, click count
+- Inactive users (no recent session / no link clicks)
+
+**Sensitive data excluded:** Session tokens, Account tokens, IP addresses, user email (unless explicitly needed for admin action)
+
+**Delete actions:**
+- Soft delete: flag (e.g., mark profile inactive)
+- Hard delete: cascade delete user + profile + links + clicks + sessions + accounts
+
+**Files to create:**
+- `app/admin/page.tsx` — dashboard overview
+- `app/admin/layout.tsx` — admin layout with auth guard
+- `app/admin/users/page.tsx` — user list
+- `app/admin/users/[id]/page.tsx` — user detail
+- `app/admin/profiles/page.tsx` — profile list
+- `server/admin/queries.ts` — admin DB queries
+- `server/admin/actions.ts` — admin actions (delete user/profile)
+- `components/admin/user-table.tsx` — user table component
+- `components/admin/stats-card.tsx` — stat card component
+
+#### C — OG Image Avatar Fix
+
+**Goal:** Fix profile avatar not rendering in `/api/og?username=xxx` OG images.
+
+**Root cause suspected:** `fetchImageAsBuffer(avatarUrl)` fails silently (returns null, no log) — avatar never reaches `OgImageCard`.
+
+**Approach:**
+- Add `console.error` logging inside `fetchImageAsBuffer` to identify failure reason
+- Verify `avatarUrl` format in DB (OAuth provider URL vs CloudFront URL)
+- If OAuth URL: ensure it's publicly fetchable from server runtime
+- If CloudFront URL: ensure no auth/CORS restrictions
+- Fix based on findings
+
+**Files:**
+- `app/api/og/route.tsx` — add fetch error logging
+- `components/og-image-card.tsx` — verify rendering path
+
+#### Decisions Made
+| Decision | Rationale |
+|----------|-----------|
+| 1 color per effect, not 2 | User confirmed — simpler and consistent across all effects |
+| Ripple gets color prop | Current ripple invisible on light backgrounds; color prop fixes it |
+| Admin role-based (not whitelist) | Prisma `Role` enum already exists, no additional config needed |
+| Soft + hard delete available | User wants flexibility to choose per account |
+| OG image fix starts with logging | Diagnose before fix — fetch failure could be transient network issue |
+
+---
+
 ## Notes
 - No CONTEXT.md exists — consider creating one lazily if domain terms get sharpened
 - No ADRs exist yet — `docs/adr/0001-server-side-diff-autosave.md` to be created after Phase 8 confirmed working in production
