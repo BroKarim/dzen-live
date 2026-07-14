@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useRef, useEffect, useCallback } from "react";
+import { useState, useTransition, useRef, useEffect } from "react";
 import { User, Globe, Trash2, LogOut, Loader2, AlertCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -31,24 +31,21 @@ export function SettingsTab({ profile }: SettingsTabProps) {
 
   const hasChanges = isPublished !== profile.isPublished;
 
-  const checkAvailability = useCallback(
-    async (value: string) => {
-      if (value.length < 1) return;
-      setIsCheckingUsername(true);
-      try {
-        const isAvailable = await checkUsernameAvailability(value);
-        if (!isAvailable) {
-          setUsernameError("Username is already taken");
-        } else {
-          setUsernameError(null);
-        }
-      } catch {
+  async function checkAvailability(value: string) {
+    if (value.length < 1) return;
+    setIsCheckingUsername(true);
+    try {
+      const isAvailable = await checkUsernameAvailability(value);
+      if (!isAvailable) {
+        setUsernameError("Username is already taken");
+      } else {
         setUsernameError(null);
       }
-      setIsCheckingUsername(false);
-    },
-    [],
-  );
+    } catch {
+      setUsernameError(null);
+    }
+    setIsCheckingUsername(false);
+  }
 
   useEffect(() => {
     return () => {

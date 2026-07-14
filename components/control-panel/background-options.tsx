@@ -137,7 +137,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
         <div className="flex flex-col gap-4">
           <div className="relative group flex h-32 w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted transition-colors hover:border-primary/50 overflow-hidden">
             {profile.bgImage ? (
-              <Image src={profile.bgImage} fill className="rounded-lg object-cover" alt="Background preview" unoptimized />
+              <Image src={profile.bgImage} fill className="rounded-lg object-cover" alt="Background preview" unoptimized sizes="(max-width: 768px) 100vw, 300px" />
             ) : (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Upload className="size-6" />
@@ -149,7 +149,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
                 <Loader2 className="size-6 text-white animate-spin" />
               </div>
             )}
-            <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 cursor-pointer opacity-0" disabled={isUploading} />
+            <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 cursor-pointer opacity-0" disabled={isUploading} aria-label="Upload background image" />
           </div>
           {profile.bgImage && (
             <Button variant="outline" size="sm" onClick={() => handleBackgroundChange({ bgImage: null })} className="w-full text-destructive">

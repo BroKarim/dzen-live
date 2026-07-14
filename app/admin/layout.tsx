@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 
 export default async function AdminLayout({
   children,
@@ -17,28 +18,28 @@ export default async function AdminLayout({
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <a href="/admin" className="text-sm font-bold tracking-tight">
+            <Link href="/admin" className="text-sm font-bold tracking-tight">
               Admin
-            </a>
+            </Link>
             <nav className="flex gap-2 text-sm text-muted-foreground">
-              <a href="/admin" className="hover:text-foreground transition-colors">
+              <Link href="/admin" className="hover:text-foreground transition-colors">
                 Overview
-              </a>
+              </Link>
               <span>/</span>
-              <a href="/admin/users" className="hover:text-foreground transition-colors">
+              <Link href="/admin/users" className="hover:text-foreground transition-colors">
                 Users
-              </a>
+              </Link>
               <span>/</span>
-              <a href="/admin/profiles" className="hover:text-foreground transition-colors">
+              <Link href="/admin/profiles" className="hover:text-foreground transition-colors">
                 Profiles
-              </a>
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-muted-foreground">{session.user.email}</span>
-            <a href="/editor" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/editor" className="text-muted-foreground hover:text-foreground transition-colors">
               Editor
-            </a>
+            </Link>
           </div>
         </div>
       </header>

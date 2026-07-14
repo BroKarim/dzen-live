@@ -12,15 +12,14 @@ export interface AdminStats {
 }
 
 export async function getAdminStats(): Promise<AdminStats> {
-  const [userCount, profileCount, linkCount, clickCount, publishedCount] = await Promise.all([
+  const [userCount, profileCount, linkCount, clickCount, publishedCount, onboardedCount] = await Promise.all([
     db.user.count(),
     db.profile.count(),
     db.link.count(),
     db.linkClick.count(),
     db.profile.count({ where: { isPublished: true } }),
+    db.user.count({ where: { isOnboarded: true } }),
   ]);
-
-  const onboardedCount = await db.user.count({ where: { isOnboarded: true } });
 
   return {
     totalUsers: userCount,
@@ -56,29 +55,27 @@ export async function getAllUsers(): Promise<AdminUserRow[]> {
   const rows: AdminUserRow[] = [];
 
   for (const user of users) {
-    const profileIds = await db.profile.findMany({
-      where: { userId: user.id },
-      select: { id: true },
-    });
+    const [profileIds, lastSession] = await Promise.all([
+      db.profile.findMany({
+        where: { userId: user.id },
+        select: { id: true },
+      }),
+      db.session.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
+      }),
+    ]);
 
     const ids = profileIds.map((p) => p.id);
     const profileCount = ids.length;
 
-    const linkCount = profileCount > 0
-      ? await db.link.count({ where: { profileId: { in: ids } } })
-      : 0;
-
-    const clickCount = profileCount > 0
-      ? await db.linkClick.count({
-          where: { link: { profileId: { in: ids } } },
-        })
-      : 0;
-
-    const lastSession = await db.session.findFirst({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      select: { createdAt: true },
-    });
+    const [linkCount, clickCount] = profileCount > 0
+      ? await Promise.all([
+          db.link.count({ where: { profileId: { in: ids } } }),
+          db.linkClick.count({ where: { link: { profileId: { in: ids } } } }),
+        ])
+      : [0, 0];
 
     rows.push({
       id: user.id,
@@ -123,13 +120,10 @@ export async function getAllProfiles(): Promise<AdminProfileRow[]> {
   const rows: AdminProfileRow[] = [];
 
   for (const profile of profiles) {
-    const linkCount = await db.link.count({
-      where: { profileId: profile.id },
-    });
-
-    const clickCount = await db.linkClick.count({
-      where: { link: { profileId: profile.id } },
-    });
+    const [linkCount, clickCount] = await Promise.all([
+      db.link.count({ where: { profileId: profile.id } }),
+      db.linkClick.count({ where: { link: { profileId: profile.id } } }),
+    ]);
 
     rows.push({
       id: profile.id,
@@ -177,30 +171,32 @@ export async function getUserDetail(id: string): Promise<AdminUserDetail | null>
     orderBy: { createdAt: "desc" },
   });
 
-  const profileRows = await Promise.all(
-    profiles.map(async (p) => {
-      const linkCount = await db.link.count({ where: { profileId: p.id } });
-      const clickCount = await db.linkClick.count({
-        where: { link: { profileId: p.id } },
-      });
-      return {
-        id: p.id,
-        username: p.username,
-        displayName: p.displayName,
-        isPublished: p.isPublished,
-        linkCount,
-        clickCount,
-      };
+  const [[profileRows, sessionCount], lastSession] = await Promise.all([
+    Promise.all([
+      Promise.all(
+        profiles.map(async (p) => {
+          const [linkCount, clickCount] = await Promise.all([
+            db.link.count({ where: { profileId: p.id } }),
+            db.linkClick.count({ where: { link: { profileId: p.id } } }),
+          ]);
+          return {
+            id: p.id,
+            username: p.username,
+            displayName: p.displayName,
+            isPublished: p.isPublished,
+            linkCount,
+            clickCount,
+          };
+        }),
+      ),
+      db.session.count({ where: { userId: user.id } }),
+    ]),
+    db.session.findFirst({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
     }),
-  );
-
-  const sessionCount = await db.session.count({ where: { userId: user.id } });
-
-  const lastSession = await db.session.findFirst({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
-    select: { createdAt: true },
-  });
+  ]);
 
   return {
     id: user.id,

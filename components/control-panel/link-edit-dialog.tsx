@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
@@ -28,19 +28,11 @@ interface LinkEditDialogProps {
 }
 
 export function LinkEditDialog({ link, open, onOpenChange, onSave }: LinkEditDialogProps) {
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving] = useState(false);
   const [editData, setEditData] = useState({
     title: link?.title || "",
     url: link?.url || "",
   });
-
-  // Sync form when a different link is opened
-  useEffect(() => {
-    if (open && link) {
-      setEditData({ title: link.title || "", url: link.url || "" });
-      setIsSaving(false);
-    }
-  }, [open, link]);
 
   const handleSave = () => {
     if (!link) return;

@@ -1,4 +1,4 @@
-import React, { type ComponentPropsWithoutRef, type CSSProperties } from "react";
+import { type ComponentPropsWithoutRef, type CSSProperties } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -9,7 +9,7 @@ interface RippleProps extends ComponentPropsWithoutRef<"div"> {
   rippleColor?: string;
 }
 
-export const Ripple = React.memo(function Ripple({ mainCircleSize = 210, mainCircleOpacity = 0.24, numCircles = 8, rippleColor = "gray", className, ...props }: RippleProps) {
+export function Ripple({ mainCircleSize = 210, mainCircleOpacity = 0.24, numCircles = 8, rippleColor = "gray", className, ...props }: RippleProps) {
   return (
     <div className={cn("pointer-events-none absolute inset-0 mask-[linear-gradient(to_bottom,white,transparent)] select-none", className)} {...props}>
       {Array.from({ length: numCircles }, (_, i) => {
@@ -43,6 +43,6 @@ export const Ripple = React.memo(function Ripple({ mainCircleSize = 210, mainCir
       })}
     </div>
   );
-});
+}
 
 Ripple.displayName = "Ripple";
