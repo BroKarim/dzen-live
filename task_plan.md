@@ -714,6 +714,8 @@ Phase 14 (completed 2026-07-14)
 **History:**
 - `v0.1.1` (2026-07-10): baseline sebelum merge texture branch
 - `v0.1.2` (2026-07-10): Phase 12 — link defaults, edit dialog cleanup, schema-resilient autosave
+- `v0.1.3` (2026-07-14): snapshot pre-merge: Phase 12.1 (OG bg fix, ripple), Phase 13 partial
+- `v0.2.0` (2026-07-14): **Phase 13+14** — admin redesign (shadcn collapsible sidebar, charts, data tables), asset management (Prisma Asset model, S3 key format, `/admin/assets`), animated bg color props, OG image avatar fix, wallpaper presets dead code removal
 
 ---
 
