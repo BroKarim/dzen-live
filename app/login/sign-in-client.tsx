@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Github } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -30,9 +30,9 @@ function SignInInner() {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-  const getCallbackUrl = useCallback(() => {
+  function getCallbackUrl() {
     return `${appUrl}/auth/callback`;
-  }, [appUrl]);
+  }
 
   const handleSignInGoogle = async () => {
     setIsGoogleLoading(true);

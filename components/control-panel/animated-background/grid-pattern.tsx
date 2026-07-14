@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 interface InteractiveGridPatternProps extends React.SVGProps<SVGSVGElement> {
   width?: number;
   height?: number;
+  lineColor?: string;
   className?: string;
 }
 
@@ -23,11 +24,11 @@ interface InteractiveGridPatternProps extends React.SVGProps<SVGSVGElement> {
  * @see InteractiveGridPatternProps for the props interface.
  * @returns A React component.
  */
-export function InteractiveGridPattern({ width = 40, height = 40, className, ...props }: InteractiveGridPatternProps) {
+export function InteractiveGridPattern({ width = 40, height = 40, lineColor = "gray", className, ...props }: InteractiveGridPatternProps) {
   const id = useId();
 
   return (
-    <svg aria-hidden="true" className={cn("pointer-events-none absolute inset-0 h-full w-full", className)} {...props}>
+    <svg aria-hidden="true" className={cn("pointer-events-none absolute inset-0 h-full w-full", className)} style={{ color: lineColor }} {...props}>
       <defs>
         <pattern id={id} width={width} height={height} patternUnits="userSpaceOnUse">
           <path d={`M ${width} 0 L 0 0 0 ${height}`} fill="none" stroke="currentColor" strokeWidth="0.5" />

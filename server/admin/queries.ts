@@ -1,0 +1,333 @@
+import { db } from "@/lib/db";
+
+export interface AdminStats {
+  totalUsers: number;
+  totalProfiles: number;
+  totalLinks: number;
+  totalClicks: number;
+  publishedProfiles: number;
+  unpublishedProfiles: number;
+  onboaredUsers: number;
+  unonboardedUsers: number;
+}
+
+export async function getAdminStats(): Promise<AdminStats> {
+  const [userCount, profileCount, linkCount, clickCount, publishedCount, onboardedCount] = await Promise.all([
+    db.user.count(),
+    db.profile.count(),
+    db.link.count(),
+    db.linkClick.count(),
+    db.profile.count({ where: { isPublished: true } }),
+    db.user.count({ where: { isOnboarded: true } }),
+  ]);
+
+  return {
+    totalUsers: userCount,
+    totalProfiles: profileCount,
+    totalLinks: linkCount,
+    totalClicks: clickCount,
+    publishedProfiles: publishedCount,
+    unpublishedProfiles: profileCount - publishedCount,
+    onboaredUsers: onboardedCount,
+    unonboardedUsers: userCount - onboardedCount,
+  };
+}
+
+export interface AdminUserRow {
+  id: string;
+  name: string;
+  email: string;
+  onboarded: boolean;
+  role: string;
+  createdAt: Date;
+  updatedAt: Date;
+  profileCount: number;
+  linkCount: number;
+  clickCount: number;
+  lastSessionAt: Date | null;
+}
+
+export async function getAllUsers(): Promise<AdminUserRow[]> {
+  const users = await db.user.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+
+  const rows: AdminUserRow[] = [];
+
+  for (const user of users) {
+    const [profileIds, lastSession] = await Promise.all([
+      db.profile.findMany({
+        where: { userId: user.id },
+        select: { id: true },
+      }),
+      db.session.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        select: { createdAt: true },
+      }),
+    ]);
+
+    const ids = profileIds.map((p) => p.id);
+    const profileCount = ids.length;
+
+    const [linkCount, clickCount] = profileCount > 0
+      ? await Promise.all([
+          db.link.count({ where: { profileId: { in: ids } } }),
+          db.linkClick.count({ where: { link: { profileId: { in: ids } } } }),
+        ])
+      : [0, 0];
+
+    rows.push({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      onboarded: user.isOnboarded,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      profileCount,
+      linkCount,
+      clickCount,
+      lastSessionAt: lastSession?.createdAt ?? null,
+    });
+  }
+
+  return rows;
+}
+
+export interface AdminProfileRow {
+  id: string;
+  username: string;
+  displayName: string | null;
+  userId: string;
+  userName: string;
+  isPublished: boolean;
+  bgType: string;
+  createdAt: Date;
+  updatedAt: Date;
+  linkCount: number;
+  clickCount: number;
+}
+
+export async function getAllProfiles(): Promise<AdminProfileRow[]> {
+  const profiles = await db.profile.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: { select: { name: true } },
+    },
+  });
+
+  const rows: AdminProfileRow[] = [];
+
+  for (const profile of profiles) {
+    const [linkCount, clickCount] = await Promise.all([
+      db.link.count({ where: { profileId: profile.id } }),
+      db.linkClick.count({ where: { link: { profileId: profile.id } } }),
+    ]);
+
+    rows.push({
+      id: profile.id,
+      username: profile.username,
+      displayName: profile.displayName,
+      userId: profile.userId,
+      userName: profile.user.name,
+      isPublished: profile.isPublished,
+      bgType: profile.bgType,
+      createdAt: profile.createdAt,
+      updatedAt: profile.updatedAt,
+      linkCount,
+      clickCount,
+    });
+  }
+
+  return rows;
+}
+
+export interface AdminUserDetail extends AdminUserRow {
+  profiles: {
+    id: string;
+    username: string;
+    displayName: string | null;
+    isPublished: boolean;
+    linkCount: number;
+    clickCount: number;
+  }[];
+  sessionCount: number;
+  accountProviders: string[];
+}
+
+export interface AdminAssetRow {
+  id: string;
+  key: string;
+  url: string;
+  type: string;
+  isActive: boolean;
+  userId: string;
+  userName: string;
+  profileId: string;
+  profileUsername: string;
+  createdAt: Date;
+}
+
+export interface AssetSummary {
+  total: number;
+  active: number;
+  orphaned: number;
+  byType: { type: string; count: number }[];
+}
+
+export async function getAssetSummary(): Promise<AssetSummary> {
+  const [total, active, byType] = await Promise.all([
+    db.asset.count(),
+    db.asset.count({ where: { isActive: true } }),
+    db.asset.groupBy({ by: ["type"], _count: true }),
+  ]);
+
+  return {
+    total,
+    active,
+    orphaned: total - active,
+    byType: byType.map((b) => ({ type: b.type, count: b._count })),
+  };
+}
+
+export async function getAllAssets(): Promise<AdminAssetRow[]> {
+  const assets = await db.asset.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: { select: { name: true } },
+      profile: { select: { username: true } },
+    },
+  });
+
+  return assets.map((a) => ({
+    id: a.id,
+    key: a.key,
+    url: a.url,
+    type: a.type,
+    isActive: a.isActive,
+    userId: a.userId,
+    userName: a.user.name,
+    profileId: a.profileId,
+    profileUsername: a.profile.username,
+    createdAt: a.createdAt,
+  }));
+}
+
+export interface GrowthDataPoint {
+  date: string;
+  users: number;
+  profiles: number;
+}
+
+export async function getGrowthData(days = 30): Promise<GrowthDataPoint[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  since.setHours(0, 0, 0, 0);
+
+  const [userDates, profileDates] = await Promise.all([
+    db.user.findMany({
+      where: { createdAt: { gte: since } },
+      select: { createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    db.profile.findMany({
+      where: { createdAt: { gte: since } },
+      select: { createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
+
+  const pointMap = new Map<string, { users: number; profiles: number }>();
+
+  for (let i = 0; i < days; i++) {
+    const d = new Date(since);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    pointMap.set(key, { users: 0, profiles: 0 });
+  }
+
+  let userIdx = 0;
+  let profileIdx = 0;
+
+  for (const [key] of pointMap) {
+    const end = new Date(key + "T23:59:59.999Z");
+    while (userIdx < userDates.length && userDates[userIdx].createdAt <= end) {
+      pointMap.get(key)!.users++;
+      userIdx++;
+    }
+    while (profileIdx < profileDates.length && profileDates[profileIdx].createdAt <= end) {
+      pointMap.get(key)!.profiles++;
+      profileIdx++;
+    }
+  }
+
+  let cumUsers = 0;
+  let cumProfiles = 0;
+
+  return Array.from(pointMap.entries()).map(([date, counts]) => {
+    cumUsers += counts.users;
+    cumProfiles += counts.profiles;
+    return { date, users: cumUsers, profiles: cumProfiles };
+  });
+}
+
+export async function getUserDetail(id: string): Promise<AdminUserDetail | null> {
+  const user = await db.user.findUnique({
+    where: { id },
+    include: {
+      accounts: { select: { providerId: true } },
+    },
+  });
+
+  if (!user) return null;
+
+  const profiles = await db.profile.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const [[profileRows, sessionCount], lastSession] = await Promise.all([
+    Promise.all([
+      Promise.all(
+        profiles.map(async (p) => {
+          const [linkCount, clickCount] = await Promise.all([
+            db.link.count({ where: { profileId: p.id } }),
+            db.linkClick.count({ where: { link: { profileId: p.id } } }),
+          ]);
+          return {
+            id: p.id,
+            username: p.username,
+            displayName: p.displayName,
+            isPublished: p.isPublished,
+            linkCount,
+            clickCount,
+          };
+        }),
+      ),
+      db.session.count({ where: { userId: user.id } }),
+    ]),
+    db.session.findFirst({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+    }),
+  ]);
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    onboarded: user.isOnboarded,
+    role: user.role,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+    profileCount: profiles.length,
+    linkCount: profileRows.reduce((s, p) => s + p.linkCount, 0),
+    clickCount: profileRows.reduce((s, p) => s + p.clickCount, 0),
+    lastSessionAt: lastSession?.createdAt ?? null,
+    profiles: profileRows,
+    sessionCount,
+    accountProviders: user.accounts.map((a) => a.providerId),
+  };
+}

@@ -117,6 +117,8 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                     {field.type === "boolean" ? (
                     <button
                       type="button"
+                      aria-label={field.label}
+                      aria-pressed={!!(animatedConfig[field.key] ?? field.default)}
                       onClick={() =>
                         handleAnimatedConfigChange({
                           ...animatedConfig,
@@ -153,6 +155,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                       <div className="relative h-7 w-7 overflow-hidden rounded-md border shadow-sm">
                         <input
                           type="color"
+                          aria-label={field.label}
                           value={String(animatedConfig[field.key] ?? field.default)}
                           onChange={(e) =>
                             handleAnimatedConfigChange({
@@ -168,6 +171,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                   ) : field.type === "number" ? (
                     <input
                       type="number"
+                      aria-label={field.label}
                       min={field.min}
                       max={field.max}
                       step={field.step ?? 10}
@@ -190,6 +194,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                       />
                       <input
                         type="text"
+                        aria-label={field.label}
                         value={String(animatedConfig[field.key] ?? field.default)}
                         onChange={(e) =>
                           handleAnimatedConfigChange({
@@ -197,7 +202,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                             [field.key]: e.target.value,
                           })
                         }
-                        className="h-7 w-20 rounded-md border bg-background px-2 text-xs"
+                        className="h-8 w-full rounded-md border bg-background px-2 text-xs"
                       />
                     </div>
                   )}

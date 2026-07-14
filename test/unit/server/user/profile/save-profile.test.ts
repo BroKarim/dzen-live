@@ -50,6 +50,12 @@ vi.mock("@/lib/db", () => ({
       findUnique: vi.fn(),
       findMany: vi.fn(),
     },
+    asset: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      updateMany: vi.fn(),
+      delete: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));

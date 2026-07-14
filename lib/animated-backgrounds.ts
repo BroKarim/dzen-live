@@ -37,15 +37,13 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       angle: 65,
       cellSize: 60,
       opacity: 0.5,
-      lightLineColor: "gray",
-      darkLineColor: "gray",
+      lineColor: "gray",
     },
     configFields: [
       { key: "angle", label: "Angle", type: "range", min: 1, max: 89, default: 65, unit: "°" },
       { key: "cellSize", label: "Cell Size", type: "range", min: 20, max: 200, step: 5, default: 60, unit: "px" },
       { key: "opacity", label: "Opacity", type: "range", min: 0.05, max: 1, step: 0.05, default: 0.5 },
-      { key: "lightLineColor", label: "Line Color (Light)", type: "color", default: "gray" },
-      { key: "darkLineColor", label: "Line Color (Dark)", type: "color", default: "gray" },
+      { key: "lineColor", label: "Line Color", type: "color", default: "gray" },
     ],
   },
   "dot-pattern": {
@@ -94,11 +92,13 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       direction: "left",
       width: 10,
       height: 10,
+      lineColor: "gray",
     },
     configFields: [
       { key: "direction", label: "Direction", type: "select", options: [{ value: "left", label: "Left" }, { value: "right", label: "Right" }], default: "left" },
       { key: "width", label: "Width", type: "range", min: 4, max: 40, step: 2, default: 10, unit: "px" },
       { key: "height", label: "Height", type: "range", min: 4, max: 40, step: 2, default: 10, unit: "px" },
+      { key: "lineColor", label: "Line Color", type: "color", default: "gray" },
     ],
   },
   "grid-pattern": {
@@ -110,10 +110,12 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
     defaultConfig: {
       width: 40,
       height: 40,
+      lineColor: "gray",
     },
     configFields: [
       { key: "width", label: "Cell Width", type: "range", min: 20, max: 100, step: 5, default: 40, unit: "px" },
       { key: "height", label: "Cell Height", type: "range", min: 20, max: 100, step: 5, default: 40, unit: "px" },
+      { key: "lineColor", label: "Line Color", type: "color", default: "gray" },
     ],
   },
   "hexagon": {
@@ -126,11 +128,13 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       radius: 40,
       gap: 0,
       direction: "horizontal",
+      lineColor: "gray",
     },
     configFields: [
       { key: "radius", label: "Radius", type: "range", min: 20, max: 80, step: 5, default: 40, unit: "px" },
       { key: "gap", label: "Gap", type: "range", min: 0, max: 20, step: 1, default: 0, unit: "px" },
       { key: "direction", label: "Direction", type: "select", options: [{ value: "horizontal", label: "Horizontal" }, { value: "vertical", label: "Vertical" }], default: "horizontal" },
+      { key: "lineColor", label: "Line Color", type: "color", default: "gray" },
     ],
   },
   "ripple": {
@@ -143,11 +147,13 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
       mainCircleSize: 210,
       mainCircleOpacity: 0.24,
       numCircles: 8,
+      rippleColor: "gray",
     },
     configFields: [
       { key: "mainCircleSize", label: "Base Size", type: "range", min: 50, max: 400, step: 10, default: 210, unit: "px" },
       { key: "mainCircleOpacity", label: "Opacity", type: "range", min: 0.05, max: 1, step: 0.05, default: 0.24 },
       { key: "numCircles", label: "Count", type: "range", min: 3, max: 20, step: 1, default: 8 },
+      { key: "rippleColor", label: "Color", type: "color", default: "gray" },
     ],
   },
 };

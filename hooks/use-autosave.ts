@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useEditorStore } from "@/lib/stores/editor-store";
 import { saveProfile } from "@/server/user/profile/save-profile-action";
 import { normalizeEditorDraft } from "@/lib/editor-draft";
@@ -19,7 +19,7 @@ export function useAutosave() {
 
   const { draftProfile, isDirty, _draftVersion, updateDraft, markAsSaved } = useEditorStore();
 
-  const clearTimers = useCallback(() => {
+  function clearTimers() {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -28,9 +28,9 @@ export function useAutosave() {
       clearTimeout(fadeRef.current);
       fadeRef.current = null;
     }
-  }, []);
+  }
 
-  const performSave = useCallback(async () => {
+  async function performSave() {
     if (!draftProfile || !isDirty) return;
 
     versionAtSaveStart.current = _draftVersion;
@@ -38,7 +38,6 @@ export function useAutosave() {
     setLastError(null);
 
     try {
-      // Normalize before send so obsolete localStorage fields never hit the server
       const payload = normalizeEditorDraft(draftProfile) ?? draftProfile;
       const res = await saveProfile(payload);
 
@@ -49,7 +48,6 @@ export function useAutosave() {
         return;
       }
 
-      // Only mark as saved if draft hasn't changed during save
       const currentVersion = useEditorStore.getState()._draftVersion;
       if (currentVersion === versionAtSaveStart.current) {
         updateDraft({ ...payload, links: res.links, socials: res.socials });
@@ -57,30 +55,28 @@ export function useAutosave() {
         setStatus("saved");
         setLastError(null);
 
-        // Fade to idle after 2s
         fadeRef.current = setTimeout(() => {
           setStatus("idle");
         }, SAVED_FADE_MS);
       }
-      // else: newer changes pending, debounce will re-fire
     } catch (error: unknown) {
       console.error("[useAutosave] save failed:", error);
       setStatus("error-retryable");
       setLastError(error instanceof Error ? error.message : "Save failed");
     }
-  }, [draftProfile, isDirty, _draftVersion, updateDraft, markAsSaved]);
+  }
 
-  const retry = useCallback(() => {
+  function retry() {
     clearTimers();
     performSave();
-  }, [clearTimers, performSave]);
+  }
 
-  const flushSave = useCallback(() => {
+  function flushSave() {
     if (isDirty) {
       clearTimers();
       performSave();
     }
-  }, [isDirty, clearTimers, performSave]);
+  }
 
   // Debounce timer — fires when isDirty changes to true
   useEffect(() => {

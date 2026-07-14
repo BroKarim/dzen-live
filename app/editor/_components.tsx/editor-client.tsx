@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useRef, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import EditorHeader from "./editor-header";
 import Preview from "./editor-preview";
@@ -23,6 +23,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
   const { status, lastError, retry, flushSave } = useAutosave();
   const router = useRouter();
   const pathname = usePathname();
+  const [, startRedirectTransition] = useTransition();
 
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -62,12 +63,14 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
       const newUsername = draftProfile?.username;
       if (newUsername && newUsername !== savedUsernameRef.current) {
         savedUsernameRef.current = newUsername;
-        router.replace(`/editor/${newUsername}`);
+        startRedirectTransition(() => {
+          router.replace(`/editor/${newUsername}`);
+        });
       }
     }
   }, [status, router]);
 
-  const handlePreviewStyleClick = useCallback((target: StyleTarget) => {
+  function handlePreviewStyleClick(target: StyleTarget) {
     const id = styleTargetId(target);
     const el = document.querySelector(`[data-style-target="${id}"]`) as HTMLElement | null;
     if (!el) return;
@@ -77,7 +80,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
       x: rect.left + rect.width / 2,
       y: rect.bottom,
     });
-  }, [openStylePopover]);
+  }
 
 
 

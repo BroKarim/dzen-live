@@ -55,6 +55,7 @@ model User {
   sessions      Session[]
   accounts      Account[]
   profiles      Profile[]
+  assets        Asset[]
 
   @@map("user")
 }
@@ -139,6 +140,7 @@ model Profile {
   // --- Relations ---
   socials     SocialLink[]
   links       Link[]
+  assets      Asset[]
   
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -146,6 +148,23 @@ model Profile {
 
   @@map("profile")
   @@index([userId])
+}
+
+model Asset {
+  id        String   @id @default(cuid())
+  key       String
+  url       String
+  type      String        // "avatar" | "bgImage"
+  isActive  Boolean  @default(true)
+  userId    String
+  profileId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([profileId, type, isActive])
+  @@index([userId])
+  @@map("asset")
 }
 
 model BackgroundPreset {

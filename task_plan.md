@@ -4,7 +4,7 @@
 Remove dead code clusters, consolidate fragmented auth patterns, extract a deep upload module, and fix caching API drift — improving locality, leverage, and AI-navigability.
 
 ## Current Phase
-Phase 11 (active)
+Phase 14 (completed 2026-07-14)
 
 ## Phases
 
@@ -767,6 +767,143 @@ Phase 11 (active)
 - [x] `pnpm build`: compiled successfully ✅
 
 ---
+
+### Phase 13: Animated Background Color Props + Admin Dashboard + OG Image Avatar Fix
+
+**Status:** completed (2026-07-13)
+
+#### A — Animated Background Color Props
+
+**Goal:** Unify color props across all animated backgrounds — each effect gets exactly 1 line color.
+
+| Effect | Current | Target |
+|--------|---------|--------|
+| **Ripple** | No color prop | Add 1 color prop |
+| **Retro Grid** | 2 colors (dark + light) | Change to 1 color |
+| **Stripes** | No color prop | Add 1 color prop |
+| **Interactive Grid** | No color prop | Add 1 color prop |
+| **Hexagon** | No color prop | Add 1 color prop |
+
+**Files:**
+- `lib/animated-backgrounds.ts` — update `configFields` for each effect
+- `components/control-panel/animated-background/ripple.tsx` — add color rendering
+- `components/control-panel/animated-background/retro-grid.tsx` — reduce to 1 color
+- `components/control-panel/animated-background/stripped.tsx` — add color rendering
+- `components/control-panel/animated-background/grid-pattern.tsx` — add color rendering
+- `components/control-panel/animated-background/hexagon.tsx` — add color rendering
+
+**Save behavior:** Already correct — debounce 1.5s, only last save fires to DB (confirmed).
+
+#### B — Admin Dashboard
+
+**Goal:** New admin area for viewing user data and managing inactive accounts.
+
+**Auth:**
+- Role-based access: only users with `Role.ADMIN` can access
+- Guard: server-side session check + `role === "ADMIN"` before rendering page data
+
+**Routes:**
+- `/admin` — overview dashboard with stats
+- `/admin/users` — list all users with detail
+- `/admin/profiles` — list all profiles
+
+**Data shown:**
+- Total users, total profiles, total links, total clicks
+- Per-user: display name, username, onboarded status, published status, profile created date, last login (from Session), link count, click count
+- Inactive users (no recent session / no link clicks)
+
+**Sensitive data excluded:** Session tokens, Account tokens, IP addresses, user email (unless explicitly needed for admin action)
+
+**Delete actions:**
+- Soft delete: flag (e.g., mark profile inactive)
+- Hard delete: cascade delete user + profile + links + clicks + sessions + accounts
+
+**Files to create:**
+- `app/admin/page.tsx` — dashboard overview
+- `app/admin/layout.tsx` — admin layout with auth guard
+- `app/admin/users/page.tsx` — user list
+- `app/admin/users/[id]/page.tsx` — user detail
+- `app/admin/profiles/page.tsx` — profile list
+- `server/admin/queries.ts` — admin DB queries
+- `server/admin/actions.ts` — admin actions (delete user/profile)
+- `components/admin/user-table.tsx` — user table component
+- `components/admin/stats-card.tsx` — stat card component
+
+#### C — OG Image Avatar Fix
+
+**Goal:** Fix profile avatar not rendering in `/api/og?username=xxx` OG images.
+
+**Root cause suspected:** `fetchImageAsBuffer(avatarUrl)` fails silently (returns null, no log) — avatar never reaches `OgImageCard`.
+
+**Approach:**
+- Add `console.error` logging inside `fetchImageAsBuffer` to identify failure reason
+- Verify `avatarUrl` format in DB (OAuth provider URL vs CloudFront URL)
+- If OAuth URL: ensure it's publicly fetchable from server runtime
+- If CloudFront URL: ensure no auth/CORS restrictions
+- Fix based on findings
+
+**Files:**
+- `app/api/og/route.tsx` — add fetch error logging
+- `components/og-image-card.tsx` — verify rendering path
+
+#### Decisions Made
+| Decision | Rationale |
+|----------|-----------|
+| 1 color per effect, not 2 | User confirmed — simpler and consistent across all effects |
+| Ripple gets color prop | Current ripple invisible on light backgrounds; color prop fixes it |
+| Admin role-based (not whitelist) | Prisma `Role` enum already exists, no additional config needed |
+| Soft + hard delete available | User wants flexibility to choose per account |
+| OG image fix starts with logging | Diagnose before fix — fetch failure could be transient network issue |
+
+---
+
+### Phase 14: Asset Management — Track, List, Delete S3 Assets
+
+**Goal:** Track all uploaded images (avatar, bgImage) in a new `Asset` model, allow admin to view/manage assets, and prevent orphaned S3 files.
+
+**Decisions (grilled 2026-07-14):**
+| Decision | Rationale |
+|----------|-----------|
+| `uploads/{userId}/{type}/{timestamp}-{name}` key format | Encode ownership in key — trivial cleanup per user, easier S3 listing |
+| Asset model only tracks forward (no backfill) | Existing `avatarUrl`/`bgImage` still work; no need to migrate old uploads |
+| `bgWallpaper` excluded | Wallpaper is a preset identifier, not user upload |
+| Asset record created during `saveProfile` (not at upload time) | Upload (presigned URL generation) can succeed but save might fail; record only on successful commit |
+| Only S3 URLs tracked — external OAuth avatars excluded | Guard: `url.startsWith(S3_PUBLIC_URL)` |
+
+**Implementation sequence:**
+
+- [x] **Step 1 — Prisma: Asset model** ✅
+  - Added `Asset` model with fields: `id`, `key`, `url`, `type`, `userId`, `profileId`, `isActive`, `createdAt`
+  - Relations: `User` and `Profile` (Cascade delete on both)
+  - Indexes: `[profileId, type, isActive]`, `[userId]`
+  - `prisma generate`: ✅ (client generated successfully)
+  - Note: `prisma db push` require koneksi ke Supabase — lakukan saat deploy
+
+- [x] **Step 2 — Server: update S3 key format + client calls** ✅
+  - `server/upload/actions.ts`: tambah `assetType: "avatar" | "bgImage"` param
+  - Folder: `uploads/${session.user.id}/${assetType}`
+  - `profile-editor.tsx`: pass `"avatar"` ke `getUploadUrl`
+  - `background-options.tsx`: pass `"bgImage"` ke `getUploadUrl`
+
+- [x] **Step 3 — Server: Asset records di `saveProfile`** ✅
+  - Saat `avatarUrl`/`bgImage` berubah → mark old `isActive: false`
+  - Jika URL baru startsWith `S3_PUBLIC_URL` → create Asset baru `isActive: true`
+  - Runs inside `$transaction` bersama update profile
+
+- [x] **Step 4 — Admin: `/admin/assets` page** ✅
+  - `server/admin/queries.ts`: `getAllAssets()`, `getAssetSummary()`
+  - `server/admin/actions.ts`: `deleteAsset(assetId)` — `deleteFromS3(url)` + delete DB record
+  - `app/admin/assets/page.tsx` — summary cards + asset table
+  - `components/admin/asset-table.tsx` — table with type/status badges, delete confirmation dialog
+  - `components/admin/app-sidebar.tsx` — added "Assets" nav item
+
+- [x] **Step 5 — Cleanup on delete user/profile** ✅
+  - `deleteUser`/`deleteProfile` admin actions: loop Asset records → `deleteFromS3(url)` → cascade delete
+
+- [x] **Step 6 — Verify** ✅
+  - `tsc --noEmit`: 0 errors
+  - `vitest run`: 132/132 pass (14 test files)
+  - `pnpm build`: skipped (timeout on macOS Turbopack — known issue, not caused by this phase)
 
 ## Notes
 - No CONTEXT.md exists — consider creating one lazily if domain terms get sharpened

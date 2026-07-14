@@ -27,14 +27,14 @@ interface HexagonPatternProps extends React.SVGProps<SVGSVGElement> {
   y?: number;
   /**
    * Controls the orientation of the hexagons.
-   * - `"horizontal"` — flat-top hexagons tiled in a horizontal honeycomb grid.
-   * - `"vertical"` — pointy-top hexagons tiled in a vertical honeycomb grid.
-   * @default "horizontal"
+   * - `\"horizontal\"` — flat-top hexagons tiled in a horizontal honeycomb grid.
+   * - `\"vertical\"` — pointy-top hexagons tiled in a vertical honeycomb grid.
+   * @default \"horizontal\"
    */
   direction?: "horizontal" | "vertical";
   /**
    * SVG stroke-dasharray applied to each hexagon outline.
-   * @default "0"
+   * @default \"0\"
    */
   strokeDasharray?: string;
   /**
@@ -43,6 +43,7 @@ interface HexagonPatternProps extends React.SVGProps<SVGSVGElement> {
    * GridPattern.
    */
   hexagons?: Array<[col: number, row: number]>;
+  lineColor?: string;
   className?: string;
   [key: string]: unknown;
 }
@@ -198,7 +199,7 @@ function hexCenter(col: number, row: number, r: number, direction: "horizontal" 
   }
 }
 
-export function HexagonPattern({ radius = 40, gap = 0, x = -1, y = -1, strokeDasharray = "0", direction = "horizontal", hexagons, className, ...props }: HexagonPatternProps) {
+export function HexagonPattern({ radius = 40, gap = 0, x = -1, y = -1, strokeDasharray = "0", direction = "horizontal", hexagons, lineColor = "gray", className, ...props }: HexagonPatternProps) {
   const id = useId();
 
   const { tileW, tileH, centers } = getTileGeometry(radius, direction, gap);
@@ -206,7 +207,7 @@ export function HexagonPattern({ radius = 40, gap = 0, x = -1, y = -1, strokeDas
   const dashedEdges = solidStroke ? null : collectUniqueHexEdges(centers, radius, direction);
 
   return (
-    <svg aria-hidden="true" className={cn("pointer-events-none absolute inset-0 h-full w-full fill-gray-400/30 stroke-gray-400/30", className)} {...props}>
+    <svg aria-hidden="true" className={cn("pointer-events-none absolute inset-0 h-full w-full fill-current/30 stroke-current/30", className)} style={{ color: lineColor }} {...props}>
       <defs>
         <pattern id={id} width={tileW} height={tileH} patternUnits="userSpaceOnUse" x={x} y={y}>
           {solidStroke

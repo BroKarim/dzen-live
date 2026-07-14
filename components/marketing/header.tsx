@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { MenuIcon } from "./icons";
@@ -28,9 +28,9 @@ export function Header() {
     }
   });
 
-  const scrollToFeatures = useCallback(() => {
+  function scrollToFeatures() {
     document.getElementById("features")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+  }
 
   return (
     <header className="fixed top-0 left-0 z-50 w-full pt-4 px-4 sm:px-6 flex justify-center pointer-events-none">

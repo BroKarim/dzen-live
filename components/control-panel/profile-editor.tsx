@@ -45,7 +45,7 @@ export function ProfileEditor({ profile, onUpdate }: ProfileEditorProps) {
         console.warn("Compression failed, using original file", compError);
       }
 
-      const uploadResult = await getUploadUrl(file.name, file.type);
+      const uploadResult = await getUploadUrl(file.name, file.type, "avatar");
       const url = uploadResult.url;
       const publicUrl = uploadResult.publicUrl;
 

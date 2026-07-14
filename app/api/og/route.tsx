@@ -7,9 +7,13 @@ import type { OgProfile } from "@/components/og-image-card";
 async function fetchImageAsBuffer(url: string): Promise<ArrayBuffer | null> {
   try {
     const res = await fetch(url);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`[og/route] fetchImageAsBuffer failed (${res.status}): ${url.slice(0, 100)}`);
+      return null;
+    }
     return await res.arrayBuffer();
-  } catch {
+  } catch (err) {
+    console.error(`[og/route] fetchImageAsBuffer threw: ${url.slice(0, 100)}`, err);
     return null;
   }
 }
@@ -67,7 +71,7 @@ export async function GET(request: Request) {
     displayName: profile.displayName || profile.username,
     username: profile.username,
     bio: profile.bio,
-    avatarUrl: profile.avatarUrl,
+    avatarUrl: profile.avatarUrl || profile.user?.image || null,
     bgType: profile.bgType,
     bgColor: profile.bgColor,
     bgWallpaper: profile.bgWallpaper,

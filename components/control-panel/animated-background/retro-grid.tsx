@@ -269,15 +269,10 @@ interface RetroGridProps extends HTMLAttributes<HTMLDivElement> {
    */
   opacity?: number;
   /**
-   * Grid line color in light mode
+   * Grid line color
    * @default "gray"
    */
-  lightLineColor?: string;
-  /**
-   * Grid line color in dark mode
-   * @default "gray"
-   */
-  darkLineColor?: string;
+  lineColor?: string;
 }
 
 interface ProgramInfo {
@@ -444,23 +439,21 @@ function bindShaderProgram(gl: WebGLRenderingContext, program: WebGLProgram) {
   gl.useProgram(program);
 }
 
-export function RetroGrid({ className, angle = 65, cellSize = 60, opacity = 0.5, lightLineColor = "gray", darkLineColor = "gray", style, ...props }: RetroGridProps) {
+export function RetroGrid({ className, angle = 65, cellSize = 60, opacity = 0.5, lineColor = "gray", style, ...props }: RetroGridProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isWebGlReady, setIsWebGlReady] = useState(false);
   const angleRef = useRef(angle);
   const cellSizeRef = useRef(cellSize);
-  const darkLineColorRef = useRef(darkLineColor);
-  const lightLineColorRef = useRef(lightLineColor);
+  const lineColorRef = useRef(lineColor);
   const syncSceneRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     angleRef.current = angle;
     cellSizeRef.current = cellSize;
-    darkLineColorRef.current = darkLineColor;
-    lightLineColorRef.current = lightLineColor;
+    lineColorRef.current = lineColor;
     syncSceneRef.current?.();
-  }, [angle, cellSize, darkLineColor, lightLineColor]);
+  }, [angle, cellSize, lineColor]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -480,7 +473,7 @@ export function RetroGrid({ className, angle = 65, cellSize = 60, opacity = 0.5,
     let gl: WebGLRenderingContext | null = null;
     let isVisible = true;
     let isContextLost = false;
-    let lineColor = resolveLineColor(lightLineColorRef.current, container);
+    let lineColor = resolveLineColor(lineColorRef.current, container);
     let positionBuffer: WebGLBuffer | null = null;
     let programInfo: ProgramInfo | null = null;
 
@@ -559,8 +552,7 @@ export function RetroGrid({ className, angle = 65, cellSize = 60, opacity = 0.5,
     };
 
     const updateLineColor = () => {
-      const activeColor = isDarkMode(colorScheme) ? darkLineColorRef.current : lightLineColorRef.current;
-      lineColor = resolveLineColor(activeColor, container);
+      lineColor = resolveLineColor(lineColorRef.current, container);
     };
 
     const resizeCanvas = () => {
@@ -742,8 +734,7 @@ export function RetroGrid({ className, angle = 65, cellSize = 60, opacity = 0.5,
   const fallbackRotationStyles = {
     transform: `rotateX(${normalizedAngle}deg)`,
   } as CSSProperties;
-  const lightFallbackGridStyles = createFallbackGridStyle(normalizedCellSize, lightLineColor);
-  const darkFallbackGridStyles = createFallbackGridStyle(normalizedCellSize, darkLineColor);
+  const fallbackGridStyles = createFallbackGridStyle(normalizedCellSize, lineColor);
 
   return (
     <div ref={containerRef} className={cn("pointer-events-none absolute size-full overflow-hidden", className)} style={gridStyles} {...props}>
@@ -751,8 +742,7 @@ export function RetroGrid({ className, angle = 65, cellSize = 60, opacity = 0.5,
       {!isWebGlReady ? (
         <div className="absolute inset-0" style={fallbackProjectionStyles}>
           <div className="absolute inset-0" style={fallbackRotationStyles}>
-            <div data-retro-grid-scroll="true" className="absolute inset-[0%_0px] ml-[-200%] h-[300vh] w-[600vw] origin-[100%_0_0] dark:hidden" style={lightFallbackGridStyles} />
-            <div data-retro-grid-scroll="true" className="absolute inset-[0%_0px] ml-[-200%] hidden h-[300vh] w-[600vw] origin-[100%_0_0] dark:block" style={darkFallbackGridStyles} />
+            <div data-retro-grid-scroll="true" className="absolute inset-[0%_0px] ml-[-200%] h-[300vh] w-[600vw] origin-[100%_0_0]" style={fallbackGridStyles} />
           </div>
         </div>
       ) : null}
