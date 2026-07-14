@@ -112,12 +112,49 @@ export const saveProfile = withAuth("profile/save", async (user, data: unknown) 
       }
     }
 
-    // Track avatar + bgImage S3 cleanup
+    // Track avatar + bgImage S3 cleanup (old file deletion)
     if (profile.avatarUrl && draft.avatarUrl !== undefined && profile.avatarUrl !== draft.avatarUrl) {
       s3KeysToClean.push(profile.avatarUrl);
     }
     if (profile.bgImage && draft.bgImage !== undefined && profile.bgImage !== draft.bgImage) {
       s3KeysToClean.push(profile.bgImage);
+    }
+
+    // ── Asset tracking (new uploads only) ─────────────────────────────────────
+    const S3_PUBLIC_URL = process.env.S3_PUBLIC_URL!;
+
+    if (draft.avatarUrl !== undefined && draft.avatarUrl !== profile.avatarUrl) {
+      operations.push(
+        db.asset.updateMany({
+          where: { profileId: profile.id, type: "avatar", isActive: true },
+          data: { isActive: false },
+        }),
+      );
+      if (draft.avatarUrl?.startsWith(S3_PUBLIC_URL)) {
+        const key = draft.avatarUrl.replace(`${S3_PUBLIC_URL}/`, "");
+        operations.push(
+          db.asset.create({
+            data: { key, url: draft.avatarUrl, type: "avatar", userId: user.id, profileId: profile.id, isActive: true },
+          }),
+        );
+      }
+    }
+
+    if (draft.bgImage !== undefined && draft.bgImage !== profile.bgImage) {
+      operations.push(
+        db.asset.updateMany({
+          where: { profileId: profile.id, type: "bgImage", isActive: true },
+          data: { isActive: false },
+        }),
+      );
+      if (draft.bgImage?.startsWith(S3_PUBLIC_URL)) {
+        const key = draft.bgImage.replace(`${S3_PUBLIC_URL}/`, "");
+        operations.push(
+          db.asset.create({
+            data: { key, url: draft.bgImage, type: "bgImage", userId: user.id, profileId: profile.id, isActive: true },
+          }),
+        );
+      }
     }
 
     if (Object.keys(updateData).length > 0) {

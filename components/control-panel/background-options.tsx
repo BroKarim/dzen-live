@@ -54,7 +54,7 @@ export default function BackgroundOptions({ profile, onUpdate }: BackgroundOptio
         console.warn("Compression failed, using original file", compError);
       }
 
-      const uploadResult = await getUploadUrl(file!.name, file!.type);
+      const uploadResult = await getUploadUrl(file!.name, file!.type, "bgImage");
       const url = uploadResult.url;
       const publicUrl = uploadResult.publicUrl;
 

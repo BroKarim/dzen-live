@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { deleteFromS3 } from "@/lib/s3";
 
 async function requireAdmin() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -26,6 +27,12 @@ export async function deleteUser(
 
     if (!user) {
       return { success: false, error: "User not found" };
+    }
+
+    // Clean up S3 assets before deletion
+    const userAssets = await db.asset.findMany({ where: { userId } });
+    for (const asset of userAssets) {
+      await deleteFromS3(asset.url).catch((err) => console.error("[admin] S3 cleanup failed:", err));
     }
 
     if (mode === "hard") {
@@ -57,6 +64,12 @@ export async function deleteProfile(
       return { success: false, error: "Profile not found" };
     }
 
+    // Clean up S3 assets for this profile
+    const profileAssets = await db.asset.findMany({ where: { profileId } });
+    for (const asset of profileAssets) {
+      await deleteFromS3(asset.url).catch((err) => console.error("[admin] S3 cleanup failed:", err));
+    }
+
     if (mode === "hard") {
       await db.profile.delete({ where: { id: profileId } });
     } else {
@@ -71,5 +84,27 @@ export async function deleteProfile(
   } catch (error: any) {
     console.error("[admin/actions] deleteProfile:", error);
     return { success: false, error: error.message || "Failed to delete profile" };
+  }
+}
+
+export async function deleteAsset(
+  assetId: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    await requireAdmin();
+
+    const asset = await db.asset.findUnique({ where: { id: assetId } });
+    if (!asset) {
+      return { success: false, error: "Asset not found" };
+    }
+
+    await deleteFromS3(asset.url);
+    await db.asset.delete({ where: { id: assetId } });
+
+    revalidatePath("/admin/assets");
+    return { success: true };
+  } catch (error: any) {
+    console.error("[admin/actions] deleteAsset:", error);
+    return { success: false, error: error.message || "Failed to delete asset" };
   }
 }

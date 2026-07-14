@@ -4,7 +4,7 @@
 Remove dead code clusters, consolidate fragmented auth patterns, extract a deep upload module, and fix caching API drift — improving locality, leverage, and AI-navigability.
 
 ## Current Phase
-Phase 11 (active)
+Phase 14 (completed 2026-07-14)
 
 ## Phases
 
@@ -856,6 +856,54 @@ Phase 11 (active)
 | OG image fix starts with logging | Diagnose before fix — fetch failure could be transient network issue |
 
 ---
+
+### Phase 14: Asset Management — Track, List, Delete S3 Assets
+
+**Goal:** Track all uploaded images (avatar, bgImage) in a new `Asset` model, allow admin to view/manage assets, and prevent orphaned S3 files.
+
+**Decisions (grilled 2026-07-14):**
+| Decision | Rationale |
+|----------|-----------|
+| `uploads/{userId}/{type}/{timestamp}-{name}` key format | Encode ownership in key — trivial cleanup per user, easier S3 listing |
+| Asset model only tracks forward (no backfill) | Existing `avatarUrl`/`bgImage` still work; no need to migrate old uploads |
+| `bgWallpaper` excluded | Wallpaper is a preset identifier, not user upload |
+| Asset record created during `saveProfile` (not at upload time) | Upload (presigned URL generation) can succeed but save might fail; record only on successful commit |
+| Only S3 URLs tracked — external OAuth avatars excluded | Guard: `url.startsWith(S3_PUBLIC_URL)` |
+
+**Implementation sequence:**
+
+- [x] **Step 1 — Prisma: Asset model** ✅
+  - Added `Asset` model with fields: `id`, `key`, `url`, `type`, `userId`, `profileId`, `isActive`, `createdAt`
+  - Relations: `User` and `Profile` (Cascade delete on both)
+  - Indexes: `[profileId, type, isActive]`, `[userId]`
+  - `prisma generate`: ✅ (client generated successfully)
+  - Note: `prisma db push` require koneksi ke Supabase — lakukan saat deploy
+
+- [x] **Step 2 — Server: update S3 key format + client calls** ✅
+  - `server/upload/actions.ts`: tambah `assetType: "avatar" | "bgImage"` param
+  - Folder: `uploads/${session.user.id}/${assetType}`
+  - `profile-editor.tsx`: pass `"avatar"` ke `getUploadUrl`
+  - `background-options.tsx`: pass `"bgImage"` ke `getUploadUrl`
+
+- [x] **Step 3 — Server: Asset records di `saveProfile`** ✅
+  - Saat `avatarUrl`/`bgImage` berubah → mark old `isActive: false`
+  - Jika URL baru startsWith `S3_PUBLIC_URL` → create Asset baru `isActive: true`
+  - Runs inside `$transaction` bersama update profile
+
+- [x] **Step 4 — Admin: `/admin/assets` page** ✅
+  - `server/admin/queries.ts`: `getAllAssets()`, `getAssetSummary()`
+  - `server/admin/actions.ts`: `deleteAsset(assetId)` — `deleteFromS3(url)` + delete DB record
+  - `app/admin/assets/page.tsx` — summary cards + asset table
+  - `components/admin/asset-table.tsx` — table with type/status badges, delete confirmation dialog
+  - `components/admin/app-sidebar.tsx` — added "Assets" nav item
+
+- [x] **Step 5 — Cleanup on delete user/profile** ✅
+  - `deleteUser`/`deleteProfile` admin actions: loop Asset records → `deleteFromS3(url)` → cascade delete
+
+- [x] **Step 6 — Verify** ✅
+  - `tsc --noEmit`: 0 errors
+  - `vitest run`: 132/132 pass (14 test files)
+  - `pnpm build`: skipped (timeout on macOS Turbopack — known issue, not caused by this phase)
 
 ## Notes
 - No CONTEXT.md exists — consider creating one lazily if domain terms get sharpened

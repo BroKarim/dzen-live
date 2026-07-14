@@ -24,7 +24,11 @@ export async function uploadImage(base64: string, fileName: string) {
 }
 
 
-export async function getUploadUrl(fileName: string, contentType: string) {
+export async function getUploadUrl(
+  fileName: string,
+  contentType: string,
+  assetType: "avatar" | "bgImage" = "avatar",
+) {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -38,9 +42,10 @@ export async function getUploadUrl(fileName: string, contentType: string) {
       return { success: false, error: "Only images are allowed" };
     }
 
-    const { url, publicUrl } = await getPresignedUploadUrl(fileName, contentType, "uploads");
+    const folder = `uploads/${session.user.id}/${assetType}`;
+    const { url, key, publicUrl } = await getPresignedUploadUrl(fileName, contentType, folder);
 
-    return { success: true, url, publicUrl };
+    return { success: true, url, key, publicUrl };
   } catch (error) {
     console.error("Failed to get upload URL:", error);
     return { success: false, error: "Failed to get upload URL" };

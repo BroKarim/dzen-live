@@ -10,7 +10,12 @@ export default async function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Users</h1>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Users</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage platform users
+        </p>
+      </div>
       <UserTable users={users} />
     </div>
   );

@@ -156,6 +156,122 @@ export interface AdminUserDetail extends AdminUserRow {
   accountProviders: string[];
 }
 
+export interface AdminAssetRow {
+  id: string;
+  key: string;
+  url: string;
+  type: string;
+  isActive: boolean;
+  userId: string;
+  userName: string;
+  profileId: string;
+  profileUsername: string;
+  createdAt: Date;
+}
+
+export interface AssetSummary {
+  total: number;
+  active: number;
+  orphaned: number;
+  byType: { type: string; count: number }[];
+}
+
+export async function getAssetSummary(): Promise<AssetSummary> {
+  const [total, active, byType] = await Promise.all([
+    db.asset.count(),
+    db.asset.count({ where: { isActive: true } }),
+    db.asset.groupBy({ by: ["type"], _count: true }),
+  ]);
+
+  return {
+    total,
+    active,
+    orphaned: total - active,
+    byType: byType.map((b) => ({ type: b.type, count: b._count })),
+  };
+}
+
+export async function getAllAssets(): Promise<AdminAssetRow[]> {
+  const assets = await db.asset.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: { select: { name: true } },
+      profile: { select: { username: true } },
+    },
+  });
+
+  return assets.map((a) => ({
+    id: a.id,
+    key: a.key,
+    url: a.url,
+    type: a.type,
+    isActive: a.isActive,
+    userId: a.userId,
+    userName: a.user.name,
+    profileId: a.profileId,
+    profileUsername: a.profile.username,
+    createdAt: a.createdAt,
+  }));
+}
+
+export interface GrowthDataPoint {
+  date: string;
+  users: number;
+  profiles: number;
+}
+
+export async function getGrowthData(days = 30): Promise<GrowthDataPoint[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  since.setHours(0, 0, 0, 0);
+
+  const [userDates, profileDates] = await Promise.all([
+    db.user.findMany({
+      where: { createdAt: { gte: since } },
+      select: { createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    db.profile.findMany({
+      where: { createdAt: { gte: since } },
+      select: { createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
+
+  const pointMap = new Map<string, { users: number; profiles: number }>();
+
+  for (let i = 0; i < days; i++) {
+    const d = new Date(since);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    pointMap.set(key, { users: 0, profiles: 0 });
+  }
+
+  let userIdx = 0;
+  let profileIdx = 0;
+
+  for (const [key] of pointMap) {
+    const end = new Date(key + "T23:59:59.999Z");
+    while (userIdx < userDates.length && userDates[userIdx].createdAt <= end) {
+      pointMap.get(key)!.users++;
+      userIdx++;
+    }
+    while (profileIdx < profileDates.length && profileDates[profileIdx].createdAt <= end) {
+      pointMap.get(key)!.profiles++;
+      profileIdx++;
+    }
+  }
+
+  let cumUsers = 0;
+  let cumProfiles = 0;
+
+  return Array.from(pointMap.entries()).map(([date, counts]) => {
+    cumUsers += counts.users;
+    cumProfiles += counts.profiles;
+    return { date, users: cumUsers, profiles: cumProfiles };
+  });
+}
+
 export async function getUserDetail(id: string): Promise<AdminUserDetail | null> {
   const user = await db.user.findUnique({
     where: { id },
