@@ -8,6 +8,7 @@ import ControlPanel from "./control-panel";
 import { EditorDock } from "./editor-dock";
 import { useEditorStore } from "@/lib/stores/editor-store";
 import { useAutosave } from "@/hooks/use-autosave";
+import { togglePublishStatus } from "@/server/user/settings/actions";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 import { TextStylePopover } from "@/components/editor/text-style-popover";
 import { styleTargetId, type StyleTarget } from "@/lib/text-style";
@@ -20,7 +21,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
 
   const { draftProfile, isDirty, initializeEditor, updateDraft, _hasHydrated, openStylePopover } = useEditorStore();
-  const { status, lastError, retry, flushSave } = useAutosave();
+  const { status, flushSave } = useAutosave();
   const router = useRouter();
   const pathname = usePathname();
   const [, startRedirectTransition] = useTransition();
@@ -82,7 +83,25 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
     });
   }
 
+  async function handleTogglePublish(publish: boolean) {
+    const result = await togglePublishStatus(publish);
+    if (result.success) {
+      const { draftProfile } = useEditorStore.getState();
+      if (draftProfile) {
+        updateDraft({ ...draftProfile, isPublished: publish });
+      }
+      router.refresh();
+      return { success: true };
+    }
+    return { success: false, error: result.error || "Failed to update publish status" };
+  }
 
+  function handleViewSite() {
+    const username = currentProfile?.username || initialProfile.username;
+    if (username) {
+      window.open(`https://dzenn.live/${username}`, "_blank", "noopener,noreferrer");
+    }
+  }
 
   const currentProfile = draftProfile || initialProfile;
 
@@ -90,7 +109,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
     <main className="min-h-screen flex h-screen flex-col bg-background">
       {/* Mobile: show header + "go to desktop" message, hide everything else */}
       <div className="flex md:hidden flex-col h-screen">
-        <EditorHeader profile={currentProfile} saveStatus={status} lastError={lastError} onRetry={retry} />
+        <EditorHeader profile={currentProfile} onTogglePublish={handleTogglePublish} onViewSite={handleViewSite} />
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
           <p className="font-bold text-base leading-snug">Go to desktop.</p>
           <p className="text-sm text-muted-foreground leading-relaxed">I didn&apos;t have time for mobile responsiveness, I have a life.</p>
@@ -99,7 +118,7 @@ export default function EditorClient({ initialProfile }: EditorClientProps) {
 
       {/* Desktop: full editor layout */}
       <div className="hidden md:flex flex-col flex-1 h-screen">
-        <EditorHeader profile={currentProfile} saveStatus={status} lastError={lastError} onRetry={retry} />
+        <EditorHeader profile={currentProfile} onTogglePublish={handleTogglePublish} onViewSite={handleViewSite} />
 
         <div className="flex flex-1 gap-6 overflow-hidden p-6" style={{ zoom: 0.9 }}>
           <Preview profile={currentProfile} viewMode={viewMode} onStyleTargetClick={handlePreviewStyleClick} />

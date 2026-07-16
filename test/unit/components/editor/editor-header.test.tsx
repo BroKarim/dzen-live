@@ -10,6 +10,22 @@ vi.mock("next/link", () => ({
   default: ({ children }: { children: React.ReactNode }) => React.createElement("a", null, children),
 }));
 
+vi.mock("@/components/ui/popover", () => ({
+  Popover: ({ children }: { children: React.ReactNode }) => React.createElement("div", null, children),
+  PopoverTrigger: ({ children }: { children: React.ReactNode }) => React.createElement("div", null, children),
+  PopoverContent: ({ children }: { children: React.ReactNode }) => React.createElement("div", null, children),
+}));
+
+vi.mock("@/components/ui/avatar", () => ({
+  Avatar: ({ children }: { children: React.ReactNode }) => React.createElement("div", null, children),
+  AvatarImage: () => null,
+  AvatarFallback: ({ children }: { children: React.ReactNode }) => React.createElement("div", null, children),
+}));
+
+vi.mock("@/lib/toast", () => ({
+  toastSuccess: vi.fn(),
+}));
+
 const { useEditorStore } = vi.hoisted(() => ({
   useEditorStore: vi.fn(),
 }));
@@ -52,7 +68,7 @@ function makeStore(overrides: Record<string, unknown>) {
 describe("editor-header", () => {
   it("renders username from prop when store draft is null", () => {
     useEditorStore.mockReturnValue(makeStore({ draftProfile: null }));
-    render(<EditorHeader profile={baseProfile} saveStatus="idle" onRetry={vi.fn()} />);
+    render(<EditorHeader profile={baseProfile} onTogglePublish={vi.fn()} onViewSite={vi.fn()} />);
     const domainView = screen.getByTestId("domain-view");
     expect(domainView.textContent).toContain("serveruser");
   });
@@ -60,7 +76,7 @@ describe("editor-header", () => {
   it("prefers draftProfile username over prop username", () => {
     const draft = { ...baseProfile, username: "draftuser" };
     useEditorStore.mockReturnValue(makeStore({ draftProfile: draft }));
-    render(<EditorHeader profile={baseProfile} saveStatus="idle" onRetry={vi.fn()} />);
+    render(<EditorHeader profile={baseProfile} onTogglePublish={vi.fn()} onViewSite={vi.fn()} />);
     const domainView = screen.getByTestId("domain-view");
     expect(domainView.textContent).toContain("draftuser");
   });
@@ -68,7 +84,7 @@ describe("editor-header", () => {
   it("falls back to 'user' when both draft and prop username empty", () => {
     useEditorStore.mockReturnValue(makeStore({ draftProfile: null }));
     const noUsername = { ...baseProfile, username: "" };
-    render(<EditorHeader profile={noUsername} saveStatus="idle" onRetry={vi.fn()} />);
+    render(<EditorHeader profile={noUsername} onTogglePublish={vi.fn()} onViewSite={vi.fn()} />);
     const domainView = screen.getByTestId("domain-view");
     expect(domainView.textContent).toContain("user");
   });
