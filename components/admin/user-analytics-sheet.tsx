@@ -34,15 +34,15 @@ export function UserAnalyticsSheet({ user, open, onClose }: UserAnalyticsSheetPr
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!open || !user) {
-      setData(null);
-      return;
-    }
+    let cancelled = false;
+    if (!open || !user) return;
     setLoading(true);
     getUserAnalyticsAction(user.id).then((result) => {
+      if (cancelled) return;
       setData(result);
       setLoading(false);
     });
+    return () => { cancelled = true; };
   }, [open, user]);
 
   if (!user) return null;

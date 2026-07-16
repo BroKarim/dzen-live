@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { MoreHorizontal, Trash2, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
@@ -15,16 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,7 +34,13 @@ import {
 } from "@/components/ui/table";
 import { deleteUser, updateUserRole, bulkDeleteUsers } from "@/server/admin/actions";
 import type { AdminUserRow } from "@/server/admin/queries";
-import { UserAnalyticsSheet } from "@/components/admin/user-analytics-sheet";
+import { BulkActionBar } from "./bulk-action-bar";
+import { UserTableAlertDialogs } from "./user-table-alert-dialogs";
+
+const UserAnalyticsSheet = dynamic(
+  () => import("@/components/admin/user-analytics-sheet").then((m) => m.UserAnalyticsSheet),
+  { ssr: false },
+);
 
 interface UserTableProps {
   users: AdminUserRow[];
@@ -63,29 +60,29 @@ export function UserTable({ users }: UserTableProps) {
   const allSelected = users.length > 0 && selectedIds.size === users.length;
   const someSelected = selectedIds.size > 0;
 
-  const toggleSelect = (id: string) => {
+  function toggleSelect(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  };
+  }
 
-  const toggleSelectAll = () => {
+  function toggleSelectAll() {
     if (allSelected) {
       setSelectedIds(new Set());
     } else {
       setSelectedIds(new Set(users.map((u) => u.id)));
     }
-  };
+  }
 
-  const openSheet = (user: AdminUserRow) => {
+  function openSheet(user: AdminUserRow) {
     setSelectedUser(user);
     setSheetOpen(true);
-  };
+  }
 
-  const handleDelete = async (userId: string, mode: "soft" | "hard") => {
+  async function handleDelete(userId: string, mode: "soft" | "hard") {
     setPendingId(userId);
     const result = await deleteUser(userId, mode);
     setPendingId(null);
@@ -94,9 +91,9 @@ export function UserTable({ users }: UserTableProps) {
     } else {
       toast.error(result.error || "Failed to delete user");
     }
-  };
+  }
 
-  const handleRoleChange = async (userId: string, newRole: "USER" | "ADMIN") => {
+  async function handleRoleChange(userId: string, newRole: "USER" | "ADMIN") {
     const user = users.find((u) => u.id === userId);
     if (!user) return;
 
@@ -118,9 +115,9 @@ export function UserTable({ users }: UserTableProps) {
     } else {
       toast.error(result.error || "Failed to update role");
     }
-  };
+  }
 
-  const confirmDemote = async () => {
+  async function confirmDemote() {
     if (!demoteTarget) return;
     setPendingId(demoteTarget.id);
     const result = await updateUserRole(demoteTarget.id, "USER");
@@ -134,9 +131,9 @@ export function UserTable({ users }: UserTableProps) {
     } else {
       toast.error(result.error || "Failed to update role");
     }
-  };
+  }
 
-  const handleBulkDelete = async () => {
+  async function handleBulkDelete() {
     if (!bulkMode || selectedIds.size === 0) return;
     setBulkPending(true);
     const result = await bulkDeleteUsers(Array.from(selectedIds), bulkMode);
@@ -150,36 +147,17 @@ export function UserTable({ users }: UserTableProps) {
     } else {
       toast.error(result.error || "Failed to delete users");
     }
-  };
+  }
 
   return (
     <>
       {someSelected && (
-        <div className="flex items-center gap-3 rounded-lg border bg-muted/50 px-4 py-2.5">
-          <span className="text-sm text-muted-foreground">
-            {selectedIds.size} selected
-          </span>
-          <div className="ml-auto flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { setBulkMode("soft"); }}
-              disabled={bulkPending}
-            >
-              <EyeOff className="size-4 mr-1" />
-              Unpublish All
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => { setBulkMode("hard"); }}
-              disabled={bulkPending}
-            >
-              <Trash2 className="size-4 mr-1" />
-              Delete All
-            </Button>
-          </div>
-        </div>
+        <BulkActionBar
+          selectedCount={selectedIds.size}
+          disabled={bulkPending}
+          onUnpublish={() => setBulkMode("soft")}
+          onDelete={() => setBulkMode("hard")}
+        />
       )}
 
       <div className="rounded-xl border">
@@ -300,61 +278,17 @@ export function UserTable({ users }: UserTableProps) {
         </Table>
       </div>
 
-      <AlertDialog
-        open={demoteTarget !== null}
-        onOpenChange={(o) => { if (!o) { setDemoteTarget(null); setSelfDemote(false); } }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {selfDemote ? "Cannot Remove Your Own Admin" : "Demote User"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {selfDemote
-                ? "You are the last admin. Promote another user to ADMIN first before demoting yourself."
-                : `This will remove admin access for "${demoteTarget?.name}". Are you sure?`
-              }
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            {!selfDemote && (
-              <AlertDialogAction onClick={confirmDemote} variant="destructive">
-                Demote to User
-              </AlertDialogAction>
-            )}
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog
-        open={bulkMode !== null}
-        onOpenChange={(o) => { if (!o) setBulkMode(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {bulkMode === "hard" ? "Delete Users" : "Unpublish Users"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {bulkMode === "hard"
-                ? `This will permanently delete ${selectedIds.size} user${selectedIds.size !== 1 ? "s" : ""} and all their data. This action cannot be undone.`
-                : `This will unpublish all profiles for ${selectedIds.size} user${selectedIds.size !== 1 ? "s" : ""}.`
-              }
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleBulkDelete}
-              variant={bulkMode === "hard" ? "destructive" : "default"}
-              disabled={bulkPending}
-            >
-              {bulkMode === "hard" ? "Delete" : "Unpublish"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <UserTableAlertDialogs
+        demoteTarget={demoteTarget}
+        selfDemote={selfDemote}
+        onDemoteDialogChange={(open) => { if (!open) { setDemoteTarget(null); setSelfDemote(false); } }}
+        onConfirmDemote={confirmDemote}
+        bulkMode={bulkMode}
+        bulkPending={bulkPending}
+        selectedCount={selectedIds.size}
+        onBulkDialogChange={(open) => { if (!open) setBulkMode(null); }}
+        onConfirmBulk={handleBulkDelete}
+      />
 
       <UserAnalyticsSheet
         user={selectedUser}

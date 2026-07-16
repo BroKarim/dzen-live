@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -12,23 +12,20 @@ interface PaginationProps {
   total: number;
 }
 
-export function Pagination({ currentPage, totalPages, total }: PaginationProps) {
+function PaginationInner({ currentPage, totalPages, total }: PaginationProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const buildHref = useCallback(
-    (page: number) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (page > 1) {
-        params.set("page", String(page));
-      } else {
-        params.delete("page");
-      }
-      const qs = params.toString();
-      return `/admin/users${qs ? `?${qs}` : ""}`;
-    },
-    [searchParams],
-  );
+  function buildHref(page: number) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (page > 1) {
+      params.set("page", String(page));
+    } else {
+      params.delete("page");
+    }
+    const qs = params.toString();
+    return `/admin/users${qs ? `?${qs}` : ""}`;
+  }
 
   if (totalPages <= 1) return null;
 
@@ -61,5 +58,29 @@ export function Pagination({ currentPage, totalPages, total }: PaginationProps) 
         </Button>
       </div>
     </div>
+  );
+}
+
+function PaginationSkeleton({ currentPage, totalPages, total }: PaginationProps) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between text-sm text-muted-foreground">
+      <p>
+        {total} user{total !== 1 ? "s" : ""} total
+      </p>
+      <div className="flex items-center gap-2">
+        <span className="tabular-nums">
+          Page {currentPage} of {totalPages}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+export function Pagination(props: PaginationProps) {
+  return (
+    <Suspense fallback={<PaginationSkeleton {...props} />}>
+      <PaginationInner {...props} />
+    </Suspense>
   );
 }

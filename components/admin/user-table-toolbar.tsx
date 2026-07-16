@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 
@@ -23,46 +23,35 @@ export function UserTableToolbar({ initialSearch, initialRole }: UserTableToolba
   const [search, setSearch] = useState(initialSearch);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const buildHref = useCallback(
-    (q: string, r: string | null, p?: number) => {
-      const params = new URLSearchParams();
-      if (q) params.set("q", q);
-      if (r) params.set("role", r);
-      if (p && p > 1) params.set("page", String(p));
-      const qs = params.toString();
-      return `/admin/users${qs ? `?${qs}` : ""}`;
-    },
-    [],
-  );
+  function buildHref(q: string, r: string | null) {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (r) params.set("role", r);
+    const qs = params.toString();
+    return `/admin/users${qs ? `?${qs}` : ""}`;
+  }
 
-  const navigate = useCallback(
-    (q: string, r: string | null) => {
-      router.push(buildHref(q, r));
-    },
-    [router, buildHref],
-  );
+  function navigate(q: string, r: string | null) {
+    router.push(buildHref(q, r));
+  }
 
-  useEffect(() => {
-    setSearch(initialSearch);
-  }, [initialSearch]);
-
-  const handleSearchChange = (value: string) => {
+  function handleSearchChange(value: string) {
     setSearch(value);
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       navigate(value, initialRole);
     }, 300);
-  };
+  }
 
-  const handleRoleChange = (value: string) => {
+  function handleRoleChange(value: string) {
     const role = value === "all" ? null : value;
     navigate(search, role);
-  };
+  }
 
-  const handleClear = () => {
+  function handleClear() {
     setSearch("");
     navigate("", initialRole);
-  };
+  }
 
   return (
     <div className="flex items-center gap-3">
@@ -76,6 +65,7 @@ export function UserTableToolbar({ initialSearch, initialRole }: UserTableToolba
         />
         {search && (
           <button
+            type="button"
             onClick={handleClear}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >

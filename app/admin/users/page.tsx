@@ -28,6 +28,7 @@ export default async function AdminUsersPage(props: Props) {
         </p>
       </div>
       <UserTableToolbar
+        key={`${search}-${role}`}
         initialSearch={search}
         initialRole={role}
       />
