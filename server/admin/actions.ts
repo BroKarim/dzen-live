@@ -87,6 +87,88 @@ export async function deleteProfile(
   }
 }
 
+export async function getUserAnalyticsAction(userId: string) {
+  const { getUserClickAnalytics } = await import("./queries");
+  return getUserClickAnalytics(userId);
+}
+
+export async function bulkDeleteUsers(
+  userIds: string[],
+  mode: "soft" | "hard" = "hard",
+): Promise<{ success: boolean; error?: string; count?: number }> {
+  try {
+    await requireAdmin();
+
+    if (userIds.length === 0) {
+      return { success: false, error: "No users selected" };
+    }
+
+    const users = await db.user.findMany({
+      where: { id: { in: userIds } },
+      include: { profiles: { select: { id: true } } },
+    });
+
+    // Clean up S3 assets for all users
+    const allUserIds = users.map((u) => u.id);
+    const userAssets = await db.asset.findMany({ where: { userId: { in: allUserIds } } });
+    for (const asset of userAssets) {
+      await deleteFromS3(asset.url).catch((err) => console.error("[admin] S3 cleanup failed:", err));
+    }
+
+    if (mode === "hard") {
+      await db.user.deleteMany({ where: { id: { in: allUserIds } } });
+    } else {
+      // Unpublish all profiles for these users
+      const profileIds = users.flatMap((u) => u.profiles.map((p) => p.id));
+      if (profileIds.length > 0) {
+        await db.profile.updateMany({
+          where: { id: { in: profileIds } },
+          data: { isPublished: false },
+        });
+      }
+    }
+
+    revalidatePath("/admin");
+    return { success: true, count: allUserIds.length };
+  } catch (error: any) {
+    console.error("[admin/actions] bulkDeleteUsers:", error);
+    return { success: false, error: error.message || "Failed to delete users" };
+  }
+}
+
+export async function updateUserRole(
+  userId: string,
+  role: "USER" | "ADMIN",
+): Promise<{ success: boolean; error?: string; blocked?: "last_admin" }> {
+  try {
+    const admin = await requireAdmin();
+
+    if (role !== "USER" && role !== "ADMIN") {
+      return { success: false, error: "Invalid role" };
+    }
+
+    const user = await db.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    if (role === "USER" && userId === admin.id) {
+      const adminCount = await db.user.count({ where: { role: "ADMIN" } });
+      if (adminCount <= 1) {
+        return { success: false, blocked: "last_admin" };
+      }
+    }
+
+    await db.user.update({ where: { id: userId }, data: { role } });
+
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (error: any) {
+    console.error("[admin/actions] updateUserRole:", error);
+    return { success: false, error: error.message || "Failed to update role" };
+  }
+}
+
 export async function deleteAsset(
   assetId: string,
 ): Promise<{ success: boolean; error?: string }> {

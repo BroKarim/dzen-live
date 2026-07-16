@@ -47,10 +47,45 @@ export interface AdminUserRow {
   lastSessionAt: Date | null;
 }
 
-export async function getAllUsers(): Promise<AdminUserRow[]> {
-  const users = await db.user.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+export interface GetAllUsersParams {
+  search?: string;
+  role?: "USER" | "ADMIN" | null;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface GetAllUsersResult {
+  users: AdminUserRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export async function getAllUsers(params?: GetAllUsersParams): Promise<GetAllUsersResult> {
+  const page = Math.max(1, params?.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, params?.pageSize ?? 20));
+
+  const where: any = {};
+  if (params?.search) {
+    where.OR = [
+      { name: { contains: params.search, mode: "insensitive" } },
+      { email: { contains: params.search, mode: "insensitive" } },
+    ];
+  }
+  if (params?.role) {
+    where.role = params.role;
+  }
+
+  const [total, users] = await Promise.all([
+    db.user.count({ where }),
+    db.user.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+  ]);
 
   const rows: AdminUserRow[] = [];
 
@@ -92,7 +127,13 @@ export async function getAllUsers(): Promise<AdminUserRow[]> {
     });
   }
 
-  return rows;
+  return {
+    users: rows,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 export interface AdminProfileRow {
@@ -270,6 +311,124 @@ export async function getGrowthData(days = 30): Promise<GrowthDataPoint[]> {
     cumProfiles += counts.profiles;
     return { date, users: cumUsers, profiles: cumProfiles };
   });
+}
+
+export interface UserClickAnalytics {
+  dailyClicks: { date: string; count: number }[];
+  topReferrers: { referrer: string; count: number }[];
+  topCountries: { country: string; count: number }[];
+  topDevices: { device: string; count: number }[];
+  profiles: {
+    id: string;
+    username: string;
+    displayName: string | null;
+    linkCount: number;
+    clickCount: number;
+  }[];
+  totalClicks: number;
+}
+
+export async function getUserClickAnalytics(id: string): Promise<UserClickAnalytics | null> {
+  const user = await db.user.findUnique({
+    where: { id },
+    select: { id: true },
+  });
+
+  if (!user) return null;
+
+  const profiles = await db.profile.findMany({
+    where: { userId: id },
+    select: { id: true, username: true, displayName: true },
+  });
+
+  const profileMap = new Map(profiles.map((p) => [p.id, p]));
+  const profileIds = profiles.map((p) => p.id);
+
+  const [allClicks, profileLinkCounts] = await Promise.all([
+    db.linkClick.findMany({
+      where: {
+        link: { profileId: { in: profileIds } },
+        isBot: false,
+      },
+      select: {
+        clickedAt: true,
+        referrer: true,
+        country: true,
+        device: true,
+        link: { select: { profileId: true } },
+      },
+      orderBy: { clickedAt: "desc" },
+    }),
+    Promise.all(
+      profiles.map(async (p) => {
+        const count = await db.link.count({ where: { profileId: p.id } });
+        return { profileId: p.id, count };
+      }),
+    ),
+  ]);
+
+  const linkCountMap = new Map(profileLinkCounts.map((l) => [l.profileId, l.count]));
+  const profileClicks: Map<string, number> = new Map();
+  for (const pid of profileIds) profileClicks.set(pid, 0);
+
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+  since.setHours(0, 0, 0, 0);
+  const dailyMap = new Map<string, number>();
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(since);
+    d.setDate(d.getDate() + i);
+    dailyMap.set(d.toISOString().slice(0, 10), 0);
+  }
+
+  const referrerMap = new Map<string, number>();
+  const countryMap = new Map<string, number>();
+  const deviceMap = new Map<string, number>();
+
+  for (const click of allClicks) {
+    const dateKey = click.clickedAt.toISOString().slice(0, 10);
+    if (dailyMap.has(dateKey)) dailyMap.set(dateKey, dailyMap.get(dateKey)! + 1);
+
+    const ref = click.referrer || "Direct";
+    referrerMap.set(ref, (referrerMap.get(ref) || 0) + 1);
+
+    const country = click.country || "Unknown";
+    countryMap.set(country, (countryMap.get(country) || 0) + 1);
+
+    const device = click.device || "Unknown";
+    deviceMap.set(device, (deviceMap.get(device) || 0) + 1);
+
+    const pid = click.link.profileId;
+    profileClicks.set(pid, (profileClicks.get(pid) || 0) + 1);
+  }
+
+  const dailyClicks = Array.from(dailyMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, count]) => ({ date, count }));
+
+  return {
+    dailyClicks,
+    topReferrers: Array.from(referrerMap.entries())
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([referrer, count]) => ({ referrer, count })),
+    topCountries: Array.from(countryMap.entries())
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([country, count]) => ({ country, count })),
+    topDevices: Array.from(deviceMap.entries())
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([device, count]) => ({ device, count })),
+    profiles: profiles.map((p) => ({
+      id: p.id,
+      username: p.username,
+      displayName: p.displayName,
+      linkCount: linkCountMap.get(p.id) || 0,
+      clickCount: profileClicks.get(p.id) || 0,
+    })),
+    totalClicks: allClicks.length,
+  };
 }
 
 export async function getUserDetail(id: string): Promise<AdminUserDetail | null> {
