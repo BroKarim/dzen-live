@@ -54,7 +54,172 @@ SELECT email, role FROM "user" WHERE role = 'ADMIN';
 Remove dead code clusters, consolidate fragmented auth patterns, extract a deep upload module, and fix caching API drift — improving locality, leverage, and AI-navigability.
 
 ## Current Phase
-Phase 14 (completed 2026-07-14)
+Phase 15 (planned — admin feature enhancements)
+
+---
+## Phase 15: Admin Feature Enhancements
+
+**Goal:** Tambah fitur admin: inline role selector, user analytics sheet, search, pagination, bulk actions.
+
+### A — Inline Role Selector (read-only → editable)
+
+**Trigger:** Klik Select di kolom Role pada tabel user `/admin/users`.
+
+**UX:**
+- Kolom Role diganti dari `<Badge>` → `<Select>` (shadcn)
+- Dua option: `USER` / `ADMIN`
+- Options hanya `USER` dan `ADMIN` — tidak perlu role lain saat ini
+- **Promosi** (USER → ADMIN): langsung eksekusi tanpa konfirmasi
+- **Demosi** (ADMIN → USER): muncul `AlertDialog` konfirmasi
+- **Self-demote** (admin demosi diri sendiri): AlertDialog kasih warning ekstra — _"You are about to remove your own admin access. Make sure at least one other admin exists."_
+
+**Guard — Last Admin:**
+- Server check: `db.user.count({ where: { role: "ADMIN" } })`
+- Jika count ≤ 1 dan user tersebut mencoba demosi diri sendiri → return `{ success: false, blocked: "last_admin" }`
+- Client: toast error _"Cannot demote the last admin. Promote another user first."_
+
+**Server action — `updateUserRole(userId, role)`:**
+- `requireAdmin()` guard
+- Cek last admin sebelum demosi diri sendiri
+- `revalidatePath("/admin")` setelah berhasil
+- Return `{ success: boolean, error?: string, blocked?: "last_admin" }`
+
+**Files:**
+- `server/admin/actions.ts` — tambah `updateUserRole`
+- `components/admin/user-table.tsx` — ganti Badge jadi Select + AlertDialog
+
+**Edge cases:**
+| Scenario | Behavior |
+|----------|----------|
+| Non-admin call action | throw `Forbidden` (already guarded) |
+| Demote last admin | `blocked: "last_admin"` |
+| Set role to invalid value | Zod validate di action (defense in depth) |
+| Select triggered via keyboard | Native `<Select>` support keyboard |
+
+### B — User Analytics Sheet
+
+**Trigger:** Klik baris user di tabel `/admin/users` → Sheet terbuka.
+
+**UI — Sheet (shadcn, side panel):**
+- **Header:** User name + email, close button (Sheet primitif)
+- **Ringkasan atas:** Total profiles, total links, total clicks, onboarded/pending badge, last session
+- **Chart:** `recharts` LineChart — klik per hari, 30 hari terakhir. Pakai CSS variable `--chart-1` (same pattern as `OverviewChart`)
+- **Per-profile breakdown:** Tabel kecil — username, linkCount, clickCount. Clickable → navigasi ke `/admin/profiles`
+- **Top lists:**
+  - 5 top referrer
+  - 5 top country
+  - 5 top device (desktop/mobile/tablet)
+  - Masing-masing dengan count bar
+
+**Server query — `getUserClickAnalytics(userId)`:**
+- Click counts per day (30 hari): `db.linkClick.findMany` joined with link → profile, group by date
+- Top 5 referrer: group by `referrer`, order by count desc, limit 5
+- Top 5 country: group by `country`, order by count desc, limit 5
+- Top 5 device: group by `device`, order by count desc, limit 5
+- Per profile summary (reuse existing `getUserDetail` data)
+
+**Optimasi — single query:**
+- `db.linkClick.findMany({ where: { link: { profile: { userId } } }, select: { clickedAt, referrer, country, device } })`
+- Semua data dikumpulkan dari satu query → di-group client-side (reduce DB round trips)
+- Filter `isBot: false` untuk exclude bot traffic
+
+**Files:**
+- `server/admin/queries.ts` — tambah `getUserClickAnalytics(userId)`
+- `components/admin/user-analytics-sheet.tsx` **(NEW)** — Sheet component dengan chart + top lists
+- `components/admin/user-table.tsx` — wire row click → open sheet
+
+### C — Search & Filter Users
+
+**Masalah:** `getAllUsers()` load SEMUA user tanpa filter. Saat user base tumbuh, ini akan lambat dan overload tabel.
+
+**UX:**
+- Search input di atas tabel (`<Input>` component)
+- Filter: search by name OR email (case-insensitive), via `where: { OR: [{ name: { contains } }, { email: { contains } }] }`
+- Filter role: Select option `All | ADMIN | USER`
+- Server-side (query Prisma dengan filter), bukan client-side filter
+
+**Files:**
+- `server/admin/queries.ts` — `getAllUsers()` jadi `getAllUsers({ search?, role? })`
+- `app/admin/users/page.tsx` — tambah search input + role filter (ini server component, perlu bungkus dengan wrapper client atau search params)
+- `components/admin/user-table.tsx` — terima props `users` (tidak perlu ubah)
+
+**Approach — URL search params:**
+- `?q=search&role=ADMIN`
+- Page reads from `searchParams` → pass ke `getAllUsers()`
+- Form/input submit → `router.push` update URL → page re-render
+- Debounce search 300ms via client wrapper
+
+### D — User List Pagination
+
+**Masalah:** Sama dengan C — `findMany` tanpa limit akan saturasi saat user base ribuan.
+
+**Solusi:** `take` + `skip` + total count.
+- Default page size: 20
+- `getAllUsers()` return: `{ users: AdminUserRow[], total: number, page: number, pageSize: number }`
+- Tombol "Previous" / "Next" di bawah tabel
+- State via URL search params: `?page=2`
+
+**Files:**
+- `server/admin/queries.ts` — tambah pagination params
+- `components/admin/pagination.tsx` **(NEW)** — shared pagination component
+- `app/admin/users/page.tsx` — handle page param
+
+### E — Bulk Actions
+
+**Trigger:** Checkbox di kiri tiap baris + master checkbox di header.
+
+**Action:**
+- Bulk unpublish (soft delete) multiple users
+- Bulk hard delete multiple users
+
+**UX:**
+- Checkbox column di tabel
+- Master checkbox di header: select all / deselect all visible rows
+- Action bar muncul saat ≥1 row terpilih: _"N selected — [Unpublish All] [Delete All]"_
+- Confirmation dialog untuk delete (AlertDialog)
+- Server action: `bulkDeleteUsers(userIds[], mode)`
+
+**Files:**
+- `server/admin/actions.ts` — tambah `bulkDeleteUsers`
+- `components/admin/user-table.tsx` — tambah checkbox column + action bar
+
+### F — Implementation Order
+
+| Step | Item | Priority | Depends on |
+|------|------|----------|------------|
+| 1 | Server: `updateUserRole` action | P0 | — |
+| 2 | Client: Role Select + AlertDialog | P0 | Step 1 |
+| 3 | Server: `getUserClickAnalytics` query | P0 | — |
+| 4 | Client: User analytics Sheet | P0 | Step 3 |
+| 5 | Server: search + filter `getAllUsers` | P1 | — |
+| 6 | Client: Search input + role filter | P1 | Step 5 |
+| 7 | Server: pagination `getAllUsers` | P1 | — |
+| 8 | Client: Pagination component | P1 | Step 7 |
+| 9 | Server: `bulkDeleteUsers` action | P2 | — |
+| 10 | Client: Checkbox + bulk action bar | P2 | Step 9 |
+| 11 | Tests + verify | P0 | All |
+
+**P0 (core)** = role selector + analytics sheet — deliver dulu.
+**P1** = search + pagination.
+**P2** = bulk actions (lowest usage).
+
+### G — Decisions Made
+
+| Decision | Rationale |
+|----------|-----------|
+| Inline Select (bukan DropdownMenu) | Future-proof untuk multi-role; satu klik ubah; UX lebih clean |
+| AlertDialog hanya untuk demosi | Promosi risiko rendah, tidak perlu konfirmasi |
+| Last admin guard di server | Cegah admin terkunci dari panel; defense in depth |
+| Row click → Sheet (bukan Dialog) | Analytics data butuh vertical space; Sheet natural scroll; tabel user tetap visible |
+| Aggregate all profiles (bukan filter per profile) | Simple; filter per profile bisa ditambah nanti (tab di Sheet) |
+| Single query + client-side group | Kurangi DB round trips; data LinkClick tidak besar per user |
+| URL search params untuk search/filter | Server-side rendering; halaman bisa di-bookmark; shareable URL |
+| Pagination 20 per page | Cukup untuk admin readability; Prev/Next simple tanpa infinite scroll |
+| Checkbox di kiri baris | Standard table pattern; expected UX untuk multiselect |
+| Bulk action bar muncul hanya saat selection | Prevent accidental delete; visible affordance saat ada action |
+| P0/P1/P2 priority | Core UX dulu (role + analytics), scale later (search/pagination), nice-to-have last (bulk) |
+
+---
 
 ## Phases
 
