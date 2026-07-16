@@ -1139,3 +1139,143 @@ Phase 15 (planned — admin feature enhancements)
 - buat konten landing page, buat dia responsive dlu
 - animated backgroudn mash ada yg pelru disesuain
 - pastiin gambar g ilang pasti ganti tab
+
+---
+
+## Phase 13: Linky-Inspired Architecture Deepening
+
+**Goal:** Adopt proven patterns from Linky across 5 areas: UI state separation, fetch layer, granular caching, `'use cache'` for public pages, and optimistic updates.
+
+**Decisions:**
+| Decision | Rationale |
+|----------|-----------|
+| Follow Linky patterns exactly for all 5 areas | User wants code mostly from Linky |
+| Execution order: E → A → B → C → D | E is zero-risk client refactor; A is foundation for B+C; D depends on E |
+| UI state split into React Context, not separate Zustand store | Follows Linky's `EditModeContext` pattern; UI state is small; zero new dependency |
+| Fetch layer before optimizing public page caching | `'use cache'` works best when RSC calls fetch() not Prisma directly |
+| Multi-tenant organizations NOT implemented | Single-user model is sufficient for current needs |
+
+### Phase 13-E: UI State Separation — EditorUIContext
+
+**Problem:** `stylePopover`, panel open/close, dragging state — semua di satu Zustand store `useEditorStore`. Re-render seluruh editor tiap popover dibuka/ditutup.
+
+**Pattern:** Linky's `EditModeContext` — React Context dengan 4 state fields:
+- `draggingItem`, `editLayoutMode`, `nextToAddBlock`, `currentEditingBlock`
+- Exported via `useEditModeContext()` hook
+
+**Ohmylink equivalent:**
+- `EditorUIContext` with: `currentPanel`, `stylePopover`, `isDragging`, `viewMode`
+- Provider wraps editor-client.tsx
+- Zustand store retains: `originalProfile`, `draftProfile`, `isDirty`, `_draftVersion`
+
+**Files:**
+- NEW: `lib/contexts/editor-ui.tsx` — EditorUIContext + Provider + hook
+- EDIT: `components/editor/text-style-popover.tsx` — read `stylePopover` from context
+- EDIT: `app/editor/_components.tsx/editor-client.tsx` — use EditorUIContext for UI state, Zustand for data only
+- EDIT: `lib/stores/editor-store.ts` — remove `stylePopover`, `openStylePopover`, `closeStylePopover`
+
+**Status:** pending
+
+### Phase 13-A: Fetch Layer — apiServerFetch + publicApiFetch
+
+**Problem:** RSC calls Prisma directly. No intermediate fetch layer means:
+1. Can't cache properly (`'use cache'` calls Prisma, not fetch())
+2. No separation between authenticated and public data access
+3. Can't migrate to dedicated backend later
+
+**Pattern:** Linky's two fetchers:
+- `apiServerFetch(path)` — marked `'server-only'`, forwards cookies via `headers()`, for authenticated reads
+- `publicApiFetch(path)` — marked `'server-only'`, no cookies, safe inside `'use cache'`, for public reads
+
+**Ohmylink implementation:**
+- `server/lib/api-server.ts` — `apiServerFetch<T>(path, options?)` → fetch internal API with cookies
+- `server/lib/public-read.ts` — `publicApiFetch<T>(path, options?)` → fetch internal API without cookies (safe for `'use cache'`)
+
+**Note:** Phase 13-A creates the files but does NOT wire them into routes yet. Wiriing happens in Phase 13-B (caching) and 13-C (public page optimization). This avoids breaking existing direct-Prisma reads until the cache layer is ready.
+
+**Files:**
+- NEW: `server/lib/api-server.ts` — cookie-forwarding fetch
+- NEW: `server/lib/public-read.ts` — cookie-free public fetch
+
+**Status:** pending
+
+### Phase 13-B: Granular Caching
+
+**Problem:** Only 1 cache tag per profile (`public-profile-${username}`). Changing a single link busts the entire cache — profile, socials, links all re-fetched.
+
+**Pattern:** Linky's granular cache tags:
+- `page-id-{id}` — profile-level
+- `page-slug-{slug}-{domain}` — for routing lookups
+- `block-{blockId}` — per-link granularity
+
+**Ohmylink equivalent:**
+- `public-profile-${username}` — keep existing
+- `links-${profileId}` — link list only
+- `socials-${profileId}` — social list only
+- `profile-meta-${profileId}` — display name, bio, avatar
+
+**Implementation:**
+- Split `getPublicProfile(username)` into 3 cached queries:
+  - `getPublicProfileMeta(username)` — profile scalars + socials (cacheTag: `profile-meta-${username}`)
+  - `getPublicLinks(profileId)` — links only (cacheTag: `links-${profileId}`)
+- Server actions revalidate granularly: `revalidateTag("links-${profileId}")` instead of `revalidatePath("/[username]")`
+- Migrate current `revalidatePath()` calls (from save-profile-action, togglePublishStatus, etc.)
+
+**Files:**
+- EDIT: `server/website/profile/queries.ts` — split into granular queries
+- EDIT: `server/user/profile/save-profile-action.ts` — granular revalidation
+- EDIT: `server/user/settings/actions.ts` — granular revalidation
+- EDIT: `app/[username]/page.tsx` — call separate granular queries
+
+**Status:** pending
+
+### Phase 13-C: `force-dynamic` → `'use cache'`
+
+**Problem:** `app/[username]/page.tsx` uses `export const dynamic = "force-dynamic"` — forces SSR every request, no CDN cache.
+
+**Pattern:** Linky's public page layout uses `'use cache'` with `cacheLife('days')` and SWR with revalidation disabled on client.
+
+**Ohmylink implementation:**
+- Remove `force-dynamic` from `app/[username]/page.tsx`
+- `getPublicProfileMeta()` already has `'use cache'` — just ensure `cacheLife("minutes")` or `cacheLife("days")` is correct
+- Profile-view.tsx (client component) already rehydrates via RSC props — no client-side refetch needed
+- For dynamic metadata (OG image, JSON-LD), keep those as separate uncached endpoints
+
+**Files:**
+- EDIT: `app/[username]/page.tsx` — remove `force-dynamic`, keep existing cached queries
+- EDIT: `server/website/profile/queries.ts` — adjust `cacheLife` values
+
+**Status:** pending
+
+### Phase 13-D: Optimistic Updates
+
+**Problem:** Autosave waits for 1.5s debounce + server round-trip before UI reflects changes. Drag-reorder links = visible delay.
+
+**Pattern:** Linky's `EditWrapper.tsx`:
+- `mutateLayout(layoutWithNewBlock, { revalidate: false })` — SWR optimistic cache
+- On error: `mutateLayout(layout, { revalidate: false })` — rollback
+- Pending skeleton via `setPendingAdds` — visual feedback until server confirms
+
+**Ohmylink implementation (with Zustand + TanStack Query):**
+- Before server action: `updateDraft()` immediately (already optimistic for text edits)
+- For reorder: update local state + fire server action in background
+- On error: `discardChanges()` — rollback to original
+- Requires `_draftVersion` stamp to prevent stale overwrites (already implemented)
+- Add loading skeleton for new link creation (following Linky's pendingAdds pattern)
+
+**Files:**
+- EDIT: `hooks/use-autosave.ts` — add optimistic flag, reduce debounce for reorder
+- EDIT: `components/preview/preview-links.tsx` — support skeleton state
+- EDIT: `lib/stores/editor-store.ts` — add `_optimisticVersion` or similar stamp
+
+**Status:** pending
+
+### Implementation Order
+
+| Step | Phase | Description | Risk | Depends on |
+|------|-------|-------------|------|------------|
+| 1 | 13-E | EditorUIContext — UI state split | None | — |
+| 2 | 13-A | Fetch layer files (apiServerFetch + publicApiFetch) | Low | — |
+| 3 | 13-B | Granular caching (split queries, granular revalidation) | Medium | Phase 13-A (optional — can split queries before fetch layer) |
+| 4 | 13-C | Remove `force-dynamic`, optimize cacheLife | Low | Phase 13-B |
+| 5 | 13-D | Optimistic updates (reorder, add link) | Medium | Phase 13-E (clean UI state) |

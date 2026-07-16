@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { getSession } from "@/server/user/auth";
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { headers } from "next/headers";
 
 export async function getOnboardingStatus() {
@@ -57,7 +57,7 @@ export async function setupUsername(username: string) {
       }),
     ]);
 
-    revalidatePath("/editor");
+    revalidateTag(`profile-meta-${formattedUsername}`, "minutes");
     return { success: true, username: formattedUsername };
   } catch (error: any) {
     console.error("[settings/actions] setupUsername:", error);
@@ -154,8 +154,8 @@ export async function updateProfileUsername(username: string) {
       data: { username: formattedUsername },
     });
 
-    revalidatePath("/editor");
-    revalidatePath(`/editor/${formattedUsername}`);
+    revalidateTag(`profile-meta-${profile.username}`, "minutes");
+    revalidateTag(`profile-meta-${formattedUsername}`, "minutes");
     return { success: true, username: formattedUsername };
   } catch (error: any) {
     console.error("[settings/actions] updateProfileUsername:", error);
@@ -180,8 +180,8 @@ export async function togglePublishStatus(isPublished: boolean) {
       data: { isPublished },
     });
 
-    revalidatePath("/editor");
-    revalidatePath(`/${profile.username}`);
+    revalidateTag(`profile-meta-${profile.username}`, "minutes");
+    revalidateTag(`links-${profile.id}`, "minutes");
     return { success: true };
   } catch (error: any) {
     console.error("[settings/actions] togglePublishStatus:", error);
@@ -223,7 +223,6 @@ export async function deleteProfileOrAccount() {
 
     await db.profile.delete({ where: { id: currentProfile.id } });
 
-    revalidatePath("/editor");
     return {
       success: true,
       redirect: otherProfile ? `/editor/${otherProfile.username}` : "/editor",

@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { db } from "@/lib/db";
-import { publicProfilePayload } from "@/server/website/profile/payloads";
+import { publicProfileMetaPayload } from "@/server/website/profile/payloads";
 import { OgImageCard } from "@/components/og-image-card";
 import type { OgProfile } from "@/components/og-image-card";
 
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
 
   const profile = await db.profile.findUnique({
     where: { username },
-    select: publicProfilePayload,
+    select: publicProfileMetaPayload,
   });
 
   if (!profile || !profile.isPublished) {

@@ -17,7 +17,7 @@ export function useAutosave() {
   const fadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const versionAtSaveStart = useRef<number>(0);
 
-  const { draftProfile, isDirty, _draftVersion, updateDraft, markAsSaved } = useEditorStore();
+  const { isDirty, _draftVersion } = useEditorStore();
 
   function clearTimers() {
     if (timerRef.current) {
@@ -31,9 +31,13 @@ export function useAutosave() {
   }
 
   async function performSave() {
-    if (!draftProfile || !isDirty) return;
+    const state = useEditorStore.getState();
+    if (!state.draftProfile || !state.isDirty) return;
 
-    versionAtSaveStart.current = _draftVersion;
+    const draftProfile = state.draftProfile;
+    const currentVersion = state._draftVersion;
+
+    versionAtSaveStart.current = currentVersion;
     setStatus("saving");
     setLastError(null);
 
@@ -48,10 +52,10 @@ export function useAutosave() {
         return;
       }
 
-      const currentVersion = useEditorStore.getState()._draftVersion;
-      if (currentVersion === versionAtSaveStart.current) {
-        updateDraft({ ...payload, links: res.links, socials: res.socials });
-        markAsSaved();
+      const stateAfter = useEditorStore.getState();
+      if (stateAfter._draftVersion === versionAtSaveStart.current) {
+        useEditorStore.getState().updateDraft({ ...payload, links: res.links, socials: res.socials });
+        useEditorStore.getState().markAsSaved();
         setStatus("saved");
         setLastError(null);
 
@@ -72,7 +76,8 @@ export function useAutosave() {
   }
 
   function flushSave() {
-    if (isDirty) {
+    const state = useEditorStore.getState();
+    if (state.isDirty) {
       clearTimers();
       performSave();
     }
@@ -85,7 +90,6 @@ export function useAutosave() {
       return;
     }
 
-    // Clear any existing timer and set new one
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(() => {
@@ -97,7 +101,6 @@ export function useAutosave() {
     };
   }, [isDirty, _draftVersion, performSave, clearTimers]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => clearTimers();
   }, [clearTimers]);

@@ -1,11 +1,11 @@
 import type { Prisma } from "@/lib/generated/prisma/client";
 
 /**
- * Payload for public profile pages
- * Only includes fields that are actually rendered on the public view
+ * Payload for profile meta (excludes links — fetched separately via getPublicLinks).
+ * Includes id so the page can pass profileId to getPublicLinks.
  */
-export const publicProfilePayload = {
-  // Profile Info
+export const publicProfileMetaPayload = {
+  id: true,
   username: true,
   displayName: true,
   bio: true,
@@ -16,7 +16,6 @@ export const publicProfilePayload = {
   bioStyle: true,
   padding: true,
 
-  // User Info (via relation)
   user: {
     select: {
       name: true,
@@ -24,7 +23,6 @@ export const publicProfilePayload = {
     },
   },
 
-  // Background
   bgType: true,
   bgColor: true,
   bgWallpaper: true,
@@ -32,10 +30,8 @@ export const publicProfilePayload = {
   bgEffects: true,
   bgPattern: true,
 
-  // Card Styling
   cardTexture: true,
 
-  // Socials
   socials: {
     select: {
       id: true,
@@ -44,21 +40,8 @@ export const publicProfilePayload = {
     },
     orderBy: { position: "asc" as const },
   },
-
-  // Links (only active ones)
-  links: {
-    select: {
-      id: true,
-      title: true,
-      url: true,
-      position: true,
-      titleStyle: true,
-    },
-    where: { isActive: true },
-    orderBy: { position: "asc" as const },
-  },
 } satisfies Prisma.ProfileSelect;
 
-type PublicProfileData = Prisma.ProfileGetPayload<{
-  select: typeof publicProfilePayload;
+type PublicProfileMetaData = Prisma.ProfileGetPayload<{
+  select: typeof publicProfileMetaPayload;
 }>;

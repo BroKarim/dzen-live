@@ -50,7 +50,7 @@ function resetStore() {
     draftProfile: null,
     isDirty: false,
     _draftVersion: 0,
-    stylePopover: null,
+    _optimisticLock: 0,
     _hasHydrated: true,
   });
 }
@@ -248,22 +248,6 @@ describe("editor-store", () => {
       const state = useEditorStore.getState();
       expect(state.draftProfile?.displayName).toBe("Test User");
       expect(state.isDirty).toBe(false);
-    });
-  });
-
-  describe("stylePopover", () => {
-    it("opens style popover with target", () => {
-      useEditorStore.getState().openStylePopover({ target: { type: "link", id: "link-1" } as any, x: 100, y: 200 });
-      const s = useEditorStore.getState();
-      expect(s.stylePopover).not.toBeNull();
-      expect(s.stylePopover?.x).toBe(100);
-      expect(s.stylePopover?.y).toBe(200);
-    });
-
-    it("closes style popover", () => {
-      useEditorStore.getState().openStylePopover({ target: { type: "link", id: "link-1" } as any, x: 0, y: 0 });
-      useEditorStore.getState().closeStylePopover();
-      expect(useEditorStore.getState().stylePopover).toBeNull();
     });
   });
 

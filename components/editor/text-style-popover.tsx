@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Type } from "lucide-react";
 import { useEditorStore } from "@/lib/stores/editor-store";
+import { useEditorUIContext } from "@/lib/contexts/editor-ui";
 import { getStyleFromProfile, styleTargetId, type StyleTarget, type TextStyle } from "@/lib/text-style";
 import { ColorPicker } from "./color-picker";
 import { FontPicker } from "./font-picker";
@@ -19,9 +20,8 @@ const FIELD_LABEL: Record<string, string> = {
 type Placement = "top" | "bottom";
 
 export function TextStylePopover() {
-  const stylePopover = useEditorStore((s) => s.stylePopover);
+  const { stylePopover, closeStylePopover } = useEditorUIContext();
   const draftProfile = useEditorStore((s) => s.draftProfile);
-  const closeStylePopover = useEditorStore((s) => s.closeStylePopover);
   const setElementStyle = useEditorStore((s) => s.setElementStyle);
 
   const popoverRef = useRef<HTMLDivElement>(null);

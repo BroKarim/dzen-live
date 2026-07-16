@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { withAuth } from "@/server/user/auth";
-import { revalidatePath } from "next/cache";
+import { revalidateTag } from "next/cache";
 import { deleteFromS3 } from "@/lib/s3";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { SaveProfileSchema } from "./schema";
@@ -241,7 +241,8 @@ export const saveProfile = withAuth("profile/save", async (user, data: unknown) 
       );
     }
 
-    revalidatePath(`/${user.username}`);
+    revalidateTag(`links-${profile.id}`, "minutes");
+    revalidateTag(`profile-meta-${profile.username}`, "minutes");
 
     // ── Return refreshed links + socials (real IDs, correct positions) ────────
 

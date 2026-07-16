@@ -1,6 +1,7 @@
 import React from "react";
 import { TexturedCard } from "@/components/texture-card";
 import type { CardTexture } from "@/lib/generated/prisma/client";
+import { cn } from "@/lib/utils";
 import { styleTargetId, type StyleTarget, type TextStyle } from "@/lib/text-style";
 
 type Mode = "editor" | "public";
@@ -15,7 +16,17 @@ interface PreviewLinksProps {
   renderLink?: (link: any, children: React.ReactNode) => React.ReactNode;
 }
 
+function isPending(id: string) {
+  return String(id).startsWith("temp-");
+}
+
 function LinkItem({ link, cardTexture, mode, onStyleTargetClick, renderLink }: { link: any; cardTexture: CardTexture; mode: Mode; onStyleTargetClick?: (target: StyleTarget) => void; renderLink?: (link: any, children: React.ReactNode) => React.ReactNode }) {
+  if (mode === "editor" && isPending(link.id)) {
+    return (
+      <div className="w-full h-14 rounded-xl bg-white/5 animate-pulse" />
+    );
+  }
+
   const card = (
     <TexturedCard
       key={link.id}

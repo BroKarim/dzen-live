@@ -18,7 +18,7 @@ vi.mock("next/og", () => ({
 }));
 
 vi.mock("@/server/website/profile/payloads", () => ({
-  publicProfilePayload: {
+  publicProfileMetaPayload: {
     username: true, displayName: true, bio: true, avatarUrl: true,
     isPublished: true, bgType: true, bgColor: true,
   },

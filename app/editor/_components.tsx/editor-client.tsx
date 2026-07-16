@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useTransition } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import EditorHeader from "./editor-header";
 import Preview from "./editor-preview";
@@ -8,6 +8,7 @@ import ControlPanel from "./control-panel";
 import { EditorDock } from "./editor-dock";
 import { useEditorStore } from "@/lib/stores/editor-store";
 import { useAutosave } from "@/hooks/use-autosave";
+import { EditorUIProvider, useEditorUIContext } from "@/lib/contexts/editor-ui";
 import { togglePublishStatus } from "@/server/user/settings/actions";
 import type { ProfileEditorData } from "@/server/user/profile/payloads";
 import { TextStylePopover } from "@/components/editor/text-style-popover";
@@ -18,9 +19,17 @@ interface EditorClientProps {
 }
 
 export default function EditorClient({ initialProfile }: EditorClientProps) {
-  const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
+  return (
+    <EditorUIProvider>
+      <EditorClientInner initialProfile={initialProfile} />
+    </EditorUIProvider>
+  );
+}
 
-  const { draftProfile, isDirty, initializeEditor, updateDraft, _hasHydrated, openStylePopover } = useEditorStore();
+function EditorClientInner({ initialProfile }: EditorClientProps) {
+  const { viewMode, setViewMode, openStylePopover } = useEditorUIContext();
+
+  const { draftProfile, isDirty, initializeEditor, updateDraft, _hasHydrated } = useEditorStore();
   const { status, flushSave } = useAutosave();
   const router = useRouter();
   const pathname = usePathname();

@@ -4,19 +4,13 @@ import type { ProfileEditorData } from "@/server/user/profile/payloads";
 import { applyStyleToProfile, type StyleTarget } from "@/lib/text-style";
 import { EDITOR_DRAFT_VERSION, normalizeEditorDraft } from "@/lib/editor-draft";
 
-interface PopoverAnchor {
-  target: StyleTarget;
-  x: number;
-  y: number;
-}
-
 interface EditorState {
   originalProfile: ProfileEditorData | null;
   draftProfile: ProfileEditorData | null;
   isDirty: boolean;
   _hasHydrated: boolean;
   _draftVersion: number;
-  stylePopover: PopoverAnchor | null;
+  _optimisticLock: number;
 
   setHasHydrated: (state: boolean) => void;
   initializeEditor: (profile: ProfileEditorData) => void;
@@ -24,8 +18,6 @@ interface EditorState {
   markAsSaved: () => void;
   discardChanges: () => void;
   clearDraft: () => void;
-  openStylePopover: (anchor: PopoverAnchor) => void;
-  closeStylePopover: () => void;
   setElementStyle: (target: StyleTarget, style: { color?: string; fontFamily?: string } | null) => void;
 }
 
@@ -37,7 +29,7 @@ export const useEditorStore = create<EditorState>()(
       isDirty: false,
       _hasHydrated: false,
       _draftVersion: 0,
-      stylePopover: null,
+      _optimisticLock: 0,
 
       setHasHydrated: (state) => set({ _hasHydrated: state }),
 
@@ -52,13 +44,13 @@ export const useEditorStore = create<EditorState>()(
 
         // Case 1: No existing draft (or unusable after normalize) — init fresh
         if (!draftProfile) {
-          set({ originalProfile: normalizedServer, draftProfile: normalizedServer, isDirty: false, _draftVersion: 0 });
+          set({ originalProfile: normalizedServer, draftProfile: normalizedServer, isDirty: false, _draftVersion: 0, _optimisticLock: 0 });
           return;
         }
 
         // Case 2: Draft belongs to a different profile (e.g. user switched account)
         if (draftProfile.id !== normalizedServer.id) {
-          set({ originalProfile: normalizedServer, draftProfile: normalizedServer, isDirty: false, _draftVersion: 0 });
+          set({ originalProfile: normalizedServer, draftProfile: normalizedServer, isDirty: false, _draftVersion: 0, _optimisticLock: 0 });
           return;
         }
 
@@ -67,7 +59,7 @@ export const useEditorStore = create<EditorState>()(
         const hasStaleLinks = (draftProfile.links ?? []).some((l) => !String(l.id).startsWith("temp-") && !serverLinkIds.has(l.id));
 
         if (hasStaleLinks) {
-          set({ originalProfile: normalizedServer, draftProfile: normalizedServer, isDirty: false, _draftVersion: 0 });
+          set({ originalProfile: normalizedServer, draftProfile: normalizedServer, isDirty: false, _draftVersion: 0, _optimisticLock: 0 });
           return;
         }
 
@@ -92,20 +84,17 @@ export const useEditorStore = create<EditorState>()(
 
       markAsSaved: () => {
         const { draftProfile } = get();
-        set({ originalProfile: draftProfile, isDirty: false });
+        set({ originalProfile: draftProfile, isDirty: false, _optimisticLock: 0 });
       },
 
       discardChanges: () => {
         const { originalProfile } = get();
-        set({ draftProfile: originalProfile, isDirty: false });
+        set({ draftProfile: originalProfile, isDirty: false, _optimisticLock: 0 });
       },
 
       clearDraft: () => {
         set({ originalProfile: null, draftProfile: null, isDirty: false });
       },
-
-      openStylePopover: (anchor) => set({ stylePopover: anchor }),
-      closeStylePopover: () => set({ stylePopover: null }),
 
       setElementStyle: (target, style) => {
         const { draftProfile, originalProfile, _draftVersion } = get();
