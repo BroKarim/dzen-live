@@ -1,5 +1,55 @@
 # Task Plan: Architecture Deepening — Dead Code, Auth, Upload, Cache
 
+---
+## Notes — Database Access (dzenn_db)
+
+### Lokasi
+- **Prod:** VPS shared — container PostgreSQL `duasatuoss-postgres21oss-5trcu6.1.hzv3w5zeykvrukz11ot0ixz7c`
+- **Local:** Supabase — `aws-1-ap-northeast-2.pooler.supabase.com:6543`
+
+### Cara akses prod (via VPS)
+
+**Masuk ke container PostgreSQL:**
+```bash
+# Cari container name dulu kalo lupa
+sudo docker ps
+
+# Masuk psql — bisa pake container ID atau full name
+sudo docker exec -it b4c6d60fd127 psql -U postgres -d dzenn_db
+```
+atau:
+```bash
+sudo docker exec -it duasatuoss-postgres21oss-5trcu6.1.hzv3w5zeykvrukz11ot0ixz7c psql -U postgres -d dzenn_db
+```
+
+**Lihat daftar user:**
+```sql
+SELECT id, name, email, role FROM "user";
+```
+
+**Promote user ke ADMIN:**
+```sql
+UPDATE "user" SET role = 'ADMIN' WHERE email = 'user@example.com';
+```
+> `user` adalah reserved word — wajib pakai `"user"` (quoted).
+
+**Promote user via Docker one-liner (langsung, tanpa masuk psql):**
+```bash
+sudo docker exec -it b4c6d60fd127 psql -U postgres -d dzenn_db -c "UPDATE \"user\" SET role = 'ADMIN' WHERE email = 'user@example.com';"
+```
+
+**Verifikasi:**
+```sql
+SELECT email, role FROM "user" WHERE role = 'ADMIN';
+```
+
+### Catatan
+- Setelah role diubah, user perlu **logout → login ulang** agar session cookie reflect role baru.
+- Container ini shared VPS — ada container milik teman lain. Hati-hati, jangan sampai salah container.
+- Tabel Prisma pakai `@@map` — nama tabel di DB lowercase (`user`, `profile`, `asset`, dll), kolom camelCase (`isActive`, `createdAt`, `bgType`).
+
+---
+
 ## Goal
 Remove dead code clusters, consolidate fragmented auth patterns, extract a deep upload module, and fix caching API drift — improving locality, leverage, and AI-navigability.
 
