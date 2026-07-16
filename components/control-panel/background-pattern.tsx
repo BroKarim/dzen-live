@@ -38,18 +38,17 @@ function ColorField({
           <div className="h-7 w-7 rounded-md border shadow-sm overflow-hidden">
             <div className="h-full w-full" style={{ backgroundColor: value }} />
           </div>
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-            Custom Color
-          </span>
+          <input
+            value={value.toUpperCase()}
+            disabled
+            className="h-7 w-20 rounded-md border bg-background px-2 text-xs font-mono uppercase disabled:opacity-100 disabled:cursor-default"
+          />
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0 border-0 bg-transparent">
         <ColorPicker
           value={value}
-          onChange={(v) => {
-            onChange(v);
-            setOpen(false);
-          }}
+          onChange={onChange}
         />
       </PopoverContent>
     </Popover>
