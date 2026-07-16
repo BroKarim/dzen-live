@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Button2 } from "@/components/ui/button-2";
 import { Button } from "@/components/ui/button";
 import { Sparkles, RotateCcw } from "lucide-react";
+import { ColorPicker } from "@/components/ui/color-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { IntensitySlider } from "@/components/ui/intesity-slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,6 +19,41 @@ interface BgPattern {
 interface BackgroundPatternProps {
   profile: ProfileEditorData;
   onUpdate: (profile: ProfileEditorData) => void;
+}
+
+function ColorField({
+  value,
+  label,
+  onChange,
+}: {
+  value: string;
+  label: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button type="button" className="flex items-center gap-2 group">
+          <div className="h-7 w-7 rounded-md border shadow-sm overflow-hidden">
+            <div className="h-full w-full" style={{ backgroundColor: value }} />
+          </div>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Custom Color
+          </span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0 border-0 bg-transparent">
+        <ColorPicker
+          value={value}
+          onChange={(v) => {
+            onChange(v);
+            setOpen(false);
+          }}
+        />
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatternProps) {
@@ -151,23 +188,16 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                       </SelectContent>
                     </Select>
                   ) : field.type === "color" ? (
-                    <div className="flex items-center gap-2">
-                      <div className="relative h-7 w-7 overflow-hidden rounded-md border shadow-sm">
-                        <input
-                          type="color"
-                          aria-label={field.label}
-                          value={String(animatedConfig[field.key] ?? field.default)}
-                          onChange={(e) =>
-                            handleAnimatedConfigChange({
-                              ...animatedConfig,
-                              [field.key]: e.target.value,
-                            })
-                          }
-                          className="absolute -inset-1 h-9 w-9 cursor-pointer"
-                        />
-                      </div>
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Custom Color</span>
-                    </div>
+                    <ColorField
+                      value={String(animatedConfig[field.key] ?? field.default)}
+                      label={field.label}
+                      onChange={(v) =>
+                        handleAnimatedConfigChange({
+                          ...animatedConfig,
+                          [field.key]: v,
+                        })
+                      }
+                    />
                   ) : field.type === "number" ? (
                     <input
                       type="number"
