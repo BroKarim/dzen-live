@@ -231,29 +231,18 @@ export function ColorPicker({
   swatches = DEFAULT_SWATCHES,
 }: ColorPickerProps) {
   const parsed = parseHex(value) ?? { rgb: { r: 124, g: 58, b: 237 }, a: 1 }
-  const [hsv, setHsv] = React.useState<Hsv>(() => rgbToHsv(parsed.rgb))
-  const [alpha, setAlpha] = React.useState(parsed.a)
+  const hsv = rgbToHsv(parsed.rgb)
+  const alpha = parsed.a
   const [format, setFormat] = React.useState<PickerFormat>('hex')
-
-  React.useEffect(() => {
-    const next = parseHex(value)
-    if (!next) return
-
-    setHsv(rgbToHsv(next.rgb))
-    setAlpha(next.a)
-  }, [value])
 
   const rgb = hsvToRgb(hsv)
   const hsl = rgbToHsl(rgb)
   const hex = rgbToHex(rgb, alpha)
 
-  const emit = React.useCallback(
-    (nextHsv: Hsv, nextAlpha: number) => {
-      const nextRgb = hsvToRgb(nextHsv)
-      onChange?.(rgbToHex(nextRgb, nextAlpha))
-    },
-    [onChange],
-  )
+  const emit = (nextHsv: Hsv, nextAlpha: number) => {
+    const nextRgb = hsvToRgb(nextHsv)
+    onChange?.(rgbToHex(nextRgb, nextAlpha))
+  }
 
   const updatePlane = (clientX: number, clientY: number, el: HTMLElement) => {
     const rect = el.getBoundingClientRect()
@@ -261,7 +250,6 @@ export function ColorPicker({
     const v = clamp(100 - ((clientY - rect.top) / rect.height) * 100, 0, 100)
 
     const next = { ...hsv, s: round(s, 1), v: round(v, 1) }
-    setHsv(next)
     emit(next, alpha)
   }
 
@@ -286,8 +274,6 @@ export function ColorPicker({
       if (!parsedColor) return
 
       const nextHsv = rgbToHsv(parsedColor.rgb)
-      setHsv(nextHsv)
-      setAlpha(1)
       emit(nextHsv, 1)
     } catch {
       // User cancelled eyedropper.
@@ -302,7 +288,7 @@ export function ColorPicker({
   } as const
 
   return (
-    <div className="w-full max-w-[320px] space-y-3 rounded-xl border bg-background p-3 shadow-sm">
+    <div className="w-full max-w-[320px] space-y-3 rounded-xl border  p-3 shadow-sm">
       <div className="relative h-56 w-full overflow-hidden rounded-lg border" style={checkerboard}>
         <div
           className="absolute inset-0"
@@ -331,13 +317,13 @@ export function ColorPicker({
         <div className="relative h-4 overflow-hidden rounded-full border" style={checkerboard}>
           <input
             type="range"
+            aria-label="Hue"
             min={0}
             max={360}
             value={hsv.h}
             onChange={(event) => {
               const h = Number(event.target.value)
               const next = { ...hsv, h }
-              setHsv(next)
               emit(next, alpha)
             }}
             className="figma-range absolute inset-0 m-0 h-full w-full cursor-pointer appearance-none rounded-full p-0"
@@ -351,12 +337,12 @@ export function ColorPicker({
         <div className="relative h-4 overflow-hidden rounded-full border" style={checkerboard}>
           <input
             type="range"
+            aria-label="Opacity"
             min={0}
             max={100}
             value={Math.round(alpha * 100)}
             onChange={(event) => {
               const nextAlpha = Number(event.target.value) / 100
-              setAlpha(nextAlpha)
               emit(hsv, nextAlpha)
             }}
             className="figma-range absolute inset-0 m-0 h-full w-full cursor-pointer appearance-none rounded-full p-0"
@@ -388,8 +374,6 @@ export function ColorPicker({
               const parsedHex = parseHex(raw)
               if (!parsedHex) return
               const next = rgbToHsv(parsedHex.rgb)
-              setHsv(next)
-              setAlpha(parsedHex.a)
               emit(next, parsedHex.a)
               return
             }
@@ -403,7 +387,6 @@ export function ColorPicker({
                 b: clamp(parts[2], 0, 255),
               }
               const next = rgbToHsv(nextRgb)
-              setHsv(next)
               emit(next, alpha)
               return
             }
@@ -416,7 +399,6 @@ export function ColorPicker({
 
             const nextRgb = hslToRgb(parts[0], parts[1], parts[2])
             const next = rgbToHsv(nextRgb)
-            setHsv(next)
             emit(next, alpha)
           }}
         />
@@ -444,8 +426,6 @@ export function ColorPicker({
               const parsedSwatch = parseHex(swatch)
               if (!parsedSwatch) return
               const next = rgbToHsv(parsedSwatch.rgb)
-              setHsv(next)
-              setAlpha(parsedSwatch.a)
               emit(next, parsedSwatch.a)
             }}
             aria-label={`Select ${swatch}`}
@@ -453,7 +433,7 @@ export function ColorPicker({
         ))}
       </div>
 
-      <style jsx global>{`
+      <style>{`
         .figma-range::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;

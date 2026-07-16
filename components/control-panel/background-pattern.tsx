@@ -34,18 +34,19 @@ function ColorField({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button type="button" className="flex items-center gap-2 group">
+        <button type="button" aria-label={label} className="flex items-center gap-2 group">
           <div className="h-7 w-7 rounded-md border shadow-sm overflow-hidden">
             <div className="h-full w-full" style={{ backgroundColor: value }} />
           </div>
           <input
             value={value.toUpperCase()}
             disabled
+            aria-label={label}
             className="h-7 w-20 rounded-md border bg-background px-2 text-xs font-mono uppercase disabled:opacity-100 disabled:cursor-default"
           />
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 border-0 bg-transparent">
+      <PopoverContent className="w-auto p-0 border-0 bg-[#222] shadow-dzenn">
         <ColorPicker
           value={value}
           onChange={onChange}

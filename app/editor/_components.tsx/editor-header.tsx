@@ -125,7 +125,7 @@ function PublishPopover({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button size="sm" variant={isPublished ? "default" : "outline"} className="h-8 gap-1.5 text-xs">
+        <Button size="sm" variant={isPublished ? "default" : "outline"} className="h-8 gap-1.5 text-xs bg-[#222]  shadow-dzenn text-white">
           <Globe className="size-3.5" />
           <span className="hidden sm:inline">{isPublished ? "Published" : "Publish"}</span>
         </Button>
@@ -155,7 +155,7 @@ function PublishPopover({
               </div>
             </div>
 
-            <Button className="w-full" onClick={handlePublish} disabled={isPublishing}>
+            <Button className="w-full bg-[#222] shadow-dzenn" onClick={handlePublish} disabled={isPublishing}>
               {isPublishing ? (
                 <Loader2 className="size-4 animate-spin mr-2" />
               ) : (
@@ -188,7 +188,7 @@ function PublishPopover({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 rounded-lg border bg-background px-4 py-3">
+            <div className="flex items-center gap-2 rounded-lg border  bg-[#222] shadow-dzenn px-4 py-3">
               <span className="flex-1 font-mono text-sm text-foreground truncate">{profileUrl}</span>
               <TooltipProvider>
                 <Tooltip>
@@ -202,12 +202,12 @@ function PublishPopover({
               </TooltipProvider>
             </div>
 
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1" onClick={handleUnpublish} disabled={isPublishing}>
+            <div className="flex gap-1">
+              <Button variant="outline" size="sm" className="flex-1 bg-[#222] shadow-dzenn text-white" onClick={handleUnpublish} disabled={isPublishing}>
                 {isPublishing ? <Loader2 className="size-3.5 animate-spin mr-1.5" /> : null}
                 Unpublish
               </Button>
-              <Button variant="outline" size="sm" className="flex-1" onClick={onViewSite}>
+              <Button variant="outline" size="sm" className="flex-1 bg-[#222] shadow-dzenn text-white" onClick={onViewSite}>
                 View Site
               </Button>
             </div>
