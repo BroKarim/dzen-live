@@ -1279,3 +1279,49 @@ Phase 15 (planned — admin feature enhancements)
 | 3 | 13-B | Granular caching (split queries, granular revalidation) | Medium | Phase 13-A (optional — can split queries before fetch layer) |
 | 4 | 13-C | Remove `force-dynamic`, optimize cacheLife | Low | Phase 13-B |
 | 5 | 13-D | Optimistic updates (reorder, add link) | Medium | Phase 13-E (clean UI state) |
+
+---
+
+### Phase 14.2: Architecture Consistency — Grill Session Fixes
+
+**Goal:** Perbaiki 13 consistency deviations dari codebase audit + tuning analytics tab + low-impact remnant cleanup, berdasarkan keputusan grilling session 2026-07-17.
+
+**Keputusan Arsitektur (settled):**
+| Decision | Rationale |
+|----------|-----------|
+| **Remove fetch layer** — `server/lib/api-server.ts`, `server/lib/public-read.ts` dead code, tidak ada import | Direct Prisma sudah benar untuk single-process; Linky perlu fetch layer karena Fastify terpisah |
+| **`cacheLife("days")`** untuk public queries (dari "minutes") | Safety net; `revalidateTag()` panggil langsung via server action = instant invalidation |
+| **Tetap Zustand** — tidak migrasi ke SWR | Ohmylink = form-based profile editor, bukan canvas-based block editor seperti Linky |
+| **TanStack Query tetap** untuk analytics | Use case real-time metrics cocok; butuh tuning config. Bukan inkonsistensi — beda kebutuhan. |
+
+**Implementation sequence:**
+
+| # | Task | Files | Detail | Effort |
+|---|------|-------|--------|--------|
+| A | Remove dead fetch layer | `server/lib/api-server.ts`, `server/lib/public-read.ts` | Hapus 2 file — zero import, tidak pernah dipakai | 1m |
+| B | Switch `cacheLife("minutes")` → `"days"` | `server/website/profile/queries.ts` | 4x ganti string literal di `getPublicProfileMeta`, `getPublicLinks`, `getPublishedProfiles`, `getPublishedProfileCount` | 1m |
+| C | Remove unnecessary `"use client"` | `components/control-panel/tabs/profile-tab.tsx:1` | Hapus directive — tidak ada hook/event/client feature | 30s |
+| D | Add missing `"use client"` | `components/preview/view-mode-toggle.tsx:1` | Tambah directive — punya `onClick` handler | 30s |
+| E | Fix duplicate state in settings-tab | `components/control-panel/tabs/settings-tab.tsx` | Hapus `useState` untuk `username`/`isPublished`, derive dari `draftProfile` store | 10m |
+| F | Add caching to editor queries | `server/user/profile/queries.ts` + `server/user/settings/actions.ts` | Tambah `'use cache'` + `cacheLife("minutes")` + `cacheTag("editor-profile-${userId}")` di `findProfileByUserId`/`findProfileByUsername`; invalidasi di save-profile-action.ts | 15m |
+| G | Fix admin `revalidatePath` → `revalidateTag` | `server/admin/actions.ts` | 5x ganti: line 47, 82, 131, 164, 186. Pakai `revalidateTag("admin-...", "minutes")` | 5m |
+| H | Fix analytics-tab slow render | `components/control-panel/tabs/analytics-tab.tsx` | `staleTime: 0` → `30_000`, `refetchInterval: 10000` → `60_000`, tambah `placeholderData: keepPreviousData` dari `@tanstack/react-query` | 5m |
+| I | Fix hydration race di editor-client | `app/editor/_components.tsx/editor-client.tsx` | Tambah loading skeleton saat `_hasHydrated` masih false, di atas return main | 5m |
+| J | Fix Prisma enum value import | `components/control-panel/profile-layout-selector.tsx:4` | `import` → `import type` | 30s |
+| K | Consistent boundary: design-tab `"use client"` | `components/control-panel/tabs/design-tab.tsx` | Tambah `"use client"` — konsisten dengan 3 tab lain (profile-tab removed directive di C, jadi ini optional) | 30s |
+| L | Fix client layout inconsistency | `app/[username]/layout.tsx` | Extract `useEffect` untuk DOM class manipulation ke inner component; layout jd pure server | 10m |
+| M | Migrate marketing `revalidate` → `'use cache'` | `app/(marketing)/page.tsx` | Hapus `export const revalidate = 60`, ganti dengan `'use cache'` + `cacheLife("days")` | 5m |
+
+**Priority:**
+| Tier | Items | Alasan |
+|------|-------|--------|
+| **P0** | E, H, I, F | Paling berdampak (data loss potential / performance) |
+| **P1** | A, B, C, D, G | Bersih-bersih, konsistensi, tanpa efek samping |
+| **P2** | J, K, L, M | Kosmetik / low impact, bisa skip |
+
+**Verifikasi:**
+- [ ] `tsc --noEmit` — 0 new errors
+- [ ] `vitest run` — all passing (130 baseline; item E mungkin perlu update test mock)
+- [ ] `pnpm build` — compiled successfully
+- [ ] Manual QA: edit profile + save → no regression
+- [ ] Manual QA: analytics tab render < 2s first load, instant on tab switch (placeholderData) |

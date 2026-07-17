@@ -243,6 +243,8 @@ export const saveProfile = withAuth("profile/save", async (user, data: unknown) 
 
     revalidateTag(`links-${profile.id}`, "minutes");
     revalidateTag(`profile-meta-${profile.username}`, "minutes");
+    revalidateTag(`editor-profile-${user.id}`, "minutes");
+    revalidateTag(`editor-profile-username-${draft.username ?? profile.username}`, "minutes");
 
     // ── Return refreshed links + socials (real IDs, correct positions) ────────
 

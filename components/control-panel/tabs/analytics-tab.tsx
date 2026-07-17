@@ -117,11 +117,12 @@ export function AnalyticsTab({ profileId, links }: AnalyticsTabProps) {
         return result.data;
       }
     },
-    refetchInterval: 10000,
+    staleTime: 30_000,
+    gcTime: 60_000,
+    refetchInterval: 60_000,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    staleTime: 0,
-    gcTime: 60000,
+    placeholderData: (previousData) => previousData,
   });
 
   const handleRefresh = async () => {

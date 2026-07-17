@@ -5,7 +5,7 @@ import { cacheLife, cacheTag } from "next/cache";
 export async function getPublicProfileMeta(username: string) {
   "use cache";
   cacheTag(`profile-meta-${username}`);
-  cacheLife("minutes");
+  cacheLife("days");
 
   return await db.profile.findUnique({
     where: { username },
@@ -16,7 +16,7 @@ export async function getPublicProfileMeta(username: string) {
 export async function getPublicLinks(profileId: string) {
   "use cache";
   cacheTag(`links-${profileId}`);
-  cacheLife("minutes");
+  cacheLife("days");
 
   return await db.link.findMany({
     where: { profileId, isActive: true },
@@ -41,7 +41,7 @@ export async function getPublicProfile(username: string) {
 export async function getPublishedProfiles(limit?: number, offset?: number) {
   "use cache";
   cacheTag("published-profiles");
-  cacheLife("minutes");
+  cacheLife("days");
 
   return await db.profile.findMany({
     where: {
@@ -69,7 +69,7 @@ export async function getPublishedProfiles(limit?: number, offset?: number) {
 export async function getPublishedProfileCount() {
   "use cache";
   cacheTag("published-profiles-count");
-  cacheLife("minutes");
+  cacheLife("days");
 
   return await db.profile.count({
     where: {

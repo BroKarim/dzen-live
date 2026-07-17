@@ -20,8 +20,6 @@ interface SettingsTabProps {
 
 export function SettingsTab({ profile }: SettingsTabProps) {
   const { push, refresh } = useRouter();
-  const [username, setUsername] = useState(profile.username);
-  const [isPublished, setIsPublished] = useState(profile.isPublished);
   const [isPending, startTransition] = useTransition();
   const [isDeleting, setIsDeleting] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
@@ -29,6 +27,9 @@ export function SettingsTab({ profile }: SettingsTabProps) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { draftProfile, updateDraft } = useEditorStore();
 
+  const currentProfile = draftProfile ?? profile;
+  const username = currentProfile.username;
+  const isPublished = currentProfile.isPublished;
   const hasChanges = isPublished !== profile.isPublished;
 
   async function checkAvailability(value: string) {
@@ -55,7 +56,6 @@ export function SettingsTab({ profile }: SettingsTabProps) {
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
-    setUsername(sanitized);
 
     if (draftProfile) {
       updateDraft({ ...draftProfile, username: sanitized });
@@ -203,7 +203,7 @@ export function SettingsTab({ profile }: SettingsTabProps) {
               </div>
               <p className="text-xs text-muted-foreground">Make your profile visible to the public</p>
             </div>
-            <Switch id="publish-status" checked={isPublished} onCheckedChange={setIsPublished} />
+            <Switch id="publish-status" checked={isPublished} onCheckedChange={(checked) => { if (draftProfile) updateDraft({ ...draftProfile, isPublished: checked }); }} />
           </div>
         </div>
 

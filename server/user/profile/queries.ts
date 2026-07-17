@@ -16,6 +16,10 @@ export async function getProfileData(userId: string) {
 }
 
 export async function findProfileByUserId(userId: string) {
+  "use cache";
+  cacheTag(`editor-profile-${userId}`);
+  cacheLife("minutes");
+
   return await db.profile.findFirst({
     where: { userId },
     select: profileEditorPayload,
@@ -23,6 +27,10 @@ export async function findProfileByUserId(userId: string) {
 }
 
 export async function findProfileByUsername(username: string) {
+  "use cache";
+  cacheTag(`editor-profile-username-${username}`);
+  cacheLife("minutes");
+
   return await db.profile.findUnique({
     where: { username },
     select: profileEditorPayload,

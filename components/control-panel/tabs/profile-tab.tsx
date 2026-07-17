@@ -1,5 +1,3 @@
-"use client";
-
 
 import { ProfileEditor } from "@/components/control-panel/profile-editor";
 import { SocialMediaEditor } from "@/components/control-panel/social-editor";

@@ -58,6 +58,8 @@ export async function setupUsername(username: string) {
     ]);
 
     revalidateTag(`profile-meta-${formattedUsername}`, "minutes");
+    revalidateTag(`editor-profile-${user.id}`, "minutes");
+    revalidateTag(`editor-profile-username-${formattedUsername}`, "minutes");
     return { success: true, username: formattedUsername };
   } catch (error: any) {
     console.error("[settings/actions] setupUsername:", error);
@@ -156,6 +158,9 @@ export async function updateProfileUsername(username: string) {
 
     revalidateTag(`profile-meta-${profile.username}`, "minutes");
     revalidateTag(`profile-meta-${formattedUsername}`, "minutes");
+    revalidateTag(`editor-profile-${user.id}`, "minutes");
+    revalidateTag(`editor-profile-username-${profile.username}`, "minutes");
+    revalidateTag(`editor-profile-username-${formattedUsername}`, "minutes");
     return { success: true, username: formattedUsername };
   } catch (error: any) {
     console.error("[settings/actions] updateProfileUsername:", error);
@@ -182,6 +187,7 @@ export async function togglePublishStatus(isPublished: boolean) {
 
     revalidateTag(`profile-meta-${profile.username}`, "minutes");
     revalidateTag(`links-${profile.id}`, "minutes");
+    revalidateTag(`editor-profile-${user.id}`, "minutes");
     return { success: true };
   } catch (error: any) {
     console.error("[settings/actions] togglePublishStatus:", error);
