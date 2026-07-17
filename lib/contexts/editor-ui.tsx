@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, use, useState, type ReactNode } from "react";
 import type { StyleTarget } from "@/lib/text-style";
 
 export interface PopoverAnchor {
@@ -29,13 +29,13 @@ export function EditorUIProvider({ children }: { children: ReactNode }) {
   const [currentPanel, setCurrentPanel] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const openStylePopover = useCallback((anchor: PopoverAnchor) => {
+  const openStylePopover = (anchor: PopoverAnchor) => {
     setStylePopover(anchor);
-  }, []);
+  };
 
-  const closeStylePopover = useCallback(() => {
+  const closeStylePopover = () => {
     setStylePopover(null);
-  }, []);
+  };
 
   return (
     <EditorUIContext.Provider
@@ -57,7 +57,7 @@ export function EditorUIProvider({ children }: { children: ReactNode }) {
 }
 
 export function useEditorUIContext() {
-  const ctx = useContext(EditorUIContext);
+  const ctx = use(EditorUIContext);
   if (!ctx) {
     throw new Error("useEditorUIContext must be used within EditorUIProvider");
   }
