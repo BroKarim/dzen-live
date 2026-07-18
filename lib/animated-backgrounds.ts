@@ -26,7 +26,20 @@ export interface AnimatedBackgroundMeta {
   }[];
 }
 
+function None() {
+  return null;
+}
+
 export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
+  "none": {
+    id: "none",
+    label: "None",
+    component: None,
+    preview:
+      "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20100%20100'%3E%3Ccircle%20cx%3D'50'%20cy%3D'50'%20r%3D'40'%20fill%3D'none'%20stroke%3D'rgba(0%2C0%2C0%2C0.25)'%20stroke-width%3D'2'%20stroke-dasharray%3D'6%204'%2F%3E%3C%2Fsvg%3E\")",
+    defaultConfig: {},
+    configFields: [],
+  },
   "retro-grid": {
     id: "retro-grid",
     label: "Retro Grid",

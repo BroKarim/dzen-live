@@ -61,9 +61,14 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
 
   const animatedId = bgPattern?.animatedId as string | undefined;
   const animatedConfig = bgPattern?.animatedConfig as Record<string, unknown> | null;
+  const hasAnimatedBg = !!animatedId;
   const selectedMeta = animatedId ? ANIMATED_BACKGROUNDS[animatedId] : null;
 
   const handleSelectAnimated = (meta: AnimatedBackgroundMeta) => {
+    if (meta.id === "none") {
+      onUpdate({ ...profile, bgPattern: null } as ProfileEditorData);
+      return;
+    }
     onUpdate({
       ...profile,
       bgPattern: {
@@ -106,7 +111,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
 
           <div className="grid grid-cols-4 gap-2 space-y-4 ">
             {Object.values(ANIMATED_BACKGROUNDS).map((meta: AnimatedBackgroundMeta) => {
-              const isSelected = animatedId === meta.id;
+              const isSelected = meta.id === "none" ? !hasAnimatedBg : animatedId === meta.id;
               return (
                 <button
                   key={meta.id}
@@ -241,12 +246,7 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
             </div>
           )}
 
-          {!selectedMeta && (
-            <div className="flex flex-col items-center gap-2 py-4 text-muted-foreground">
-              <Sparkles className="size-8 opacity-20" />
-              <span className="text-xs">Select an animated background above</span>
-            </div>
-          )}
+
         </div>
       </PopoverContent>
     </Popover>
