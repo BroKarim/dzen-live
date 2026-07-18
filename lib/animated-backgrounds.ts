@@ -36,7 +36,7 @@ export const ANIMATED_BACKGROUNDS: Record<string, AnimatedBackgroundMeta> = {
     label: "None",
     component: None,
     preview:
-      "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20100%20100'%3E%3Ccircle%20cx%3D'50'%20cy%3D'50'%20r%3D'40'%20fill%3D'none'%20stroke%3D'rgba(0%2C0%2C0%2C0.25)'%20stroke-width%3D'2'%20stroke-dasharray%3D'6%204'%2F%3E%3C%2Fsvg%3E\")",
+      "url(\"data:image/svg+xml,%3Csvg+xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22+viewBox%3D%220+0+32+32%22%3E%3Cpath+fill%3D%22%23fff%22+d%3D%22M30+3.414L28.586+2l-3.432+3.432A13.93+13.93+0+0+0+16+2C8.28+2+2+8.28+2+16c0+3.5+1.3+6.697+3.432+9.154L2+28.586L3.414+30l3.432-3.432A13.93+13.93+0+0+0+16+30c7.72+0+14-6.28+14-14c0-3.5-1.3-6.697-3.432-9.154zM4+16C4+9.383+9.383+4+16+4a11.94+11.94+0+0+1+7.74+2.845L6.846+23.741A11.94+11.94+0+0+1+4+16m24+0c0+6.617-5.383+12-12+12a11.94+11.94+0+0+1-7.74-2.845L25.155+8.259A11.94+11.94+0+0+1+28+16%22+%2F%3E%3C%2Fsvg%3E\")",
     defaultConfig: {},
     configFields: [],
   },

@@ -117,8 +117,10 @@ export default function BackgroundPattern({ profile, onUpdate }: BackgroundPatte
                   key={meta.id}
                   type="button"
                   onClick={() => handleSelectAnimated(meta)}
-                  className={`relative aspect-square size-12 rounded-md bg-white p-1 transition-all duration-200 ${
-                    isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 z-10" : "hover:scale-110 active:scale-95 border border-black/5"
+                  className={`relative aspect-square size-12 rounded-md p-1 transition-all duration-200 ${
+                    meta.id === "none" ? "bg-[#222]" : "bg-white"
+                  } ${
+                    isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 z-10" : `hover:scale-110 active:scale-95 border ${meta.id === "none" ? "border-white/10" : "border-black/5"}`
                   }`}
                   style={{ backgroundImage: meta.preview }}
                   title={meta.label}
